@@ -181,6 +181,16 @@ const PanditDashboard = () => {
     } catch { alert('Failed to update status'); }
   };
 
+  const handleAddMeetingLink = async (bookingId) => {
+    const link = window.prompt('Enter Zoom/Meet link for this Puja:');
+    if (!link) return;
+    try {
+      await axios.patch(`${API}/bookings/${bookingId}/link`, { videoLink: link }, { headers: { Authorization: `Bearer ${token}` } });
+      setBookings(bookings.map(b => b._id === bookingId ? { ...b, videoLink: link } : b));
+      alert('Link shared with devotee!');
+    } catch { alert('Failed to share link'); }
+  };
+
   const handleSubscriptionPayment = async () => {
     const script = document.createElement('script');
     script.src = 'https://checkout.razorpay.com/v1/checkout.js';
@@ -275,6 +285,13 @@ const PanditDashboard = () => {
                   <User size={15} className="text-orange-500" />
                   <span className="font-semibold text-gray-700">Puja:</span>
                   <span className="text-gray-600">{incomingRequest.pujaType}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <Video size={15} className="text-blue-500" />
+                  <span className="font-semibold text-gray-700">Mode:</span>
+                  <span className={`capitalize font-bold ${incomingRequest.pujaMode === 'online' ? 'text-blue-600' : 'text-orange-600'}`}>
+                    {incomingRequest.pujaMode || 'in-person'}
+                  </span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <Clock size={15} className="text-orange-500" />
@@ -462,9 +479,21 @@ const PanditDashboard = () => {
                         }`}>{booking.status}</span>
                       </div>
                       <div className="text-sm text-gray-600 grid grid-cols-2 gap-x-8 gap-y-1.5">
+                        <div className="flex items-center gap-1">
+                          <span className="font-semibold text-gray-700">Mode:</span> 
+                          <span className={`flex items-center gap-1 font-bold ${booking.pujaMode === 'online' ? 'text-blue-600' : 'text-orange-600'}`}>
+                            {booking.pujaMode === 'online' && <Video size={14}/>} {booking.pujaMode || 'in-person'}
+                          </span>
+                        </div>
                         <div><span className="font-semibold text-gray-700">Puja:</span> {booking.pujaType}</div>
                         <div><span className="font-semibold text-gray-700">Date:</span> {booking.scheduledDate ? new Date(booking.scheduledDate).toLocaleDateString() : '-'} {booking.scheduledTime && `at ${booking.scheduledTime}`}</div>
+                        <div><span className="font-semibold text-gray-700">Fee:</span> <span className="font-bold text-gray-900 font-mono">₹{booking.fee}</span></div>
                         <div className="col-span-2"><span className="font-semibold text-gray-700">Address:</span> {booking.address}</div>
+                        {booking.videoLink && (
+                          <div className="col-span-2 bg-blue-50 p-2 rounded-lg text-blue-700 flex items-center gap-2 truncate">
+                            <Video size={14} /> <strong>Link:</strong> {booking.videoLink}
+                          </div>
+                        )}
                       </div>
                     </div>
                       <div className="flex gap-2">
@@ -498,12 +527,22 @@ const PanditDashboard = () => {
                         )}
                         
                         {booking.status === 'confirmed' && (
-                          <button
-                            onClick={() => updateBookingStatus(booking._id, 'completed')}
-                            className="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-600 font-bold rounded-lg hover:bg-green-100 transition-colors text-sm"
-                          >
-                            <CheckCircle size={16} /> Complete
-                          </button>
+                          <>
+                            {booking.pujaMode === 'online' && (
+                              <button
+                                onClick={() => handleAddMeetingLink(booking._id)}
+                                className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 font-bold rounded-lg hover:bg-blue-100 transition-colors text-sm"
+                              >
+                                <Video size={16} /> {booking.videoLink ? 'Edit Link' : 'Add Link'}
+                              </button>
+                            )}
+                            <button
+                              onClick={() => updateBookingStatus(booking._id, 'completed')}
+                              className="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-600 font-bold rounded-lg hover:bg-green-100 transition-colors text-sm"
+                            >
+                              <CheckCircle size={16} /> Complete
+                            </button>
+                          </>
                         )}
 
                         {(booking.status === 'completed' || booking.status === 'rejected') && (

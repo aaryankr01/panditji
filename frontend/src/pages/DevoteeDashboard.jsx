@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../store/useAuthStore';
 import axios from 'axios';
 import { io } from 'socket.io-client';
-import { LogOut, MessageSquare, Search, Star, MapPin, AlertCircle, CheckCircle, BadgeCheck, Clock, Navigation, X, Calendar, HeadphonesIcon } from 'lucide-react';
+import { LogOut, MessageSquare, Search, Star, MapPin, AlertCircle, CheckCircle, BadgeCheck, Clock, Navigation, X, Calendar, HeadphonesIcon, Video } from 'lucide-react';
 import ChatInterface from '../components/ChatInterface';
 import SupportCare from '../components/SupportCare';
 
@@ -54,7 +54,8 @@ const PUJA_PRICES = {
       date: new Date().toISOString().split('T')[0],
       time: '10:00',
       address: '',
-      notes: ''
+      notes: '',
+      pujaMode: 'in-person'
     });
     const socketRef = useRef(null);
 
@@ -169,6 +170,11 @@ const PUJA_PRICES = {
         setActiveTab('chat');
       });
 
+      // Meeting link updated
+      socket.on('bookingLinkUpdated', ({ bookingId, videoLink }) => {
+        setBookings(prev => prev.map(b => b._id === bookingId ? { ...b, videoLink } : b));
+      });
+
       return () => socket.disconnect();
     }, [token, user, navigate]);
 
@@ -194,14 +200,15 @@ const PUJA_PRICES = {
         const { pandit } = bookingModal;
         const { pujaType, date, time, address, notes } = bookingForm;
         const res = await axios.post('http://localhost:5000/api/bookings', {
-        panditId: pandit._id,
-        pujaType,
-        date,
-        time,
-        address,
-        city: user?.city,
-        notes,
-        fee: PUJA_PRICES[pujaType] || 1500
+          panditId: pandit._id,
+          pujaType,
+          date,
+          time,
+          address,
+          city: user?.city,
+          notes,
+          pujaMode: bookingForm.pujaMode,
+          fee: bookingForm.pujaMode === 'online' ? (PUJA_PRICES[pujaType] || 1500) * 0.7 : (PUJA_PRICES[pujaType] || 1500)
         }, { headers: { Authorization: `Bearer ${token}` } });
         setBookingModal({ isOpen: false, pandit: null });
         setWaitingBooking(res.data.data);
@@ -364,10 +371,24 @@ const PUJA_PRICES = {
                       className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none"
                       required
                     >
-                      {Object.keys(PUJA_PRICES).map(puja => (
-                        <option key={puja} value={puja}>{puja}</option>
-                      ))}
                     </select>
+                  </div>
+
+                  <div className="bg-orange-50 p-1 rounded-xl border border-orange-200 flex mb-2">
+                    <button 
+                      type="button"
+                      onClick={() => setBookingForm({...bookingForm, pujaMode: 'in-person'})}
+                      className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${bookingForm.pujaMode === 'in-person' ? 'bg-orange-600 text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}
+                    >
+                      In-Person
+                    </button>
+                    <button 
+                      type="button"
+                      onClick={() => setBookingForm({...bookingForm, pujaMode: 'online'})}
+                      className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2 ${bookingForm.pujaMode === 'online' ? 'bg-orange-600 text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}
+                    >
+                      Online <span className="bg-green-100 text-green-700 text-[10px] px-1.5 py-0.5 rounded uppercase">-30%</span>
+                    </button>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
@@ -418,8 +439,15 @@ const PUJA_PRICES = {
                   </div>
 
                   <div className="bg-orange-50 p-4 rounded-xl flex items-center justify-between border border-orange-100">
-                    <span className="font-semibold text-orange-800">Total Standard Fee</span>
-                    <span className="text-2xl font-bold text-orange-600">₹{PUJA_PRICES[bookingForm.pujaType]?.toLocaleString()}</span>
+                    <span className="font-semibold text-orange-800">Booking Fee</span>
+                    <div className="text-right">
+                      {bookingForm.pujaMode === 'online' && (
+                        <div className="text-xs text-orange-400 line-through">₹{(PUJA_PRICES[bookingForm.pujaType] || 1500).toLocaleString()}</div>
+                      )}
+                      <div className="text-2xl font-bold text-orange-600">
+                        ₹{(bookingForm.pujaMode === 'online' ? (PUJA_PRICES[bookingForm.pujaType] || 1500) * 0.7 : (PUJA_PRICES[bookingForm.pujaType] || 1500)).toLocaleString()}
+                      </div>
+                    </div>
                   </div>
 
                   <button
@@ -687,8 +715,22 @@ const PUJA_PRICES = {
                           </div>
                           <div className="flex items-center gap-2">
                             <MapPin size={14} className="text-orange-500" />
-                            <span className="line-clamp-1">{booking.address}</span>
+                            <span className="line-clamp-1">{booking.pujaMode === 'online' ? 'Online/Virtual' : booking.address}</span>
                           </div>
+                          <div className="flex items-center gap-2">
+                            <Video size={14} className={booking.pujaMode === 'online' ? 'text-blue-500' : 'text-gray-300'} />
+                            <span className={`font-medium ${booking.pujaMode === 'online' ? 'text-blue-600' : 'text-gray-400'}`}>
+                              {booking.pujaMode === 'online' ? 'Distance Puja' : 'In-Person'}
+                            </span>
+                          </div>
+                          {booking.videoLink && (
+                            <div className="col-span-full mt-2 bg-blue-50 p-3 rounded-xl border border-blue-100 flex items-center justify-between">
+                              <div className="flex items-center gap-2 text-blue-800 font-bold text-xs truncate">
+                                <Video size={14} /> Link: {booking.videoLink}
+                              </div>
+                              <a href={booking.videoLink} target="_blank" rel="noopener noreferrer" className="bg-blue-600 text-white px-3 py-1 rounded-lg text-[10px] font-bold hover:bg-blue-700 transition-colors">Join Now</a>
+                            </div>
+                          )}
                           {booking.pandit && (
                             <div className="flex items-center gap-2 col-span-full pt-1">
                               <div className="w-6 h-6 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center text-[10px] font-bold">

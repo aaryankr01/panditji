@@ -32,6 +32,8 @@ const bookingSchema = new mongoose.Schema(
     },
     paymentId: { type: String },
     notes: { type: String },
+    pujaMode: { type: String, enum: ['in-person', 'online'], default: 'in-person' },
+    videoLink: { type: String },
     cancellationReason: { type: String },
     cancelledBy: { type: String, enum: ['devotee', 'pandit', 'admin'] },
     completedAt: { type: Date },

@@ -10,7 +10,7 @@ exports.setIO = (io) => { _io = io; };
 // @access  Private/Devotee
 exports.createBooking = async (req, res, next) => {
   try {
-    const { pujaType, date, time, address, city, notes, fee, panditId } = req.body;
+    const { pujaType, date, time, address, city, notes, fee, panditId, pujaMode } = req.body;
     const devoteeId = req.user.id;
 
     const devotee = await User.findById(devoteeId).select('firstName lastName phone city');
@@ -24,6 +24,7 @@ exports.createBooking = async (req, res, next) => {
       city: city || devotee.city,
       notes,
       fee: fee || 0,
+      pujaMode: pujaMode || 'in-person',
       status: 'pending'
     };
 
@@ -36,7 +37,7 @@ exports.createBooking = async (req, res, next) => {
     const populatedBooking = await Booking.findById(booking._id)
       .populate('devotee', 'firstName lastName phone city');
 
-    // Broadcast to specific pandit if panditId provided, else broadcast to city
+    // Broadcast logic
     if (_io) {
       if (panditId) {
         // Send directly to the chosen pandit
@@ -44,11 +45,14 @@ exports.createBooking = async (req, res, next) => {
         if (panditSocketId) {
           _io.to(panditSocketId).emit('newBookingRequest', populatedBooking);
         }
+      } else if (pujaMode === 'online') {
+        // Online puja? Broadcast to EVERYONE since location doesn't matter
+        _io.to('all_pandits').emit('newBookingRequest', populatedBooking);
       } else {
-        // Broadcast to all pandits in that city room
-        _io.to(`city_${(city || '').toLowerCase().replace(/\s/g, '_')}`)
-           .emit('newBookingRequest', populatedBooking);
-        // Also broadcast to all pandits as fallback
+        // In-person? Broadcast to city room
+        const cityRoom = `city_${(city || '').toLowerCase().replace(/\s/g, '_')}`;
+        _io.to(cityRoom).emit('newBookingRequest', populatedBooking);
+        // Fallback to all for now to ensure visibility during testing
         _io.to('all_pandits').emit('newBookingRequest', populatedBooking);
       }
     }
@@ -162,6 +166,34 @@ exports.deleteBooking = async (req, res, next) => {
     await booking.deleteOne();
 
     res.status(200).json({ success: true, data: {} });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Update booking video link
+// @route   PATCH /api/bookings/:id/link
+// @access  Private/Pandit
+exports.updateBookingLink = async (req, res, next) => {
+  try {
+    const { videoLink } = req.body;
+    const booking = await Booking.findById(req.params.id);
+
+    if (!booking) return res.status(404).json({ success: false, message: 'Booking not found' });
+    if (booking.pandit.toString() !== req.user.id) {
+      return res.status(401).json({ success: false, message: 'Not authorized' });
+    }
+
+    booking.videoLink = videoLink;
+    await booking.save();
+
+    // Notify devotee of new link
+    if (_io) {
+      const devoteeSocketId = global.activeUsers?.get(booking.devotee.toString());
+      if (devoteeSocketId) _io.to(devoteeSocketId).emit('bookingLinkUpdated', { bookingId: booking._id, videoLink });
+    }
+
+    res.status(200).json({ success: true, data: booking });
   } catch (err) {
     next(err);
   }
