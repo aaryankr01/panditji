@@ -1,5 +1,17 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* The landing page has its own custom CSS which will be scoped inside the component or added here as globals if needed. */
+@layer base {
+  body {
+    font-family: 'Poppins', sans-serif;
+    color: #2C1A0E;
+    background-color: #FAF7F2;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Playfair Display', serif;
+  }
+}

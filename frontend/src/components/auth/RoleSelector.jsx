@@ -8,8 +8,8 @@ const RoleSelector = ({ selectedRole, onRoleChange }) => {
         onClick={() => onRoleChange('devotee')}
         className={`flex-1 py-3 px-4 rounded-xl font-bold border-2 transition-all ${
           selectedRole === 'devotee' 
-            ? 'border-orange-600 bg-orange-50 text-orange-700' 
-            : 'border-gray-200 text-gray-500 hover:border-orange-200'
+            ? 'border-saffron bg-saffron-light text-saffron-dark shadow-sm' 
+            : 'border-brandborder text-textMid hover:border-saffron hover:text-saffron'
         }`}
       >
         I am a Devotee
@@ -19,8 +19,8 @@ const RoleSelector = ({ selectedRole, onRoleChange }) => {
         onClick={() => onRoleChange('pandit')}
         className={`flex-1 py-3 px-4 rounded-xl font-bold border-2 transition-all ${
           selectedRole === 'pandit' 
-            ? 'border-orange-600 bg-orange-50 text-orange-700' 
-            : 'border-gray-200 text-gray-500 hover:border-orange-200'
+            ? 'border-saffron bg-saffron-light text-saffron-dark shadow-sm' 
+            : 'border-brandborder text-textMid hover:border-saffron hover:text-saffron'
         }`}
       >
         I am a Pandit

@@ -5,13 +5,70 @@ import axios from 'axios';
 import { io } from 'socket.io-client';
 import {
   LogOut, Calendar, MessageSquare, CheckCircle, XCircle,
-  MapPin, Clock, Bell, Phone, User, AlertCircle, Trash2, HeadphonesIcon
+  MapPin, Clock, Bell, Phone, User, AlertCircle, Trash2, HeadphonesIcon, Video
 } from 'lucide-react';
 import ChatInterface from '../components/ChatInterface';
 import SupportCare from '../components/SupportCare';
 
 const SOCKET_URL = 'http://localhost:5000';
 const API = 'http://localhost:5000/api';
+
+/* ─── Design tokens from DevoteeDashboard ─── */
+const C = {
+  saffron: '#E8710A',
+  saffronDk: '#C45F06',
+  saffronLt: '#FFF3E8',
+  maroon: '#7B1D0E',
+  maroonLt: '#F9EDE8',
+  gold: '#C8960C',
+  goldLt: '#FFF8E1',
+  purple: '#5B2D8E',
+  purpleLt: '#F3EEFF',
+  white: '#FFFFFF',
+  surface: '#FAF7F2',
+  card: '#FFFFFF',
+  border: '#EAD9CC',
+  text: '#2C1A0E',
+  textMid: '#6B4C3B',
+  textMuted: '#A07060',
+  success: '#1E7D3C',
+  successLt: '#E8F5EE',
+  red: '#C0392B',
+  redLt: '#FDECEC',
+};
+
+const G = `
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;900&display=swap');
+  
+  .dd-btn {
+    display: inline-flex; align-items: center; gap: 8px; font-family: 'Poppins', sans-serif;
+    font-weight: 700; font-size: 14px; padding: 10px 20px; border-radius: 12px;
+    cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); border: none;
+    text-decoration: none;
+  }
+  .dd-btn-primary { background: ${C.saffron}; color: #fff; box-shadow: 0 4px 12px rgba(232,113,10,0.25); }
+  .dd-btn-primary:hover { background: ${C.saffronDk}; transform: translateY(-2px); box-shadow: 0 6px 16px rgba(232,113,10,0.3); }
+  .dd-btn-maroon { background: ${C.maroon}; color: #fff; }
+  .dd-btn-maroon:hover { background: #5a140a; transform: translateY(-2px); }
+  .dd-btn-ghost { background: ${C.saffronLt}; color: ${C.saffronDk}; }
+  .dd-btn-ghost:hover { background: #FDE8D5; }
+  .dd-btn-red { background: ${C.redLt}; color: ${C.red}; }
+  .dd-btn-red:hover { background: #fadbd8; }
+  .dd-btn-green { background: ${C.successLt}; color: ${C.success}; }
+  .dd-btn-green:hover { background: #d4efdf; }
+  
+  .dd-stat { font-family: 'Playfair Display', serif; font-weight: 900; font-size: 28px; color: ${C.maroon}; line-height: 1.1; }
+  .dd-stat-lbl { font-size: 12px; font-weight: 700; color: ${C.textMuted}; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  
+  .spin { animation: spin 1s linear infinite; }
+  @keyframes spin { 100% { transform: rotate(360deg); } }
+  .bounce { animation: bounce 1s infinite; }
+  @keyframes bounce { 0%, 100% { transform: translateY(-25%); animation-timing-function: cubic-bezier(0.8,0,1,1); } 50% { transform: none; animation-timing-function: cubic-bezier(0,0,0.2,1); } }
+`;
+
+const SectionTitle = ({ children }) => (
+  <h2 style={{ fontFamily: "'Playfair Display',serif", fontSize: 20, fontWeight: 700, color: C.maroon, marginBottom: 16, borderBottom: `2px solid ${C.border}`, paddingBottom: 8 }}>{children}</h2>
+);
 
 const PanditDashboard = () => {
   const { user, token, logout, updateUser } = useAuthStore();
@@ -21,11 +78,11 @@ const PanditDashboard = () => {
   const [selectedChatUser, setSelectedChatUser] = useState(null);
   const [conversations, setConversations] = useState([]);
   const [totalEarnings, setTotalEarnings] = useState(0);
-  const [incomingRequest, setIncomingRequest] = useState(null); // Ola-style popup
+  const [incomingRequest, setIncomingRequest] = useState(null); 
   const [accepting, setAccepting] = useState(false);
   const [profileData, setProfileData] = useState(null);
   const [daysToExpiry, setDaysToExpiry] = useState(null);
-  const [subscriptionStatus, setSubscriptionStatus] = useState('active'); // active, warning, inactive
+  const [subscriptionStatus, setSubscriptionStatus] = useState('active');
   const socketRef = useRef(null);
   const timerRef = useRef(null);
   const [countdown, setCountdown] = useState(30);
@@ -33,7 +90,6 @@ const PanditDashboard = () => {
   useEffect(() => {
     if (!token || user?.role !== 'pandit') { navigate('/'); return; }
 
-    // Fetch existing bookings
     axios.get(`${API}/bookings`, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => setBookings(r.data.data)).catch(console.error);
 
@@ -44,7 +100,7 @@ const PanditDashboard = () => {
       .then(r => {
         const payments = r.data.data;
         const sum = payments.reduce((acc, curr) => acc + (curr.panditEarnings || 0), 0);
-        setTotalEarnings(sum / 100); // Convert paise to INR
+        setTotalEarnings(sum / 100); 
       }).catch(console.error);
 
     const fetchProfile = async () => {
@@ -67,7 +123,6 @@ const PanditDashboard = () => {
     };
     fetchProfile();
 
-    // Connect socket
     const socket = io(SOCKET_URL, { transports: ['websocket'] });
     socketRef.current = socket;
 
@@ -75,13 +130,11 @@ const PanditDashboard = () => {
       socket.emit('join', { userId: user._id, role: 'pandit', city: user.city });
     });
 
-    // NEW BOOKING BROADCAST — Ola/Uber style
     socket.on('newBookingRequest', (booking) => {
       setIncomingRequest(booking);
       setCountdown(30);
     });
 
-    // Booking was taken by another pandit
     socket.on('bookingTaken', ({ bookingId }) => {
       setIncomingRequest(prev => prev?._id === bookingId ? null : prev);
     });
@@ -89,7 +142,6 @@ const PanditDashboard = () => {
     return () => socket.disconnect();
   }, [token, user, navigate]);
 
-  // Countdown timer when popup shows
   useEffect(() => {
     if (!incomingRequest) { clearInterval(timerRef.current); return; }
     timerRef.current = setInterval(() => {
@@ -114,7 +166,6 @@ const PanditDashboard = () => {
       );
       const accepted = res.data.data;
       
-      // Update the booking in the list
       setBookings(prev => {
         const exists = prev.find(b => b._id === bookingId);
         if (exists) {
@@ -123,7 +174,6 @@ const PanditDashboard = () => {
         return [accepted, ...prev];
       });
 
-      // Auto-open chat with devotee
       setSelectedChatUser(accepted.devotee);
       setActiveTab('chat');
       setIncomingRequest(null);
@@ -155,18 +205,12 @@ const PanditDashboard = () => {
   const handleAvatarUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
     const formData = new FormData();
     formData.append('file', file);
-
     try {
       const res = await axios.post('http://localhost:5000/api/users/avatar', formData, {
-        headers: { 
-          'Content-Type': 'multipart/form-data',
-          Authorization: `Bearer ${token}` 
-        }
+        headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${token}` }
       });
-      
       updateUser({ avatar: res.data.avatarUrl });
     } catch (err) {
       console.error('Avatar upload failed', err);
@@ -218,12 +262,12 @@ const PanditDashboard = () => {
 
               if (verifyRes.data.success) {
                 alert('Subscription successful!');
-                window.location.reload(); // Refresh to clear inactive state
+                window.location.reload(); 
               }
             } catch (err) { alert('Verification failed.'); }
           },
           prefill: { name: `${user.firstName} ${user.lastName}`, email: user.email || '' },
-          theme: { color: '#ea580c' },
+          theme: { color: C.saffron },
         };
         const rzp = new window.Razorpay(options);
         rzp.open();
@@ -239,98 +283,86 @@ const PanditDashboard = () => {
     } catch { alert('Failed to delete booking'); }
   };
 
+  const renderBadge = (status) => {
+    const map = {
+      pending: { bg: C.goldLt, c: C.gold },
+      confirmed: { bg: C.successLt, c: C.success },
+      completed: { bg: C.purpleLt, c: C.purple },
+      rejected: { bg: C.redLt, c: C.red },
+    };
+    const s = map[status] || map.pending;
+    return (
+      <span style={{ background: s.bg, color: s.c, padding: '4px 12px', borderRadius: 20, fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+        {status}
+      </span>
+    );
+  };
+
   return (
-    <div className="flex h-screen bg-gray-50 font-sans relative">
+    <div style={{ display: 'flex', height: '100vh', background: C.surface, fontFamily: "'Poppins', sans-serif" }}>
+      <style>{G}</style>
 
       {/* ═══ INCOMING BOOKING POPUP (Ola/Uber style) ═══ */}
       {incomingRequest && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden">
-            {/* Orange header */}
-            <div className="bg-orange-600 text-white p-5 text-center relative">
-              <div className="absolute top-4 right-4 w-10 h-10 rounded-full border-2 border-white flex items-center justify-center font-bold text-sm">
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(44,26,14,0.6)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <div style={{ background: '#fff', borderRadius: 24, width: '100%', maxWidth: 420, overflow: 'hidden', boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }}>
+            <div style={{ background: `linear-gradient(135deg, ${C.saffron} 0%, ${C.saffronDk} 100%)`, color: '#fff', padding: 24, textAlign: 'center', position: 'relative' }}>
+              <div style={{ position: 'absolute', top: 16, right: 16, width: 44, height: 44, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 14 }}>
                 {countdown}s
               </div>
-              <Bell size={28} className="mx-auto mb-2 animate-bounce" />
-              <h2 className="text-xl font-bold">New Puja Request!</h2>
-              <p className="text-orange-100 text-sm mt-1">Accept before someone else does</p>
+              <Bell size={32} className="bounce" style={{ margin: '0 auto 12px' }} />
+              <h2 style={{ fontFamily: "'Playfair Display',serif", fontSize: 24, fontWeight: 900, marginBottom: 4 }}>New Puja Request!</h2>
+              <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.8)' }}>Accept before someone else does</p>
             </div>
 
-            {/* Countdown bar */}
-            <div className="h-1.5 bg-orange-100">
-              <div
-                className="h-full bg-orange-500 transition-all duration-1000"
-                style={{ width: `${(countdown / 30) * 100}%` }}
-              />
+            <div style={{ height: 6, background: C.saffronLt }}>
+              <div style={{ height: '100%', background: C.saffron, transition: 'width 1s linear', width: `${(countdown / 30) * 100}%` }} />
             </div>
 
-            {/* Booking details */}
-            <div className="p-6 space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center font-bold text-xl">
+            <div style={{ padding: 24 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20 }}>
+                <div style={{ width: 56, height: 56, background: C.saffronLt, color: C.saffron, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 800 }}>
                   {incomingRequest.devotee?.firstName?.charAt(0)}
                 </div>
                 <div>
-                  <div className="font-bold text-gray-800 text-lg">
-                    {incomingRequest.devotee?.firstName} {incomingRequest.devotee?.lastName}
-                  </div>
-                  <div className="flex items-center gap-1 text-gray-500 text-sm">
-                    <Phone size={13} /> {incomingRequest.devotee?.phone}
+                  <div style={{ fontWeight: 800, fontSize: 18, color: C.maroon }}>{incomingRequest.devotee?.firstName} {incomingRequest.devotee?.lastName}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, color: C.textMid, marginTop: 4 }}>
+                    <Phone size={14} /> {incomingRequest.devotee?.phone}
                   </div>
                 </div>
               </div>
 
-              <div className="bg-gray-50 rounded-2xl p-4 space-y-3">
-                <div className="flex items-center gap-2 text-sm">
-                  <User size={15} className="text-orange-500" />
-                  <span className="font-semibold text-gray-700">Puja:</span>
-                  <span className="text-gray-600">{incomingRequest.pujaType}</span>
+              <div style={{ background: C.surface, borderRadius: 16, padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div style={{ display: 'flex', gap: 8, fontSize: 14 }}>
+                  <User size={16} color={C.saffron} style={{ flexShrink: 0, marginTop: 2 }} />
+                  <div><strong style={{ color: C.maroon }}>Puja:</strong> <span style={{ color: C.textMid }}>{incomingRequest.pujaType}</span></div>
                 </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Video size={15} className="text-blue-500" />
-                  <span className="font-semibold text-gray-700">Mode:</span>
-                  <span className={`capitalize font-bold ${incomingRequest.pujaMode === 'online' ? 'text-blue-600' : 'text-orange-600'}`}>
-                    {incomingRequest.pujaMode || 'in-person'}
-                  </span>
+                <div style={{ display: 'flex', gap: 8, fontSize: 14 }}>
+                  <Video size={16} color={C.purple} style={{ flexShrink: 0, marginTop: 2 }} />
+                  <div><strong style={{ color: C.maroon }}>Mode:</strong> <span style={{ color: incomingRequest.pujaMode === 'online' ? C.purple : C.saffron, fontWeight: 700, textTransform: 'capitalize' }}>{incomingRequest.pujaMode || 'in-person'}</span></div>
                 </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Clock size={15} className="text-orange-500" />
-                  <span className="font-semibold text-gray-700">Date & Time:</span>
-                  <span className="text-gray-600">
-                    {incomingRequest.scheduledDate ? new Date(incomingRequest.scheduledDate).toLocaleDateString() : '-'} at {incomingRequest.scheduledTime}
-                  </span>
+                <div style={{ display: 'flex', gap: 8, fontSize: 14 }}>
+                  <Clock size={16} color={C.saffron} style={{ flexShrink: 0, marginTop: 2 }} />
+                  <div><strong style={{ color: C.maroon }}>Date:</strong> <span style={{ color: C.textMid }}>{incomingRequest.scheduledDate ? new Date(incomingRequest.scheduledDate).toLocaleDateString() : '-'} at {incomingRequest.scheduledTime}</span></div>
                 </div>
-                <div className="flex items-start gap-2 text-sm">
-                  <MapPin size={15} className="text-orange-500 mt-0.5 shrink-0" />
-                  <span className="font-semibold text-gray-700">Address:</span>
-                  <span className="text-gray-600">{incomingRequest.address}</span>
+                <div style={{ display: 'flex', gap: 8, fontSize: 14 }}>
+                  <MapPin size={16} color={C.saffron} style={{ flexShrink: 0, marginTop: 2 }} />
+                  <div><strong style={{ color: C.maroon }}>Address:</strong> <span style={{ color: C.textMid }}>{incomingRequest.address}</span></div>
                 </div>
                 {incomingRequest.notes && (
-                  <div className="text-sm text-gray-500 italic border-t border-gray-200 pt-3">
+                  <div style={{ fontSize: 13, color: C.textMuted, fontStyle: 'italic', borderTop: `1px solid ${C.border}`, paddingTop: 12, marginTop: 4 }}>
                     "{incomingRequest.notes}"
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Action buttons */}
-            <div className="px-6 pb-6 flex gap-3">
-              <button
-                onClick={declineRequest}
-                className="flex-1 py-3 bg-gray-100 text-gray-700 font-bold rounded-2xl hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
-              >
+            <div style={{ padding: '0 24px 24px', display: 'flex', gap: 12 }}>
+              <button onClick={declineRequest} style={{ flex: 1, padding: 16, background: C.surface, color: C.textMid, fontWeight: 700, borderRadius: 16, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                 <XCircle size={20} /> Decline
               </button>
-              <button
-                onClick={() => handleAccept(incomingRequest._id)}
-                disabled={accepting}
-                className="flex-1 py-3 bg-green-500 text-white font-bold rounded-2xl hover:bg-green-600 transition-colors flex items-center justify-center gap-2 shadow-lg"
-              >
-                {accepting ? (
-                  <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <><CheckCircle size={20} /> Accept</>
-                )}
+              <button onClick={() => handleAccept(incomingRequest._id)} disabled={accepting} style={{ flex: 1, padding: 16, background: C.success, color: '#fff', fontWeight: 700, borderRadius: 16, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: '0 8px 20px rgba(30,125,60,0.25)' }}>
+                {accepting ? <span className="spin" style={{ width: 20, height: 20, border: '2px solid rgba(255,255,255,0.4)', borderTopColor: '#fff', borderRadius: '50%', display: 'inline-block' }} /> : <><CheckCircle size={20} /> Accept</>}
               </button>
             </div>
           </div>
@@ -338,190 +370,150 @@ const PanditDashboard = () => {
       )}
 
       {/* ═══ SIDEBAR ═══ */}
-      <div className="w-64 bg-white border-r border-gray-200 flex flex-col">
-        <div className="p-6 border-b border-gray-100 text-center">
-          <div className="relative inline-block mx-auto mb-3">
+      <div style={{ width: 280, background: '#fff', borderRight: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ padding: 32, textAlign: 'center', borderBottom: `1px solid ${C.border}` }}>
+          <div style={{ position: 'relative', display: 'inline-block', marginBottom: 16 }}>
             {user?.avatar ? (
-              <img src={user.avatar} alt="Profile" className="w-16 h-16 rounded-full object-cover border-2 border-orange-200" />
+              <img src={user.avatar} alt="Profile" style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover', border: `3px solid ${C.saffronLt}` }} />
             ) : (
-              <div className="w-16 h-16 bg-orange-600 text-white rounded-full flex items-center justify-center text-2xl font-bold">
+              <div style={{ width: 80, height: 80, background: C.saffron, color: '#fff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32, fontWeight: 800, border: `3px solid ${C.saffronLt}` }}>
                 {user?.firstName?.charAt(0)}
               </div>
             )}
-            <button 
-              onClick={() => document.getElementById('avatar-upload').click()}
-              className="absolute bottom-0 right-0 bg-orange-600 text-white p-1.5 rounded-full shadow-md hover:bg-orange-700 transition-colors border border-white"
-              title="Upload Profile Picture"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+            <button onClick={() => document.getElementById('avatar-upload').click()} style={{ position: 'absolute', bottom: 0, right: 0, background: C.maroon, color: '#fff', width: 28, height: 28, borderRadius: '50%', border: '2px solid #fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
             </button>
-            <input 
-              type="file" 
-              id="avatar-upload" 
-              className="hidden" 
-              accept="image/*"
-              onChange={handleAvatarUpload}
-            />
+            <input type="file" id="avatar-upload" style={{ display: 'none' }} accept="image/*" onChange={handleAvatarUpload} />
           </div>
-          <h2 className="font-bold text-gray-800">Pt. {user?.firstName} {user?.lastName}</h2>
-          <p className="text-xs text-orange-600 font-bold capitalize mt-1 border border-orange-200 bg-orange-50 inline-block px-2 py-1 rounded-full">{user?.role}</p>
+          <h2 style={{ fontFamily: "'Playfair Display',serif", fontSize: 20, fontWeight: 900, color: C.maroon }}>Pt. {user?.firstName} {user?.lastName}</h2>
+          <p style={{ fontSize: 11, color: C.saffron, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px', background: C.saffronLt, padding: '4px 12px', borderRadius: 20, display: 'inline-block', marginTop: 8 }}>{user?.role}</p>
           {user?.city && (
-            <div className="flex items-center justify-center gap-1 mt-1 text-xs text-gray-500">
-              <MapPin size={11} /> {user.city}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 8, fontSize: 13, color: C.textMid }}>
+              <MapPin size={14} color={C.saffron} /> {user.city}
             </div>
           )}
-          <div className="mt-4 pt-4 border-t border-gray-100">
-            <p className="text-xs text-gray-500 uppercase tracking-wider font-bold mb-1">Total Earnings</p>
-            <p className="text-2xl font-black text-green-600">₹{totalEarnings.toLocaleString()}</p>
+          <div style={{ marginTop: 24, paddingTop: 24, borderTop: `1px dashed ${C.border}` }}>
+            <p className="dd-stat-lbl">Total Earnings</p>
+            <p className="dd-stat" style={{ color: C.success }}>₹{totalEarnings.toLocaleString()}</p>
           </div>
         </div>
 
-        <nav className="flex-1 p-4 space-y-2">
-          <button onClick={() => setActiveTab('bookings')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'bookings' ? 'bg-orange-50 text-orange-600 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}>
-            <Calendar size={20} /> My Bookings
-            {bookings.filter(b => b.status === 'pending').length > 0 && (
-              <span className="ml-auto bg-orange-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                {bookings.filter(b => b.status === 'pending').length}
-              </span>
-            )}
-          </button>
-          <button onClick={() => setActiveTab('chat')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'chat' ? 'bg-orange-50 text-orange-600 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}>
-            <MessageSquare size={20} /> Messages
-          </button>
-          <button onClick={() => setActiveTab('support')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'support' ? 'bg-orange-50 text-orange-600 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}>
-            <HeadphonesIcon size={20} /> Support
-          </button>
+        <nav style={{ flex: 1, padding: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {[
+            { id: 'bookings', label: 'Booking Requests', icon: Calendar },
+            { id: 'chat', label: 'Messages', icon: MessageSquare },
+            { id: 'support', label: 'Support Care', icon: HeadphonesIcon },
+          ].map(tab => (
+            <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', borderRadius: 12, border: 'none', cursor: 'pointer', fontFamily: "'Poppins', sans-serif", fontSize: 14, fontWeight: 700, transition: 'all 0.2s', textAlign: 'left',
+                background: activeTab === tab.id ? C.maroon : 'transparent',
+                color: activeTab === tab.id ? '#fff' : C.textMid,
+              }}>
+              <tab.icon size={20} color={activeTab === tab.id ? C.gold : C.textMuted} /> {tab.label}
+              {tab.id === 'bookings' && bookings.filter(b => b.status === 'pending').length > 0 && (
+                <span style={{ marginLeft: 'auto', background: C.gold, color: C.maroon, fontSize: 11, fontWeight: 800, width: 24, height: 24, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {bookings.filter(b => b.status === 'pending').length}
+                </span>
+              )}
+            </button>
+          ))}
         </nav>
 
-        <div className="p-4 border-t border-gray-100">
-          <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors">
+        <div style={{ padding: 24, borderTop: `1px solid ${C.border}` }}>
+          <button onClick={handleLogout} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: 14, background: C.redLt, color: C.red, border: 'none', borderRadius: 12, cursor: 'pointer', fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: 14, transition: 'all 0.2s' }}>
             <LogOut size={20} /> Logout
           </button>
         </div>
       </div>
 
       {/* ═══ MAIN CONTENT ═══ */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-16 bg-white border-b border-gray-200 flex items-center px-8 justify-between">
-          <h1 className="text-xl font-bold text-gray-800">
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <header style={{ height: 80, background: '#fff', borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', padding: '0 32px', justifyContent: 'space-between' }}>
+          <h1 style={{ fontFamily: "'Playfair Display',serif", fontSize: 24, fontWeight: 900, color: C.maroon }}>
             {activeTab === 'bookings' ? 'Booking Requests' : activeTab === 'chat' ? 'Messages' : 'Help & Support'}
           </h1>
-          <div className="flex items-center gap-2 text-xs font-semibold">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 700 }}>
             {subscriptionStatus === 'inactive' ? (
-              <span className="text-red-600 flex items-center gap-1"><XCircle size={14}/> Offline — Subscription Expired</span>
+              <span style={{ color: C.red, display: 'flex', alignItems: 'center', gap: 6 }}><XCircle size={16}/> Offline — Subscription Expired</span>
             ) : (
-              <span className="text-green-600 flex items-center gap-1"><span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" /> Online — Receiving Requests</span>
+              <span style={{ color: C.success, display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ width: 8, height: 8, background: C.success, borderRadius: '50%', animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }} /> Online — Receiving Requests</span>
             )}
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-8 relative">
+        <main style={{ flex: 1, overflowY: 'auto', padding: 32 }}>
           
           {/* SUBSCRIPTION ALERTS */}
           {subscriptionStatus === 'inactive' && (
-            <div className="bg-red-50 border border-red-200 rounded-2xl p-6 mb-6 flex items-center justify-between shadow-sm">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center shrink-0">
+            <div style={{ background: C.redLt, border: `1px solid rgba(192,57,43,0.2)`, borderRadius: 16, padding: 24, marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 4px 12px rgba(192,57,43,0.05)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                <div style={{ width: 48, height: 48, background: 'rgba(192,57,43,0.1)', color: C.red, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <AlertCircle size={24} />
                 </div>
                 <div>
-                  <h3 className="font-bold text-red-800 text-lg">Subscription Inactive</h3>
-                  <p className="text-red-700 text-sm mt-0.5">Your profile is hidden from Devotees. You cannot receive or accept new bookings.</p>
+                  <h3 style={{ fontFamily: "'Playfair Display',serif", fontSize: 20, fontWeight: 700, color: C.red, marginBottom: 4 }}>Subscription Inactive</h3>
+                  <p style={{ fontSize: 14, color: 'rgba(192,57,43,0.8)' }}>Your profile is hidden from Devotees. You cannot receive or accept new bookings.</p>
                 </div>
               </div>
-              <button onClick={handleSubscriptionPayment} className="px-6 py-2.5 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-colors shrink-0 shadow-sm">
+              <button className="dd-btn" style={{ background: C.red, color: '#fff' }} onClick={handleSubscriptionPayment}>
                 Pay ₹500 to Activate
               </button>
             </div>
           )}
 
           {subscriptionStatus === 'warning' && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-6 mb-6 flex items-center justify-between shadow-sm">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center shrink-0">
+            <div style={{ background: C.goldLt, border: `1px solid rgba(200,150,12,0.2)`, borderRadius: 16, padding: 24, marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 4px 12px rgba(200,150,12,0.05)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                <div style={{ width: 48, height: 48, background: 'rgba(200,150,12,0.1)', color: '#A67C00', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <AlertCircle size={24} />
                 </div>
                 <div>
-                  <h3 className="font-bold text-yellow-800 text-lg">Subscription Expiring Soon</h3>
-                  <p className="text-yellow-700 text-sm mt-0.5">Your subscription expires in {daysToExpiry} days. Renew now to stay visible to Devotees.</p>
+                  <h3 style={{ fontFamily: "'Playfair Display',serif", fontSize: 20, fontWeight: 700, color: '#A67C00', marginBottom: 4 }}>Subscription Expiring Soon</h3>
+                  <p style={{ fontSize: 14, color: '#8A6600' }}>Your subscription expires in {daysToExpiry} days. Renew now to stay visible to Devotees.</p>
                 </div>
               </div>
-              <button onClick={handleSubscriptionPayment} className="px-6 py-2.5 bg-yellow-600 text-white font-bold rounded-xl hover:bg-yellow-700 transition-colors shrink-0 shadow-sm">
+              <button className="dd-btn" style={{ background: '#A67C00', color: '#fff' }} onClick={handleSubscriptionPayment}>
                 Renew for ₹500
               </button>
             </div>
           )}
 
           {activeTab === 'bookings' && (
-            <div className="space-y-4 max-w-4xl mx-auto">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 900, margin: '0 auto' }}>
               {bookings.length === 0 ? (
-                <div className="text-center py-20">
-                  <Bell size={40} className="text-orange-300 mx-auto mb-4" />
-                  <p className="text-gray-500 font-medium">No booking requests yet.</p>
-                  <p className="text-gray-400 text-sm mt-1">Requests from your city will appear here instantly.</p>
+                <div style={{ textAlign: 'center', padding: '60px 20px', background: '#fff', borderRadius: 24, border: `1px solid ${C.border}` }}>
+                  <Bell size={48} color={C.saffronLt} style={{ margin: '0 auto 16px' }} />
+                  <p style={{ fontSize: 16, fontWeight: 700, color: C.maroon }}>No booking requests yet.</p>
+                  <p style={{ fontSize: 14, color: C.textMuted, marginTop: 4 }}>Requests from your city will appear here instantly.</p>
                 </div>
               ) : (
                 bookings.map(booking => (
-                  <div key={booking._id} className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm flex items-center justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-3">
-                        <h3 className="font-bold text-lg text-gray-800">
-                          {booking.devotee?.firstName} {booking.devotee?.lastName}
-                        </h3>
-                        <span className={`px-3 py-1 rounded-full text-xs font-bold capitalize ${
-                          booking.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
-                          booking.status === 'confirmed' ? 'bg-green-100 text-green-700' :
-                          booking.status === 'completed' ? 'bg-blue-100 text-blue-700' :
-                          'bg-red-100 text-red-700'
-                        }`}>{booking.status}</span>
-                      </div>
-                      <div className="text-sm text-gray-600 grid grid-cols-2 gap-x-8 gap-y-1.5">
-                        <div className="flex items-center gap-1">
-                          <span className="font-semibold text-gray-700">Mode:</span> 
-                          <span className={`flex items-center gap-1 font-bold ${booking.pujaMode === 'online' ? 'text-blue-600' : 'text-orange-600'}`}>
-                            {booking.pujaMode === 'online' && <Video size={14}/>} {booking.pujaMode || 'in-person'}
-                          </span>
+                  <div key={booking._id} style={{ background: '#fff', borderRadius: 20, padding: 24, border: `1px solid ${C.border}`, boxShadow: '0 4px 12px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column', gap: 16 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                        <div style={{ width: 56, height: 56, background: C.saffronLt, color: C.saffron, borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 800 }}>
+                          {booking.devotee?.firstName?.charAt(0)}
                         </div>
-                        <div><span className="font-semibold text-gray-700">Puja:</span> {booking.pujaType}</div>
-                        <div><span className="font-semibold text-gray-700">Date:</span> {booking.scheduledDate ? new Date(booking.scheduledDate).toLocaleDateString() : '-'} {booking.scheduledTime && `at ${booking.scheduledTime}`}</div>
-                        <div><span className="font-semibold text-gray-700">Fee:</span> <span className="font-bold text-gray-900 font-mono">₹{booking.fee}</span></div>
-                        <div className="col-span-2"><span className="font-semibold text-gray-700">Address:</span> {booking.address}</div>
-                        {booking.videoLink && (
-                          <div className="col-span-2 bg-blue-50 p-2 rounded-lg text-blue-700 flex items-center gap-2 truncate">
-                            <Video size={14} /> <strong>Link:</strong> {booking.videoLink}
-                          </div>
-                        )}
+                        <div>
+                          <h3 style={{ fontFamily: "'Playfair Display',serif", fontSize: 20, fontWeight: 800, color: C.maroon, marginBottom: 4 }}>
+                            {booking.devotee?.firstName} {booking.devotee?.lastName}
+                          </h3>
+                          {renderBadge(booking.status)}
+                        </div>
                       </div>
-                    </div>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => { setSelectedChatUser(booking.devotee); setActiveTab('chat'); }}
-                          className="flex items-center gap-2 px-4 py-2 bg-orange-50 text-orange-600 font-bold rounded-lg hover:bg-orange-100 transition-colors text-sm"
-                        >
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button className="dd-btn dd-btn-ghost" onClick={() => { setSelectedChatUser(booking.devotee); setActiveTab('chat'); }}>
                           <MessageSquare size={16} /> Chat
                         </button>
 
                         {booking.status === 'pending' && (
                           <>
-                            <button
-                              onClick={() => handleReject(booking._id)}
-                              className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 font-bold rounded-lg hover:bg-red-100 transition-colors text-sm"
-                            >
+                            <button className="dd-btn dd-btn-red" onClick={() => handleReject(booking._id)}>
                               <XCircle size={16} /> Reject
                             </button>
-                            <button
-                              onClick={() => handleAccept(booking._id)}
-                              disabled={accepting}
-                              className="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-600 font-bold rounded-lg hover:bg-green-100 transition-colors text-sm shadow-sm"
-                            >
-                              {accepting ? (
-                                  <span className="w-4 h-4 border-2 border-green-600 border-t-transparent rounded-full animate-spin" />
-                              ) : (
-                                  <><CheckCircle size={16} /> Accept</>
-                              )}
+                            <button className="dd-btn dd-btn-green" onClick={() => handleAccept(booking._id)} disabled={accepting}>
+                              {accepting ? <span className="spin" style={{ width: 16, height: 16, border: '2px solid rgba(255,255,255,0.4)', borderTopColor: C.success, borderRadius: '50%', display: 'inline-block' }} /> : <><CheckCircle size={16} /> Accept</>}
                             </button>
                           </>
                         )}
@@ -529,32 +521,51 @@ const PanditDashboard = () => {
                         {booking.status === 'confirmed' && (
                           <>
                             {booking.pujaMode === 'online' && (
-                              <button
-                                onClick={() => handleAddMeetingLink(booking._id)}
-                                className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 font-bold rounded-lg hover:bg-blue-100 transition-colors text-sm"
-                              >
+                              <button className="dd-btn" style={{ background: C.purpleLt, color: C.purple }} onClick={() => handleAddMeetingLink(booking._id)}>
                                 <Video size={16} /> {booking.videoLink ? 'Edit Link' : 'Add Link'}
                               </button>
                             )}
-                            <button
-                              onClick={() => updateBookingStatus(booking._id, 'completed')}
-                              className="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-600 font-bold rounded-lg hover:bg-green-100 transition-colors text-sm"
-                            >
+                            <button className="dd-btn dd-btn-green" onClick={() => updateBookingStatus(booking._id, 'completed')}>
                               <CheckCircle size={16} /> Complete
                             </button>
                           </>
                         )}
 
                         {(booking.status === 'completed' || booking.status === 'rejected') && (
-                          <button
-                            onClick={() => deleteBooking(booking._id)}
-                            className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 font-bold rounded-lg hover:bg-red-100 transition-colors text-sm"
-                            title="Delete History"
-                          >
+                          <button className="dd-btn dd-btn-red" onClick={() => deleteBooking(booking._id)} title="Delete History">
                             <Trash2 size={16} /> Delete
                           </button>
                         )}
                       </div>
+                    </div>
+
+                    <div style={{ background: C.surface, borderRadius: 16, padding: 20, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                      <div style={{ display: 'flex', gap: 8, fontSize: 14 }}>
+                        <Video size={16} color={C.purple} style={{ flexShrink: 0, marginTop: 2 }} />
+                        <div><strong style={{ color: C.maroon }}>Mode:</strong> <span style={{ color: booking.pujaMode === 'online' ? C.purple : C.saffron, fontWeight: 700, textTransform: 'capitalize' }}>{booking.pujaMode || 'in-person'}</span></div>
+                      </div>
+                      <div style={{ display: 'flex', gap: 8, fontSize: 14 }}>
+                        <User size={16} color={C.saffron} style={{ flexShrink: 0, marginTop: 2 }} />
+                        <div><strong style={{ color: C.maroon }}>Puja:</strong> <span style={{ color: C.textMid }}>{booking.pujaType}</span></div>
+                      </div>
+                      <div style={{ display: 'flex', gap: 8, fontSize: 14 }}>
+                        <Clock size={16} color={C.saffron} style={{ flexShrink: 0, marginTop: 2 }} />
+                        <div><strong style={{ color: C.maroon }}>Date:</strong> <span style={{ color: C.textMid }}>{booking.scheduledDate ? new Date(booking.scheduledDate).toLocaleDateString() : '-'} {booking.scheduledTime && `at ${booking.scheduledTime}`}</span></div>
+                      </div>
+                      <div style={{ display: 'flex', gap: 8, fontSize: 14 }}>
+                        <span style={{ fontSize: 16, fontWeight: 800, color: C.success, flexShrink: 0 }}>₹</span>
+                        <div><strong style={{ color: C.maroon }}>Fee:</strong> <span style={{ color: C.success, fontWeight: 800 }}>₹{booking.fee}</span></div>
+                      </div>
+                      <div style={{ display: 'flex', gap: 8, fontSize: 14, gridColumn: '1 / -1' }}>
+                        <MapPin size={16} color={C.saffron} style={{ flexShrink: 0, marginTop: 2 }} />
+                        <div><strong style={{ color: C.maroon }}>Address:</strong> <span style={{ color: C.textMid }}>{booking.address}</span></div>
+                      </div>
+                      {booking.videoLink && (
+                        <div style={{ gridColumn: '1 / -1', background: C.purpleLt, padding: 12, borderRadius: 12, color: C.purple, display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, wordBreak: 'break-all' }}>
+                          <Video size={16} style={{ flexShrink: 0 }} /> <strong>Meeting Link:</strong> <a href={booking.videoLink} target="_blank" rel="noopener noreferrer" style={{ color: C.purple, textDecoration: 'underline' }}>{booking.videoLink}</a>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ))
               )}
@@ -562,31 +573,35 @@ const PanditDashboard = () => {
           )}
 
           {activeTab === 'chat' && (
-            <div className="flex h-full gap-6 max-w-6xl mx-auto">
-              <div className="w-1/3 bg-white rounded-2xl border border-gray-200 overflow-hidden flex flex-col">
-                <div className="p-4 border-b border-gray-100 font-bold text-gray-800">Conversations</div>
-                <div className="flex-1 overflow-y-auto">
+            <div style={{ display: 'flex', height: '100%', gap: 24, maxWidth: 1200, margin: '0 auto' }}>
+              <div style={{ width: 340, background: '#fff', borderRadius: 24, border: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                <div style={{ padding: '20px 24px', borderBottom: `1px solid ${C.border}`, fontFamily: "'Playfair Display',serif", fontSize: 18, fontWeight: 800, color: C.maroon }}>
+                  Conversations
+                </div>
+                <div style={{ flex: 1, overflowY: 'auto' }}>
                   {conversations.length === 0 ? (
-                    <div className="p-4 text-sm text-gray-500 text-center">No conversations yet. Accept a booking to start chatting!</div>
+                    <div style={{ padding: 32, textAlign: 'center', fontSize: 14, color: C.textMuted }}>No conversations yet. Accept a booking to start chatting!</div>
                   ) : (
                     conversations.map(c => (
                       <div key={c._id} onClick={() => setSelectedChatUser(c)}
-                        className={`p-4 border-b border-gray-50 cursor-pointer transition-colors ${selectedChatUser?._id === c._id ? 'bg-orange-50' : 'hover:bg-gray-50'}`}>
-                        <div className="font-bold text-gray-800">{c.firstName} {c.lastName}</div>
-                        <div className="text-xs text-orange-600 capitalize mt-1">{c.role}</div>
+                        style={{ padding: '16px 24px', borderBottom: `1px solid ${C.surface}`, cursor: 'pointer', transition: 'all 0.2s', background: selectedChatUser?._id === c._id ? C.saffronLt : '#fff', borderLeft: `4px solid ${selectedChatUser?._id === c._id ? C.saffron : 'transparent'}` }}>
+                        <div style={{ fontWeight: 800, fontSize: 15, color: C.maroon }}>{c.firstName} {c.lastName}</div>
+                        <div style={{ fontSize: 11, color: C.saffron, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', marginTop: 4 }}>{c.role}</div>
                       </div>
                     ))
                   )}
                 </div>
               </div>
-              <div className="w-2/3">
+              <div style={{ flex: 1, background: '#fff', borderRadius: 24, border: `1px solid ${C.border}`, overflow: 'hidden', boxShadow: '0 8px 30px rgba(0,0,0,0.04)' }}>
                 <ChatInterface otherUser={selectedChatUser} />
               </div>
             </div>
           )}
 
           {activeTab === 'support' && (
-            <SupportCare userRole="pandit" />
+            <div style={{ maxWidth: 900, margin: '0 auto' }}>
+              <SupportCare userRole="pandit" />
+            </div>
           )}
         </main>
       </div>

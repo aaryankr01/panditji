@@ -11,6 +11,37 @@ import {
 
 const API = 'http://localhost:5000/api';
 
+/* ─── Design tokens from DevoteeDashboard ─── */
+const C = {
+  saffron: '#E8710A',
+  saffronDk: '#C45F06',
+  saffronLt: '#FFF3E8',
+  maroon: '#7B1D0E',
+  maroonLt: '#F9EDE8',
+  gold: '#C8960C',
+  goldLt: '#FFF8E1',
+  purple: '#5B2D8E',
+  purpleLt: '#F3EEFF',
+  white: '#FFFFFF',
+  surface: '#FAF7F2',
+  card: '#FFFFFF',
+  border: '#EAD9CC',
+  text: '#2C1A0E',
+  textMid: '#6B4C3B',
+  textMuted: '#A07060',
+  success: '#1E7D3C',
+  successLt: '#E8F5EE',
+  red: '#C0392B',
+  redLt: '#FDECEC',
+};
+
+const SectionTitle = ({ children }) => (
+  <h2 style={{ fontFamily: "'Playfair Display',serif", fontSize: 20, fontWeight: 700, color: C.maroon, marginBottom: 16, borderBottom: `2px solid ${C.border}`, paddingBottom: 8 }}>{children}</h2>
+);
+const lbl = { display: 'block', fontSize: 13, fontWeight: 700, color: C.textMid, marginBottom: 6 };
+const inp = { width: '100%', border: `1px solid ${C.border}`, borderRadius: 10, padding: '10px 14px', fontSize: 14, outline: 'none', background: C.surface, fontFamily: "'Poppins',sans-serif", color: C.text };
+const sel = { ...inp, cursor: 'pointer' };
+
 const faqs = [
   {
     category: 'Booking',
@@ -53,37 +84,29 @@ const faqs = [
 ];
 
 const contactChannels = [
-  { icon: Mail, label: 'Email Support', value: 'support@panditji.com', href: 'mailto:support@panditji.com', color: 'orange' },
-  { icon: Phone, label: 'Call Us', value: '+91 98765 43210', href: 'tel:+919876543210', color: 'green' },
-  { icon: MessageCircle, label: 'WhatsApp', value: 'Chat on WhatsApp', href: 'https://wa.me/919876543210', color: 'emerald' },
+  { icon: Mail, label: 'Email Support', value: 'support@panditji.com', href: 'mailto:support@panditji.com', bg: C.saffronLt, text: C.saffron, border: C.saffron },
+  { icon: Phone, label: 'Call Us', value: '+91 98765 43210', href: 'tel:+919876543210', bg: C.successLt, text: C.success, border: C.success },
+  { icon: MessageCircle, label: 'WhatsApp', value: 'Chat on WhatsApp', href: 'https://wa.me/919876543210', bg: C.purpleLt, text: C.purple, border: C.purple },
 ];
 
-const colorMap = {
-  orange: { bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-700', badge: 'bg-orange-100 text-orange-700' },
-  green: { bg: 'bg-green-50', border: 'border-green-200', text: 'text-green-700', badge: 'bg-green-100 text-green-700' },
-  blue: { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-700', badge: 'bg-blue-100 text-blue-700' },
-  purple: { bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-700', badge: 'bg-purple-100 text-purple-700' },
-  emerald: { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-700', badge: 'bg-emerald-100 text-emerald-700' },
-};
-
 const statusConfig = {
-  open: { label: 'Open', badge: 'bg-yellow-100 text-yellow-700', icon: Inbox },
-  in_progress: { label: 'In Progress', badge: 'bg-blue-100 text-blue-700', icon: RefreshCw },
-  resolved: { label: 'Resolved', badge: 'bg-green-100 text-green-700', icon: CheckSquare },
-  closed: { label: 'Closed', badge: 'bg-gray-100 text-gray-600', icon: XSquare },
+  open: { label: 'Open', bg: C.goldLt, text: C.gold, icon: Inbox },
+  in_progress: { label: 'In Progress', bg: C.purpleLt, text: C.purple, icon: RefreshCw },
+  resolved: { label: 'Resolved', bg: C.successLt, text: C.success, icon: CheckSquare },
+  closed: { label: 'Closed', bg: C.maroonLt, text: C.maroon, icon: XSquare },
 };
 
 const FAQItem = ({ question, answer }) => {
   const [open, setOpen] = useState(false);
   return (
-    <div className={`border border-gray-200 rounded-xl overflow-hidden transition-all duration-200 ${open ? 'shadow-md' : 'shadow-sm'}`}>
-      <button onClick={() => setOpen(!open)} className="w-full flex items-center justify-between p-4 bg-white hover:bg-gray-50 transition-colors text-left gap-3">
-        <span className="font-semibold text-gray-800 text-sm">{question}</span>
-        {open ? <ChevronUp size={18} className="text-orange-500 shrink-0" /> : <ChevronDown size={18} className="text-gray-400 shrink-0" />}
+    <div style={{ border: `1px solid ${C.border}`, borderRadius: 12, overflow: 'hidden', transition: 'all 0.2s', marginBottom: 8, background: '#fff' }}>
+      <button onClick={() => setOpen(!open)} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', background: open ? C.surface : '#fff', border: 'none', cursor: 'pointer', textAlign: 'left', gap: 12 }}>
+        <span style={{ fontWeight: 700, color: C.maroon, fontSize: 14 }}>{question}</span>
+        {open ? <ChevronUp size={18} color={C.saffron} style={{ flexShrink: 0 }} /> : <ChevronDown size={18} color={C.textMuted} style={{ flexShrink: 0 }} />}
       </button>
       {open && (
-        <div className="px-4 pb-4 pt-1 bg-orange-50 border-t border-orange-100">
-          <p className="text-sm text-gray-700 leading-relaxed">{answer}</p>
+        <div style={{ padding: '0 20px 16px', background: C.surface }}>
+          <p style={{ fontSize: 13, color: C.textMid, lineHeight: 1.6 }}>{answer}</p>
         </div>
       )}
     </div>
@@ -92,7 +115,7 @@ const FAQItem = ({ question, answer }) => {
 
 const SupportCare = ({ userRole = 'devotee' }) => {
   const { token, user } = useAuthStore();
-  const [view, setView] = useState('faq'); // 'faq' | 'submit' | 'mytickets'
+  const [view, setView] = useState('faq');
   const [ticketForm, setTicketForm] = useState({ subject: '', category: 'Booking', message: '' });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -115,7 +138,6 @@ const SupportCare = ({ userRole = 'devotee' }) => {
     }
   };
 
-  // Socket: listen for admin replies in real-time
   useEffect(() => {
     if (!user?._id && !user?.id) return;
     const socket = io('http://localhost:5000', { transports: ['websocket'] });
@@ -124,13 +146,11 @@ const SupportCare = ({ userRole = 'devotee' }) => {
     });
     socket.on('supportTicketReplied', (data) => {
       setReplyNotification(data);
-      // If user is on My Tickets tab, refresh it
       setMyTickets(prev => prev.map(t =>
         t._id === data.ticketId
           ? { ...t, adminReply: data.adminReply, status: data.status, repliedAt: data.repliedAt }
           : t
       ));
-      // Clear notification after 6 seconds
       setTimeout(() => setReplyNotification(null), 6000);
     });
     return () => socket.disconnect();
@@ -164,43 +184,40 @@ const SupportCare = ({ userRole = 'devotee' }) => {
   const visibleFaqs = activeCategory === 'All' ? faqs : faqs.filter(f => f.category === activeCategory);
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
 
-      {/* ── Real-time Admin Reply Notification ── */}
       {replyNotification && (
-        <div className="fixed top-4 right-4 z-50 bg-white border border-orange-200 rounded-2xl shadow-2xl p-5 max-w-sm w-full animate-bounce-once">
-          <div className="flex items-start gap-3">
-            <div className="w-10 h-10 bg-orange-100 text-orange-600 rounded-xl flex items-center justify-center shrink-0">
-              <HeadphonesIcon size={20} />
+        <div style={{ position: 'fixed', top: 16, right: 16, zIndex: 200, background: '#fff', borderRadius: 14, boxShadow: '0 8px 30px rgba(0,0,0,0.18)', border: `1.5px solid ${C.saffron}`, maxWidth: 340, overflow: 'hidden' }}>
+          <div style={{ background: C.saffron, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <HeadphonesIcon size={20} color="#fff" />
+              <span style={{ color: '#fff', fontWeight: 800, fontSize: 14 }}>Support Team Replied!</span>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-bold text-gray-800 text-sm">Support Team Replied!</p>
-              <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">Re: {replyNotification.subject}</p>
-              <p className="text-sm text-gray-700 mt-1 line-clamp-2">{replyNotification.adminReply}</p>
-            </div>
-            <button onClick={() => setReplyNotification(null)} className="text-gray-400 hover:text-gray-600 text-lg leading-none shrink-0">×</button>
+            <button onClick={() => setReplyNotification(null)} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', fontSize: 18 }}>×</button>
           </div>
-          <button
-            onClick={() => { setView('mytickets'); setReplyNotification(null); }}
-            className="mt-3 w-full py-2 bg-orange-600 text-white text-xs font-bold rounded-xl hover:bg-orange-700 transition-colors"
-          >
-            View Reply in My Tickets
-          </button>
+          <div style={{ padding: '14px 16px' }}>
+            <p style={{ fontSize: 11, color: C.textMuted }}>Re: {replyNotification.subject}</p>
+            <p style={{ fontSize: 13, color: C.textMid, marginTop: 4, marginBottom: 12 }}>{replyNotification.adminReply}</p>
+            <button className="dd-btn dd-btn-primary" style={{ width: '100%', justifyContent: 'center', fontSize: 12 }}
+              onClick={() => { setView('mytickets'); setReplyNotification(null); }}>
+              View in My Tickets
+            </button>
+          </div>
         </div>
       )}
 
       {/* Hero Banner */}
-      <div className="bg-gradient-to-r from-orange-600 to-orange-500 rounded-2xl p-8 text-white shadow-lg">
-        <div className="flex items-center gap-4 mb-3">
-          <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center">
-            <HeadphonesIcon size={28} className="text-white" />
+      <div style={{ background: `linear-gradient(135deg, ${C.maroon} 0%, ${C.purple} 100%)`, borderRadius: 16, padding: '32px', color: '#fff', boxShadow: '0 10px 30px rgba(123,29,14,0.15)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 12 }}>
+          <div style={{ width: 56, height: 56, background: 'rgba(255,255,255,0.15)', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <HeadphonesIcon size={28} color="#fff" />
           </div>
           <div>
-            <h2 className="text-2xl font-black">Support Center</h2>
-            <p className="text-orange-100 text-sm">We're here to help you 24/7</p>
+            <h2 style={{ fontFamily: "'Playfair Display',serif", fontSize: 28, fontWeight: 900, marginBottom: 4 }}>Support Center</h2>
+            <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.8)' }}>We're here to help you 24/7</p>
           </div>
         </div>
-        <p className="text-orange-100 text-sm leading-relaxed max-w-xl">
+        <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.7)', maxWidth: 600, lineHeight: 1.5 }}>
           {userRole === 'devotee'
             ? 'Find answers about bookings, payments, and connecting with the right Pandit for your puja.'
             : 'Get help with bookings, subscription, earnings, and serving devotees better.'}
@@ -208,36 +225,35 @@ const SupportCare = ({ userRole = 'devotee' }) => {
       </div>
 
       {/* Quick Contact Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {contactChannels.map(({ icon: Icon, label, value, href, color }) => {
-          const c = colorMap[color];
-          return (
-            <a key={label} href={href} target="_blank" rel="noopener noreferrer"
-              className={`flex items-center gap-4 p-4 rounded-2xl border ${c.bg} ${c.border} hover:shadow-md transition-all group`}>
-              <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${c.badge}`}>
-                <Icon size={20} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs text-gray-500 font-medium">{label}</p>
-                <p className={`text-sm font-bold ${c.text} truncate`}>{value}</p>
-              </div>
-              <ExternalLink size={14} className="text-gray-400 group-hover:text-gray-600 shrink-0" />
-            </a>
-          );
-        })}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
+        {contactChannels.map(({ icon: Icon, label, value, href, bg, text, border }) => (
+          <a key={label} href={href} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', background: '#fff', borderRadius: 16, padding: 16, border: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', gap: 16, transition: 'transform 0.2s, box-shadow 0.2s', ':hover': { transform: 'translateY(-2px)', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' } }}>
+            <div style={{ width: 44, height: 44, borderRadius: 12, background: bg, color: text, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Icon size={20} />
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ fontSize: 11, fontWeight: 600, color: C.textMuted, marginBottom: 2 }}>{label}</p>
+              <p style={{ fontSize: 14, fontWeight: 800, color: C.maroon, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{value}</p>
+            </div>
+            <ExternalLink size={14} color={C.border} />
+          </a>
+        ))}
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex gap-2 bg-gray-100 p-1.5 rounded-2xl">
+      <div style={{ display: 'flex', gap: 8, background: C.saffronLt, padding: 6, borderRadius: 16, border: `1px solid ${C.border}` }}>
         {[
           { key: 'faq', label: 'FAQs', icon: BookOpen },
-          { key: 'submit', label: 'Submit a Ticket', icon: Send },
+          { key: 'submit', label: 'Submit Ticket', icon: Send },
           { key: 'mytickets', label: 'My Tickets', icon: Ticket },
         ].map(({ key, label, icon: Icon }) => (
           <button key={key} onClick={() => setView(key)}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all ${
-              view === key ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'
-            }`}>
+            style={{
+              flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '12px', borderRadius: 12, border: 'none', cursor: 'pointer', fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 13, transition: 'all 0.2s',
+              background: view === key ? '#fff' : 'transparent',
+              color: view === key ? C.saffron : C.textMid,
+              boxShadow: view === key ? '0 2px 8px rgba(232,113,10,0.1)' : 'none'
+            }}>
             <Icon size={16} /> {label}
           </button>
         ))}
@@ -245,75 +261,68 @@ const SupportCare = ({ userRole = 'devotee' }) => {
 
       {/* FAQ View */}
       {view === 'faq' && (
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-          <div className="p-6 border-b border-gray-100">
-            <div className="flex flex-wrap gap-2">
-              {allCategories.map(cat => (
-                <button key={cat} onClick={() => setActiveCategory(cat)}
-                  className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-colors ${
-                    activeCategory === cat ? 'bg-orange-600 text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}>
-                  {cat}
-                </button>
-              ))}
-            </div>
+        <div style={{ background: '#fff', borderRadius: 16, border: `1px solid ${C.border}`, overflow: 'hidden' }}>
+          <div style={{ padding: '20px 24px', borderBottom: `1px solid ${C.border}`, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {allCategories.map(cat => (
+              <button key={cat} onClick={() => setActiveCategory(cat)}
+                style={{
+                  padding: '6px 16px', borderRadius: 20, border: `1px solid ${activeCategory === cat ? C.saffron : C.border}`, cursor: 'pointer', fontSize: 12, fontWeight: 700, transition: 'all 0.2s',
+                  background: activeCategory === cat ? C.saffron : C.surface,
+                  color: activeCategory === cat ? '#fff' : C.textMid
+                }}>
+                {cat}
+              </button>
+            ))}
           </div>
-          <div className="p-6 space-y-6">
-            {visibleFaqs.map(({ category, icon: Icon, color, questions }) => {
-              const c = colorMap[color];
-              return (
-                <div key={category}>
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className={`flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full ${c.badge}`}>
-                      <Icon size={13} /> {category}
-                    </span>
-                  </div>
-                  <div className="space-y-2">
-                    {questions.map(({ q, a }) => <FAQItem key={q} question={q} answer={a} />)}
-                  </div>
+          <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 24 }}>
+            {visibleFaqs.map(({ category, icon: Icon, color, questions }) => (
+              <div key={category}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px', background: C.saffronLt, color: C.saffron, padding: '4px 12px', borderRadius: 20 }}>
+                    <Icon size={12} /> {category}
+                  </span>
                 </div>
-              );
-            })}
+                <div>
+                  {questions.map(({ q, a }) => <FAQItem key={q} question={q} answer={a} />)}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}
 
       {/* Submit Ticket View */}
       {view === 'submit' && (
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-          <div className="p-6 border-b border-gray-100 flex items-center gap-3">
-            <AlertCircle size={22} className="text-orange-500" />
+        <div style={{ background: '#fff', borderRadius: 16, border: `1px solid ${C.border}`, overflow: 'hidden' }}>
+          <div style={{ padding: '20px 24px', borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', gap: 12 }}>
+            <AlertCircle size={24} color={C.saffron} />
             <div>
-              <h3 className="text-lg font-bold text-gray-800">Submit a Support Ticket</h3>
-              <p className="text-xs text-gray-500 mt-0.5">Our team will respond within 24 hours.</p>
+              <h3 style={{ fontFamily: "'Playfair Display',serif", fontSize: 20, fontWeight: 700, color: C.maroon }}>Submit a Support Ticket</h3>
+              <p style={{ fontSize: 12, color: C.textMuted }}>Our team will respond within 24 hours.</p>
             </div>
           </div>
-          <div className="p-6">
+          <div style={{ padding: 24 }}>
             {submitted ? (
-              <div className="flex flex-col items-center justify-center py-10 text-center gap-3">
-                <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center">
+              <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+                <div style={{ width: 64, height: 64, borderRadius: '50%', background: C.successLt, color: C.success, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
                   <CheckCircle size={32} />
                 </div>
-                <h4 className="text-lg font-bold text-gray-800">Ticket Submitted!</h4>
-                <p className="text-gray-500 text-sm max-w-sm">
-                  Your ticket has been saved. We'll respond within 24 hours. Redirecting to your tickets...
-                </p>
+                <h4 style={{ fontSize: 18, fontWeight: 800, color: C.maroon, marginBottom: 8 }}>Ticket Submitted!</h4>
+                <p style={{ fontSize: 14, color: C.textMid }}>Your ticket has been saved. We'll respond within 24 hours. Redirecting...</p>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Subject</label>
+                    <label style={lbl}>Subject</label>
                     <input type="text" required value={ticketForm.subject}
                       onChange={e => setTicketForm({ ...ticketForm, subject: e.target.value })}
-                      placeholder="Brief description of your issue"
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none transition" />
+                      placeholder="Brief description" style={inp} />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Category</label>
+                    <label style={lbl}>Category</label>
                     <select value={ticketForm.category}
-                      onChange={e => setTicketForm({ ...ticketForm, category: e.target.value })}
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none transition">
+                      onChange={e => setTicketForm({ ...ticketForm, category: e.target.value })} style={sel}>
                       <option>Booking</option>
                       <option>Payments</option>
                       <option>Account</option>
@@ -324,20 +333,17 @@ const SupportCare = ({ userRole = 'devotee' }) => {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Describe Your Issue</label>
+                  <label style={lbl}>Describe Your Issue</label>
                   <textarea required rows={5} value={ticketForm.message}
                     onChange={e => setTicketForm({ ...ticketForm, message: e.target.value })}
-                    placeholder="Please describe the issue in detail. Include any booking IDs or error messages..."
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none transition resize-none" />
+                    placeholder="Include any booking IDs or error messages..." style={{ ...inp, resize: 'none' }} />
                 </div>
-                <div className="flex items-center justify-between pt-2">
-                  <div className="flex items-center gap-2 text-xs text-gray-400">
-                    <Shield size={14} />
-                    <span>Your information is private and secure.</span>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: C.textMuted }}>
+                    <Shield size={14} /> Your information is private and secure.
                   </div>
-                  <button type="submit" disabled={submitting}
-                    className="flex items-center gap-2 px-6 py-3 bg-orange-600 text-white font-bold rounded-xl hover:bg-orange-700 transition-colors shadow-sm disabled:opacity-50">
-                    {submitting ? <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Send size={16} />}
+                  <button type="submit" disabled={submitting} className="dd-btn dd-btn-maroon" style={{ padding: '12px 24px', fontSize: 14 }}>
+                    {submitting ? <span className="spin" style={{ width: 14, height: 14, border: '2px solid rgba(255,255,255,0.4)', borderTopColor: '#fff', borderRadius: '50%', display: 'inline-block' }} /> : <Send size={16} />}
                     {submitting ? 'Sending...' : 'Send Ticket'}
                   </button>
                 </div>
@@ -349,61 +355,58 @@ const SupportCare = ({ userRole = 'devotee' }) => {
 
       {/* My Tickets View */}
       {view === 'mytickets' && (
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-          <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Ticket size={22} className="text-orange-500" />
-              <h3 className="text-lg font-bold text-gray-800">My Support Tickets</h3>
+        <div style={{ background: '#fff', borderRadius: 16, border: `1px solid ${C.border}`, overflow: 'hidden' }}>
+          <div style={{ padding: '20px 24px', borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <Ticket size={24} color={C.saffron} />
+              <h3 style={{ fontFamily: "'Playfair Display',serif", fontSize: 20, fontWeight: 700, color: C.maroon }}>My Tickets</h3>
             </div>
-            <button onClick={fetchMyTickets} className="flex items-center gap-1.5 text-sm text-orange-600 font-semibold hover:text-orange-700">
+            <button onClick={fetchMyTickets} style={{ background: 'transparent', border: 'none', color: C.saffron, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontWeight: 700, fontSize: 13 }}>
               <RefreshCw size={14} /> Refresh
             </button>
           </div>
-          <div className="p-6">
+          <div style={{ padding: 24 }}>
             {loadingTickets ? (
-              <div className="flex justify-center py-10">
-                <div className="w-8 h-8 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin" />
+              <div style={{ display: 'flex', justifyContent: 'center', padding: '40px 0' }}>
+                <span className="spin" style={{ width: 32, height: 32, border: `3px solid ${C.border}`, borderTopColor: C.saffron, borderRadius: '50%', display: 'inline-block' }} />
               </div>
             ) : myTickets.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="w-16 h-16 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Inbox size={28} className="text-orange-300" />
+              <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+                <div style={{ width: 64, height: 64, borderRadius: '50%', background: C.saffronLt, color: C.saffron, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                  <Inbox size={32} />
                 </div>
-                <p className="text-gray-500 font-medium">No tickets submitted yet.</p>
-                <button onClick={() => setView('submit')}
-                  className="mt-4 px-5 py-2 bg-orange-600 text-white font-bold rounded-xl text-sm hover:bg-orange-700 transition-colors">
-                  Submit Your First Ticket
-                </button>
+                <p style={{ fontSize: 14, color: C.textMid, fontWeight: 600, marginBottom: 16 }}>No tickets submitted yet.</p>
+                <button className="dd-btn dd-btn-primary" onClick={() => setView('submit')}>Submit Your First Ticket</button>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 {myTickets.map(ticket => {
                   const s = statusConfig[ticket.status] || statusConfig.open;
                   const StatusIcon = s.icon;
                   return (
-                    <div key={ticket._id} className="border border-gray-200 rounded-2xl p-5 hover:shadow-sm transition-shadow">
-                      <div className="flex items-start justify-between gap-3 mb-2">
+                    <div key={ticket._id} style={{ border: `1px solid ${C.border}`, borderRadius: 14, padding: 20, background: '#fff' }}>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 12 }}>
                         <div>
-                          <h4 className="font-bold text-gray-800">{ticket.subject}</h4>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">{ticket.category}</span>
-                            <span className="text-xs text-gray-400">{new Date(ticket.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                          <h4 style={{ fontWeight: 800, fontSize: 15, color: C.maroon }}>{ticket.subject}</h4>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
+                            <span style={{ fontSize: 11, background: C.surface, padding: '2px 8px', borderRadius: 12, color: C.textMid, fontWeight: 600 }}>{ticket.category}</span>
+                            <span style={{ fontSize: 11, color: C.textMuted }}>{new Date(ticket.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                           </div>
                         </div>
-                        <span className={`flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full shrink-0 ${s.badge}`}>
-                          <StatusIcon size={11} /> {s.label}
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 800, background: s.bg, color: s.text, padding: '4px 10px', borderRadius: 20, flexShrink: 0 }}>
+                          <StatusIcon size={12} /> {s.label}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-600 leading-relaxed mb-3 line-clamp-2">{ticket.message}</p>
+                      <p style={{ fontSize: 13, color: C.textMid, lineHeight: 1.5 }}>{ticket.message}</p>
                       {ticket.adminReply && (
-                        <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 mt-3">
-                          <p className="text-xs font-bold text-orange-700 mb-1 flex items-center gap-1">
-                            <HeadphonesIcon size={12} /> Support Team Reply
+                        <div style={{ background: C.saffronLt, border: `1px solid ${C.saffron}`, borderRadius: 10, padding: 16, marginTop: 16 }}>
+                          <p style={{ fontSize: 12, fontWeight: 800, color: C.saffronDk, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <HeadphonesIcon size={14} /> Support Team Reply
                           </p>
-                          <p className="text-sm text-gray-700">{ticket.adminReply}</p>
+                          <p style={{ fontSize: 13, color: C.textMid }}>{ticket.adminReply}</p>
                           {ticket.repliedAt && (
-                            <p className="text-xs text-gray-400 mt-1.5 flex items-center gap-1">
-                              <Clock size={10} /> {new Date(ticket.repliedAt).toLocaleString('en-IN')}
+                            <p style={{ fontSize: 11, color: C.textMuted, marginTop: 8, display: 'flex', alignItems: 'center', gap: 4 }}>
+                              <Clock size={12} /> {new Date(ticket.repliedAt).toLocaleString('en-IN')}
                             </p>
                           )}
                         </div>

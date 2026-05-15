@@ -1,32 +1,44 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import RegisterForm from '../components/auth/RegisterForm';
 import { BrandWordmark } from '../components/common/BrandLogo';
 
 const Register = () => {
+  const location = useLocation();
+  const redirect = new URLSearchParams(location.search).get('redirect');
+  const loginUrl = redirect ? `/login?redirect=${encodeURIComponent(redirect)}` : '/login';
+
   return (
-    <div className="min-h-screen bg-gray-50 flex font-sans">
+    <div className="min-h-screen bg-surface flex font-sans">
       {/* Left decorative panel */}
-      <div className="hidden lg:flex w-2/5 bg-gradient-to-br from-orange-600 to-amber-700 flex-col justify-center px-16">
-        <BrandWordmark logoSize={48} textClass="text-3xl" />
-        <h2 className="text-4xl font-black text-white mt-8 leading-tight">
-          Join thousands of devotees.
-        </h2>
-        <p className="text-orange-100 mt-4 leading-relaxed">
-          Create your free account and start booking verified Pandits for every sacred ceremony.
-        </p>
+      <div className="hidden lg:flex w-2/5 bg-gradient-to-br from-maroon to-purpleTheme flex-col justify-center px-16 relative overflow-hidden">
+        {/* Background Decorative Blobs */}
+        <div className="absolute top-0 -left-20 w-96 h-96 bg-gold rounded-full blur-3xl opacity-20" />
+        <div className="absolute bottom-0 -right-20 w-96 h-96 bg-saffron rounded-full blur-3xl opacity-20" />
+
+        <div className="relative z-10">
+          <div className="bg-white p-2 rounded-xl inline-block mb-8">
+            <BrandWordmark logoSize={48} textClass="text-3xl" />
+          </div>
+          <h2 className="text-4xl lg:text-5xl font-black text-white leading-tight font-serif">
+            Join thousands of devotees.
+          </h2>
+          <p className="text-[#EAD9CC] mt-6 text-lg leading-relaxed max-w-sm">
+            Create your free account and start booking verified Pandits for every sacred ceremony.
+          </p>
+        </div>
       </div>
 
       {/* Right form panel */}
-      <div className="flex-1 flex flex-col justify-center py-12 px-6 sm:px-12 lg:px-16 overflow-y-auto">
-        <div className="max-w-lg w-full mx-auto">
+      <div className="flex-1 flex flex-col justify-center py-12 px-6 sm:px-12 lg:px-16 overflow-y-auto bg-surface">
+        <div className="max-w-lg w-full mx-auto bg-white p-8 sm:p-10 rounded-3xl border border-brandborder shadow-xl shadow-saffron/5">
           <div className="lg:hidden mb-8">
             <BrandWordmark />
           </div>
-          <h2 className="text-3xl font-black text-gray-900 mb-1">Create your account</h2>
-          <p className="text-sm text-gray-500 mb-8">
+          <h2 className="text-3xl font-black text-maroon mb-2 font-serif">Create your account</h2>
+          <p className="text-sm text-textMid mb-8">
             Already have an account?{' '}
-            <Link to="/login" className="font-bold text-orange-600 hover:text-orange-500">Sign in</Link>
+            <Link to={loginUrl} className="font-bold text-saffron hover:text-saffron-dark transition-colors">Sign in</Link>
           </p>
           <RegisterForm />
         </div>
