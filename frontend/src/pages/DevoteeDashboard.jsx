@@ -742,7 +742,7 @@ const PUJA_PRICES = {
                         </div>
                       </div>
                       <div className="flex flex-col gap-2 shrink-0">
-                        {booking.pandit && (
+                        {booking.pandit && booking.paymentStatus === 'paid' && (
                           <button
                             onClick={() => startChat(booking.pandit)}
                             className="flex items-center justify-center gap-2 px-4 py-2 bg-orange-50 text-orange-600 font-bold rounded-lg hover:bg-orange-100 transition-colors text-xs"

@@ -31,9 +31,7 @@ exports.getPandits = async (req, res, next) => {
         { $unwind: '$userDetails' },
         { $match: { 
             'userDetails.isActive': true, 
-            'userDetails.role': 'pandit',
-            'subscription.isActive': true,
-            'subscription.endDate': { $gt: new Date() }
+            'userDetails.role': 'pandit'
         } }
       ]);
 
@@ -57,8 +55,6 @@ exports.getPandits = async (req, res, next) => {
     // If city is provided, first try to find pandits in that city
     if (city) {
       const localPanditProfiles = await Pandit.find({
-        'subscription.isActive': true,
-        'subscription.endDate': { $gt: new Date() }
       }).populate({
         path: 'user',
         match: {
@@ -89,8 +85,6 @@ exports.getPandits = async (req, res, next) => {
 
       // No local pandits — return top pandits from major cities, sorted newest first
       const fallbackProfiles = await Pandit.find({
-        'subscription.isActive': true,
-        'subscription.endDate': { $gt: new Date() }
       }).populate({
         path: 'user',
         match: { role: 'pandit', isActive: true },
@@ -116,8 +110,6 @@ exports.getPandits = async (req, res, next) => {
 
     // No city filter — return all pandits sorted newest first
     const allProfiles = await Pandit.find({
-      'subscription.isActive': true,
-      'subscription.endDate': { $gt: new Date() }
     }).populate({
       path: 'user',
       match: { role: 'pandit', isActive: true },

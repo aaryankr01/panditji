@@ -27,7 +27,7 @@ exports.createOrder = async (req, res, next) => {
     const options = {
       amount: amountInPaise,
       currency: 'INR',
-      receipt: `receipt_booking_${bookingId}`,
+      receipt: `bk_${bookingId}`,
     };
 
     const order = await razorpay.orders.create(options);
@@ -93,11 +93,14 @@ exports.verifyPayment = async (req, res, next) => {
       razorpaySignature: razorpay_signature,
     });
 
-    // Update booking status
-    booking.paymentStatus = 'paid';
-    booking.status = 'confirmed';
-    booking.paymentId = razorpay_payment_id;
-    await booking.save();
+    // Update booking status using findByIdAndUpdate
+    await Booking.findByIdAndUpdate(bookingId, {
+      $set: {
+        paymentStatus: 'paid',
+        status: 'confirmed',
+        paymentId: razorpay_payment_id
+      }
+    });
 
     res.status(200).json({ success: true, message: 'Payment successful', data: payment });
   } catch (err) {
@@ -142,7 +145,7 @@ exports.createSubscriptionOrder = async (req, res, next) => {
     const options = {
       amount: feeInPaise,
       currency: 'INR',
-      receipt: `sub_receipt_${req.user.id}_${Date.now()}`
+      receipt: `sub_${Date.now()}`
     };
 
     const order = await razorpay.orders.create(options);
@@ -188,13 +191,16 @@ exports.verifySubscription = async (req, res, next) => {
         newEndDate = new Date(new Date(profile.subscription.endDate).getTime() + 30 * 24 * 60 * 60 * 1000);
       }
 
-      profile.subscription = {
-        isActive: true,
-        startDate: profile.subscription?.startDate || now,
-        endDate: newEndDate,
-        razorpaySubId: razorpay_order_id
-      };
-      await profile.save();
+      await Pandit.findByIdAndUpdate(profile._id, {
+        $set: {
+          subscription: {
+            isActive: true,
+            startDate: profile.subscription?.startDate || now,
+            endDate: newEndDate,
+            razorpaySubId: razorpay_order_id
+          }
+        }
+      });
 
       // Create payment record for Subscription
       await Payment.create({
