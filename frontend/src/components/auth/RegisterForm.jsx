@@ -24,6 +24,7 @@ const RegisterForm = () => {
     panditSpecialization: '',
     panditExperience: ''
   });
+  const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState('');
   const [selectedStateCode, setSelectedStateCode] = useState('');
 
@@ -159,18 +160,28 @@ const RegisterForm = () => {
         </div>
       )}
 
+      {/* Agreements Checklist */}
+      <div className="mt-4">
+        <label className="flex items-start gap-3 cursor-pointer group">
+          <input 
+            type="checkbox" 
+            checked={agreed}
+            onChange={(e) => setAgreed(e.target.checked)}
+            className="mt-0.5 w-4 h-4 rounded border-brandborder text-saffron focus:ring-saffron bg-white cursor-pointer"
+          />
+          <span className="text-[11px] text-textMuted group-hover:text-maroon transition-colors leading-tight">
+            I agree to the <Link to="/terms" target="_blank" className="font-bold text-saffron hover:underline">Terms of Service</Link>, <Link to="/privacy" target="_blank" className="font-bold text-saffron hover:underline">Privacy Policy</Link>, and <Link to="/guidelines" target="_blank" className="font-bold text-saffron hover:underline">Community Guidelines</Link>.
+          </span>
+        </label>
+      </div>
+
       <button 
         type="submit" 
-        disabled={isLoading}
-        className="w-full bg-saffron hover:bg-saffron-dark text-white font-bold py-3 px-4 rounded-xl transition-all shadow-md flex justify-center items-center h-12 shadow-saffron/20"
+        disabled={isLoading || !agreed}
+        className="w-full bg-saffron hover:bg-saffron-dark disabled:bg-brandborder disabled:text-textMuted disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-xl transition-all shadow-md flex justify-center items-center h-12 shadow-saffron/20"
       >
         {isLoading ? <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : 'Create Account'}
       </button>
-
-      <p className="text-center text-[10px] text-textMuted mt-4">
-        By creating an account you agree to our{' '}
-        <Link to="/terms" className="underline hover:text-maroon font-medium">Terms of Service</Link> and Privacy Policy.
-      </p>
     </form>
   );
 };

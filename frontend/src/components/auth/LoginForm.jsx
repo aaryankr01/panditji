@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import useAuthStore from '../../store/useAuthStore';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import Loader from '../common/Loader';
 
 const LoginForm = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
+  const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState('');
   const { login, isLoading } = useAuthStore();
   const navigate = useNavigate();
@@ -57,10 +58,25 @@ const LoginForm = () => {
           placeholder="••••••••"
         />
       </div>
+      {/* Agreements Checklist */}
+      <div className="mt-4">
+        <label className="flex items-start gap-3 cursor-pointer group">
+          <input 
+            type="checkbox" 
+            checked={agreed}
+            onChange={(e) => setAgreed(e.target.checked)}
+            className="mt-0.5 w-4 h-4 rounded border-brandborder text-saffron focus:ring-saffron bg-white cursor-pointer"
+          />
+          <span className="text-[11px] text-textMuted group-hover:text-maroon transition-colors leading-tight">
+            I agree to the <Link to="/terms" target="_blank" className="font-bold text-saffron hover:underline">Terms of Service</Link>, <Link to="/privacy" target="_blank" className="font-bold text-saffron hover:underline">Privacy Policy</Link>, and <Link to="/guidelines" target="_blank" className="font-bold text-saffron hover:underline">Community Guidelines</Link>.
+          </span>
+        </label>
+      </div>
+
       <button 
         type="submit" 
-        disabled={isLoading}
-        className="w-full bg-saffron hover:bg-saffron-dark text-white font-bold py-3 px-4 rounded-xl transition-all shadow-md shadow-saffron/20 flex justify-center items-center h-12"
+        disabled={isLoading || !agreed}
+        className="w-full bg-saffron hover:bg-saffron-dark disabled:bg-brandborder disabled:text-textMuted disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-xl transition-all shadow-md shadow-saffron/20 flex justify-center items-center h-12"
       >
         {isLoading ? <Loader size={20} className="text-white" /> : 'Log In'}
       </button>
