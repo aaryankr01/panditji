@@ -100,6 +100,26 @@ module.exports = (io, socket, activeUsers) => {
     } catch (err) { console.error(err); }
   });
 
+  socket.on('markConversationSeen', ({ conversationId, readerId, senderId }) => {
+    try {
+      // 1. Instantly notify the sender (optimistic relay on server)
+      // This tells the sender that the recipient has read the messages
+      const senderSocketId = activeUsers.get(senderId.toString());
+      if (senderSocketId) {
+        io.to(senderSocketId).emit('conversationSeen', { conversationId, readerId, status: 'seen' });
+      }
+
+      // 2. Perform DB update asynchronously (non-blocking)
+      Message.updateMany(
+        { conversation: conversationId, receiver: readerId, status: { $ne: 'seen' } },
+        { $set: { status: 'seen', isRead: true, readAt: new Date() } }
+      ).catch(err => console.error('Error in markConversationSeen DB update:', err));
+      
+    } catch (err) {
+      console.error('markConversationSeen error:', err);
+    }
+  });
+
   socket.on('deleteMessage', async ({ messageId, deletedBy, type }) => {
     // type: 'me' or 'everyone'
     try {
