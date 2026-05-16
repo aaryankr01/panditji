@@ -3,10 +3,10 @@ import axios from 'axios';
 import { io } from 'socket.io-client';
 import useAuthStore from '../store/useAuthStore';
 import {
-  HeadphonesIcon, MessageCircle, ChevronDown, ChevronUp,
+  Headphones, MessageCircle, ChevronDown, ChevronUp,
   Send, CheckCircle, Phone, Mail, BookOpen, AlertCircle,
   Zap, Shield, CreditCard, Calendar, User, ExternalLink,
-  Ticket, Clock, RefreshCw, CheckSquare, XSquare, Inbox
+  Ticket, Clock, RefreshCw, XCircle, Inbox
 } from 'lucide-react';
 
 const API = 'http://localhost:5000/api';
@@ -92,8 +92,8 @@ const contactChannels = [
 const statusConfig = {
   open: { label: 'Open', bg: C.goldLt, text: C.gold, icon: Inbox },
   in_progress: { label: 'In Progress', bg: C.purpleLt, text: C.purple, icon: RefreshCw },
-  resolved: { label: 'Resolved', bg: C.successLt, text: C.success, icon: CheckSquare },
-  closed: { label: 'Closed', bg: C.maroonLt, text: C.maroon, icon: XSquare },
+  resolved: { label: 'Resolved', bg: C.successLt, text: C.success, icon: CheckCircle },
+  closed: { label: 'Closed', bg: C.maroonLt, text: C.maroon, icon: XCircle },
 };
 
 const FAQItem = ({ question, answer }) => {
@@ -190,7 +190,7 @@ const SupportCare = ({ userRole = 'devotee' }) => {
         <div style={{ position: 'fixed', top: 16, right: 16, zIndex: 200, background: '#fff', borderRadius: 14, boxShadow: '0 8px 30px rgba(0,0,0,0.18)', border: `1.5px solid ${C.saffron}`, maxWidth: 340, overflow: 'hidden' }}>
           <div style={{ background: C.saffron, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <HeadphonesIcon size={20} color="#fff" />
+              <Headphones size={20} color="#fff" />
               <span style={{ color: '#fff', fontWeight: 800, fontSize: 14 }}>Support Team Replied!</span>
             </div>
             <button onClick={() => setReplyNotification(null)} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', fontSize: 18 }}>×</button>
@@ -210,7 +210,7 @@ const SupportCare = ({ userRole = 'devotee' }) => {
       <div style={{ background: `linear-gradient(135deg, ${C.maroon} 0%, ${C.purple} 100%)`, borderRadius: 16, padding: '32px', color: '#fff', boxShadow: '0 10px 30px rgba(123,29,14,0.15)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 12 }}>
           <div style={{ width: 56, height: 56, background: 'rgba(255,255,255,0.15)', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <HeadphonesIcon size={28} color="#fff" />
+            <Headphones size={28} color="#fff" />
           </div>
           <div>
             <h2 style={{ fontFamily: "'Playfair Display',serif", fontSize: 28, fontWeight: 900, marginBottom: 4 }}>Support Center</h2>
@@ -401,7 +401,7 @@ const SupportCare = ({ userRole = 'devotee' }) => {
                       {ticket.adminReply && (
                         <div style={{ background: C.saffronLt, border: `1px solid ${C.saffron}`, borderRadius: 10, padding: 16, marginTop: 16 }}>
                           <p style={{ fontSize: 12, fontWeight: 800, color: C.saffronDk, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <HeadphonesIcon size={14} /> Support Team Reply
+                            <Headphones size={14} /> Support Team Reply
                           </p>
                           <p style={{ fontSize: 13, color: C.textMid }}>{ticket.adminReply}</p>
                           {ticket.repliedAt && (

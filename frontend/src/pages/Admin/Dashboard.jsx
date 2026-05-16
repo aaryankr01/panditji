@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../../store/useAuthStore';
 import axios from 'axios';
-import { Users, MessageSquare, LayoutDashboard, LogOut, HeadphonesIcon, RefreshCw, Inbox, CheckCircle, Clock, XCircle, Send, Trash2 } from 'lucide-react';
+import { Users, MessageSquare, LayoutDashboard, LogOut, Headphones, RefreshCw, Inbox, CheckCircle, Clock, XCircle, Send, Trash2 } from 'lucide-react';
 
 const AdminDashboard = () => {
   const { user, token, logout } = useAuthStore();
@@ -149,7 +149,7 @@ const AdminDashboard = () => {
             onClick={() => setActiveTab('support')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'support' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
           >
-            <HeadphonesIcon size={20} />
+            <Headphones size={20} />
             Support
             {tickets.filter(t => t.status === 'open').length > 0 && (
               <span className="ml-auto bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
@@ -372,7 +372,7 @@ const AdminDashboard = () => {
               {!selectedTicket ? (
                 <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
                   <div className="w-16 h-16 bg-orange-50 rounded-full flex items-center justify-center mb-4">
-                    <HeadphonesIcon size={28} className="text-orange-300" />
+                    <Headphones size={28} className="text-orange-300" />
                   </div>
                   <p className="text-gray-500 font-medium">Select a ticket to view details</p>
                   <p className="text-gray-400 text-sm mt-1">Click any ticket from the list on the left</p>
@@ -426,7 +426,7 @@ const AdminDashboard = () => {
                     {/* Existing admin reply */}
                     {selectedTicket.adminReply && (
                       <div className="bg-orange-50 rounded-2xl p-4 border border-orange-200">
-                        <p className="text-xs font-bold text-orange-700 mb-2 flex items-center gap-1"><HeadphonesIcon size={12} /> YOUR REPLY</p>
+                        <p className="text-xs font-bold text-orange-700 mb-2 flex items-center gap-1"><Headphones size={12} /> YOUR REPLY</p>
                         <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{selectedTicket.adminReply}</p>
                         {selectedTicket.repliedAt && (
                           <p className="text-xs text-gray-400 mt-2 flex items-center gap-1"><Clock size={10} /> {new Date(selectedTicket.repliedAt).toLocaleString('en-IN')}</p>
