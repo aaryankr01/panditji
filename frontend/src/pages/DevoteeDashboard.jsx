@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../store/useAuthStore';
 import axios from 'axios';
@@ -102,54 +102,54 @@ const PUJA_PRICES = {
       );
     };
 
+    const fetchConversations = useCallback(async () => {
+      try {
+        const res = await axios.get('http://localhost:5000/api/chat/conversations/list', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setConversations(res.data.data);
+      } catch (err) {
+        console.error(err);
+      }
+    }, [token]);
+
+    const fetchMyBookings = useCallback(async () => {
+      try {
+        const res = await axios.get('http://localhost:5000/api/bookings', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const fetchedBookings = res.data.data;
+        setBookings(fetchedBookings);
+        // Find if there is any pending or accepted but unpaid booking
+        const pending = fetchedBookings.find(b => b.status === 'pending');
+        const accepted = fetchedBookings.find(b => b.status === 'confirmed' && b.paymentStatus === 'pending');
+
+        if (accepted) {
+          setAcceptedBooking(accepted);
+        } else if (pending) {
+          setWaitingBooking(pending);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }, [token]);
+
+    const fetchMyPayments = useCallback(async () => {
+      try {
+        const res = await axios.get('http://localhost:5000/api/payments', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setPayments(res.data.data);
+      } catch (err) {
+        console.error(err);
+      }
+    }, [token]);
+
     useEffect(() => {
       if (!token || user?.role !== 'devotee') {
         navigate('/');
         return;
       }
-
-      const fetchConversations = async () => {
-        try {
-          const res = await axios.get('http://localhost:5000/api/chat/conversations/list', {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          setConversations(res.data.data);
-        } catch (err) {
-          console.error(err);
-        }
-      };
-
-      const fetchMyBookings = async () => {
-        try {
-          const res = await axios.get('http://localhost:5000/api/bookings', {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          const fetchedBookings = res.data.data;
-          setBookings(fetchedBookings);
-          // Find if there is any pending or accepted but unpaid booking
-          const pending = fetchedBookings.find(b => b.status === 'pending');
-          const accepted = fetchedBookings.find(b => b.status === 'confirmed' && b.paymentStatus === 'pending');
-
-          if (accepted) {
-            setAcceptedBooking(accepted);
-          } else if (pending) {
-            setWaitingBooking(pending);
-          }
-        } catch (err) {
-          console.error(err);
-        }
-      };
-
-      const fetchMyPayments = async () => {
-        try {
-          const res = await axios.get('http://localhost:5000/api/payments', {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          setPayments(res.data.data);
-        } catch (err) {
-          console.error(err);
-        }
-      };
 
       fetchPandits();
       fetchConversations();
@@ -166,6 +166,12 @@ const PUJA_PRICES = {
       socket.on('bookingAccepted', (booking) => {
         setAcceptedBooking(booking);
         setWaitingBooking(null);
+        // Update bookings list so it shows in the tab without refresh
+        setBookings(prev => {
+          const exists = prev.find(b => b._id === booking._id);
+          if (exists) return prev.map(b => b._id === booking._id ? booking : b);
+          return [booking, ...prev];
+        });
         setSelectedChatUser(booking.pandit);
         setActiveTab('chat');
       });
@@ -176,7 +182,7 @@ const PUJA_PRICES = {
       });
 
       return () => socket.disconnect();
-    }, [token, user, navigate]);
+    }, [token, user, navigate, fetchConversations, fetchMyBookings, fetchMyPayments]);
 
     const handleLogout = () => {
       logout();
@@ -295,6 +301,7 @@ const PUJA_PRICES = {
                 setAcceptedBooking(null); // Clear the payment prompt
                 fetchMyBookings(); // Refresh bookings to remove 'Pay Now' button
                 fetchMyPayments(); // Refresh payments list
+                fetchConversations(); // Refresh chat list
                 // Open chat
                 setSelectedChatUser(booking.pandit);
                 setActiveTab('chat');
@@ -371,6 +378,9 @@ const PUJA_PRICES = {
                       className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none"
                       required
                     >
+                      {Object.keys(PUJA_PRICES).map(puja => (
+                        <option key={puja} value={puja}>{puja} - ₹{PUJA_PRICES[puja].toLocaleString()}</option>
+                      ))}
                     </select>
                   </div>
 
@@ -787,7 +797,7 @@ const PUJA_PRICES = {
                   </div>
                 </div>
                 <div className="w-2/3">
-                  <ChatInterface otherUser={selectedChatUser} />
+                  <ChatInterface otherUser={selectedChatUser} socket={socketRef.current} />
                 </div>
               </div>
             )}

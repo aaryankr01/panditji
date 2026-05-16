@@ -4,10 +4,11 @@ import { io } from 'socket.io-client';
 import useAuthStore from '../store/useAuthStore';
 import { Send, User as UserIcon, Paperclip, Mic, StopCircle, Trash2, Check, CheckCheck, MoreVertical, X, Image as ImageIcon } from 'lucide-react';
 
-const ChatInterface = ({ otherUser }) => {
+const ChatInterface = ({ otherUser, socket }) => {
   const { user, token } = useAuthStore();
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
+  const [isLocked, setIsLocked] = useState(false);
   
   // Voice recording and file upload states
   const [isRecording, setIsRecording] = useState(false);
@@ -33,7 +34,12 @@ const ChatInterface = ({ otherUser }) => {
   const [activeMessageOptions, setActiveMessageOptions] = useState(null);
 
   useEffect(() => {
-    if (!otherUser || !user) return;
+    if (!socket || !otherUser || !user) return;
+    
+    // We use the shared socket passed from parent dashboard
+    socketRef.current = socket;
+    const userId = user._id || user.id;
+    socketRef.current.emit('join', { userId, role: user.role, city: user.city });
 
     // Fetch initial chat history
     const fetchHistory = async () => {
@@ -46,12 +52,25 @@ const ChatInterface = ({ otherUser }) => {
         console.error('Failed to fetch chat history', err);
       }
     };
-    fetchHistory();
 
-    // Setup Socket
-    socketRef.current = io('http://localhost:5000');
-    const userId = user._id || user.id;
-    socketRef.current.emit('join', { userId, role: user.role, city: user.city });
+    const checkBookingStatus = async () => {
+      try {
+        const res = await axios.get('http://localhost:5000/api/bookings', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const bookings = res.data.data;
+        const paidBooking = bookings.find(b => 
+          (b.pandit?._id === otherUser._id || b.devotee?._id === otherUser._id) && 
+          b.paymentStatus === 'paid'
+        );
+        setIsLocked(!paidBooking);
+      } catch (err) {
+        console.error('Failed to check booking status', err);
+      }
+    };
+
+    fetchHistory();
+    checkBookingStatus();
 
     socketRef.current.on('newMessage', (msg) => {
       if (msg.sender === otherUser._id || msg.receiver === otherUser._id) {
@@ -76,11 +95,19 @@ const ChatInterface = ({ otherUser }) => {
       setMessages(prev => prev.map(m => m._id === messageId ? newMsg : m));
     });
 
+    socketRef.current.on('error', (err) => {
+      alert(err.message || 'An error occurred in chat');
+    });
+
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
-      socketRef.current.disconnect();
+      // We don't disconnect the shared socket here as it's managed by the parent
+      socket.off('newMessage');
+      socket.off('messageSent');
+      socket.off('messageStatusUpdated');
+      socket.off('messageDeleted');
     };
-  }, [otherUser, user, token]);
+  }, [otherUser, user, token, socket]);
 
   // Mark messages as seen when they are loaded or received
   useEffect(() => {
@@ -402,79 +429,86 @@ const ChatInterface = ({ otherUser }) => {
 
       {/* Input Area */}
       <div className="p-4 bg-white border-t border-gray-100">
-        <div className="flex gap-2 items-center">
-          <input 
-            type="file" 
-            ref={fileInputRef} 
-            onChange={handleFileUpload} 
-            className="hidden" 
-            accept="image/*,video/*,audio/*"
-          />
-          <button 
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="p-2 text-gray-500 hover:text-orange-600 hover:bg-orange-50 rounded-full transition-colors shrink-0"
-            title="Attach file"
-          >
-            <Paperclip size={20} />
-          </button>
-          
-          {audioPreviewUrl ? (
-            <div className="flex-1 flex items-center justify-between bg-gray-50 rounded-full px-4 py-2 border border-gray-200">
-              <audio src={audioPreviewUrl} controls className="h-8 w-full max-w-[200px]" />
-              <div className="flex items-center gap-1 ml-2">
-                <button onClick={cancelRecording} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors" title="Delete">
-                  <Trash2 size={18} />
-                </button>
-                <button onClick={sendRecording} className="p-1.5 text-white bg-orange-600 hover:bg-orange-700 rounded-full transition-colors shadow-md" title="Send">
-                  <Send size={18} className="ml-0.5" />
-                </button>
+        {isLocked ? (
+          <div className="bg-orange-50 border border-orange-200 rounded-xl p-3 text-center text-orange-700 text-sm font-medium flex items-center justify-center gap-2">
+            <Send size={16} className="rotate-45 opacity-50" />
+            Chat will unlock once the payment is completed.
+          </div>
+        ) : (
+          <div className="flex gap-2 items-center">
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              onChange={handleFileUpload} 
+              className="hidden" 
+              accept="image/*,video/*,audio/*"
+            />
+            <button 
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="p-2 text-gray-500 hover:text-orange-600 hover:bg-orange-50 rounded-full transition-colors shrink-0"
+              title="Attach file"
+            >
+              <Paperclip size={20} />
+            </button>
+            
+            {audioPreviewUrl ? (
+              <div className="flex-1 flex items-center justify-between bg-gray-50 rounded-full px-4 py-2 border border-gray-200">
+                <audio src={audioPreviewUrl} controls className="h-8 w-full max-w-[200px]" />
+                <div className="flex items-center gap-1 ml-2">
+                  <button onClick={cancelRecording} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors" title="Delete">
+                    <Trash2 size={18} />
+                  </button>
+                  <button onClick={sendRecording} className="p-1.5 text-white bg-orange-600 hover:bg-orange-700 rounded-full transition-colors shadow-md" title="Send">
+                    <Send size={18} className="ml-0.5" />
+                  </button>
+                </div>
               </div>
-            </div>
-          ) : isRecording ? (
-            <div className="flex-1 flex items-center justify-between bg-gray-50 rounded-full px-4 py-2 border border-gray-200">
-              <div className="flex items-center gap-2 text-red-500 animate-pulse">
-                <Mic size={18} />
-                <span className="text-sm font-medium">{formatTime(recordingTime)}</span>
+            ) : isRecording ? (
+              <div className="flex-1 flex items-center justify-between bg-gray-50 rounded-full px-4 py-2 border border-gray-200">
+                <div className="flex items-center gap-2 text-red-500 animate-pulse">
+                  <Mic size={18} />
+                  <span className="text-sm font-medium">{formatTime(recordingTime)}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <button onClick={cancelRecording} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors" title="Cancel">
+                    <Trash2 size={18} />
+                  </button>
+                  <button onClick={sendRecording} className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-full transition-colors" title="Send">
+                    <Send size={18} />
+                  </button>
+                </div>
               </div>
-              <div className="flex items-center gap-1">
-                <button onClick={cancelRecording} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors" title="Cancel">
-                  <Trash2 size={18} />
-                </button>
-                <button onClick={sendRecording} className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-full transition-colors" title="Send">
-                  <Send size={18} />
-                </button>
-              </div>
-            </div>
-          ) : (
-            <form onSubmit={handleSend} className="flex-1 flex gap-2">
-              <input
-                type="text"
-                value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
-                placeholder="Type your message..."
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
-              />
-              {inputText.trim() ? (
-                <button 
-                  type="submit"
-                  className="p-2 bg-orange-600 text-white rounded-full hover:bg-orange-700 transition-colors shrink-0"
-                >
-                  <Send size={20} className="ml-1" />
-                </button>
-              ) : (
-                <button 
-                  type="button"
-                  onClick={startRecording}
-                  className="p-2 text-gray-500 hover:text-orange-600 hover:bg-orange-50 rounded-full transition-colors shrink-0"
-                  title="Record voice message"
-                >
-                  <Mic size={20} />
-                </button>
-              )}
-            </form>
-          )}
-        </div>
+            ) : (
+              <form onSubmit={handleSend} className="flex-1 flex gap-2">
+                <input
+                  type="text"
+                  value={inputText}
+                  onChange={(e) => setInputText(e.target.value)}
+                  placeholder="Type your message..."
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                />
+                {inputText.trim() ? (
+                  <button 
+                    type="submit"
+                    className="p-2 bg-orange-600 text-white rounded-full hover:bg-orange-700 transition-colors shrink-0"
+                  >
+                    <Send size={20} className="ml-1" />
+                  </button>
+                ) : (
+                  <button 
+                    type="button"
+                    onClick={startRecording}
+                    className="p-2 text-gray-500 hover:text-orange-600 hover:bg-orange-50 rounded-full transition-colors shrink-0"
+                    title="Record voice message"
+                  >
+                    <Mic size={20} />
+                  </button>
+                )}
+              </form>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

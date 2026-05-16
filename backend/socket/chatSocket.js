@@ -9,6 +9,22 @@ module.exports = (io, socket, activeUsers) => {
     try {
       const { senderId, receiverId, text, type, fileUrl } = data;
 
+      // ENFORCE PAYMENT GATING
+      const Booking = require('../models/Booking');
+      const hasPaidBooking = await Booking.findOne({
+        $or: [
+          { devotee: senderId, pandit: receiverId },
+          { devotee: receiverId, pandit: senderId }
+        ],
+        status: 'confirmed',
+        paymentStatus: 'paid'
+      });
+
+      if (!hasPaidBooking) {
+        console.log(`🚫 Chat Blocked: No paid booking between ${senderId} and ${receiverId}`);
+        return socket.emit('error', { message: 'Chat is locked. Payment required.' });
+      }
+
       // Find or create conversation
       let conversation = await Conversation.findOne({
         participants: { $all: [senderId, receiverId] }

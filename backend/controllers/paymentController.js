@@ -102,6 +102,15 @@ exports.verifyPayment = async (req, res, next) => {
       }
     });
 
+    // Notify Pandit that payment is complete
+    if (global.io) {
+      const pId = booking.pandit.toString();
+      const panditSocketId = global.activeUsers?.get(pId);
+      if (panditSocketId) {
+        global.io.to(panditSocketId).emit('paymentConfirmed', { bookingId: booking._id.toString() });
+      }
+    }
+
     res.status(200).json({ success: true, message: 'Payment successful', data: payment });
   } catch (err) {
     next(err);

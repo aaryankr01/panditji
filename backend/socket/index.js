@@ -12,17 +12,21 @@ const initSocket = (io) => {
 
     // User joins with userId and role
     socket.on('join', ({ userId, role, city }) => {
-      activeUsers.set(userId, socket.id);
-      console.log(`User ${userId} (${role}) joined`);
-
+      const uId = userId?.toString();
+      if (uId) {
+        activeUsers.set(uId, socket.id);
+        console.log(`📡 Socket: User ${uId} (${role}) joined on socket ${socket.id}`);
+      }
+      
       // All pandits join a shared room for broadcast
       if (role === 'pandit') {
         socket.join('all_pandits');
+        console.log(`📡 Socket: Pandit ${uId} joined all_pandits room`);
         // Also join their city room
         if (city) {
           const cityRoom = `city_${city.toLowerCase().replace(/\s/g, '_')}`;
           socket.join(cityRoom);
-          console.log(`Pandit joined city room: ${cityRoom}`);
+          console.log(`📡 Socket: Pandit ${uId} joined city room: ${cityRoom}`);
         }
       }
 

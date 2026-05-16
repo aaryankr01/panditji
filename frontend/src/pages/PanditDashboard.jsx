@@ -72,7 +72,8 @@ const PanditDashboard = () => {
     socketRef.current = socket;
 
     socket.on('connect', () => {
-      socket.emit('join', { userId: user._id, role: 'pandit', city: user.city });
+      const userId = user._id || user.id;
+      socket.emit('join', { userId, role: 'pandit', city: user.city });
     });
 
     // NEW BOOKING BROADCAST — Ola/Uber style
@@ -84,6 +85,10 @@ const PanditDashboard = () => {
     // Booking was taken by another pandit
     socket.on('bookingTaken', ({ bookingId }) => {
       setIncomingRequest(prev => prev?._id === bookingId ? null : prev);
+    });
+
+    socket.on('paymentConfirmed', ({ bookingId }) => {
+      setBookings(prev => prev.map(b => b._id === bookingId ? { ...b, paymentStatus: 'paid' } : b));
     });
 
     return () => socket.disconnect();
@@ -123,9 +128,10 @@ const PanditDashboard = () => {
         return [accepted, ...prev];
       });
 
-      // Auto-open chat with devotee
-      setSelectedChatUser(accepted.devotee);
-      setActiveTab('chat');
+      // Do not auto-open chat until paid
+      // setSelectedChatUser(accepted.devotee);
+      // setActiveTab('chat');
+      alert('Request accepted! Chat will unlock once the devotee completes the payment.');
       setIncomingRequest(null);
     } catch (err) {
       alert(err.response?.data?.message || 'Could not accept – already taken');
@@ -497,12 +503,14 @@ const PanditDashboard = () => {
                       </div>
                     </div>
                       <div className="flex gap-2">
-                        <button
-                          onClick={() => { setSelectedChatUser(booking.devotee); setActiveTab('chat'); }}
-                          className="flex items-center gap-2 px-4 py-2 bg-orange-50 text-orange-600 font-bold rounded-lg hover:bg-orange-100 transition-colors text-sm"
-                        >
-                          <MessageSquare size={16} /> Chat
-                        </button>
+                        {booking.paymentStatus === 'paid' && (
+                          <button
+                            onClick={() => { setSelectedChatUser(booking.devotee); setActiveTab('chat'); }}
+                            className="flex items-center gap-2 px-4 py-2 bg-orange-50 text-orange-600 font-bold rounded-lg hover:bg-orange-100 transition-colors text-sm"
+                          >
+                            <MessageSquare size={16} /> Chat
+                          </button>
+                        )}
 
                         {booking.status === 'pending' && (
                           <>
@@ -580,7 +588,7 @@ const PanditDashboard = () => {
                 </div>
               </div>
               <div className="w-2/3">
-                <ChatInterface otherUser={selectedChatUser} />
+                <ChatInterface otherUser={selectedChatUser} socket={socketRef.current} />
               </div>
             </div>
           )}

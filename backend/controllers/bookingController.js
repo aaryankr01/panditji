@@ -39,20 +39,29 @@ exports.createBooking = async (req, res, next) => {
 
     // Broadcast logic
     if (_io) {
+      console.log(`📡 Broadcast: Attempting to notify pandits for booking ${booking._id}`);
       if (panditId) {
-        // Send directly to the chosen pandit
-        const panditSocketId = global.activeUsers?.get(panditId.toString());
+        const pId = panditId.toString();
+        const panditSocketId = global.activeUsers?.get(pId);
         if (panditSocketId) {
+          console.log(`📡 Broadcast: Sending direct request to Pandit ${pId} on socket ${panditSocketId}`);
           _io.to(panditSocketId).emit('newBookingRequest', populatedBooking);
+        } else {
+          console.log(`📡 Broadcast: Target Pandit ${pId} is offline. Falling back to city/all rooms.`);
+          // If the specific pandit is offline, still broadcast to the city/all so others see it? 
+          // Actually, if it's a DIRECT booking, we might want to just wait. 
+          // But for now, let's fallback to ensure visibility.
+          const cityRoom = `city_${(city || '').toLowerCase().replace(/\s/g, '_')}`;
+          _io.to(cityRoom).emit('newBookingRequest', populatedBooking);
+          _io.to('all_pandits').emit('newBookingRequest', populatedBooking);
         }
       } else if (pujaMode === 'online') {
-        // Online puja? Broadcast to EVERYONE since location doesn't matter
+        console.log(`📡 Broadcast: Online puja - notifying all pandits`);
         _io.to('all_pandits').emit('newBookingRequest', populatedBooking);
       } else {
-        // In-person? Broadcast to city room
         const cityRoom = `city_${(city || '').toLowerCase().replace(/\s/g, '_')}`;
+        console.log(`📡 Broadcast: In-person puja - notifying city room ${cityRoom}`);
         _io.to(cityRoom).emit('newBookingRequest', populatedBooking);
-        // Fallback to all for now to ensure visibility during testing
         _io.to('all_pandits').emit('newBookingRequest', populatedBooking);
       }
     }

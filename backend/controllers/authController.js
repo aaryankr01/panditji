@@ -28,18 +28,31 @@ exports.register = async (req, res, next) => {
     });
 
     if (role === 'pandit') {
-      const panditProfile = await Pandit.create({
-        user: user._id,
-        city: city, // Required by schema
-        specializations: ['All Pujas'], // Default to pass enum validation
-        bio: `Specializes in: ${panditSpecialization}`, // Save typed text in bio
-        experience: panditExperience,
-        subscription: { isActive: false }
-      });
-      
-      // Link back to user
-      user.panditProfile = panditProfile._id;
-      await user.save();
+      try {
+        const panditProfile = await Pandit.create({
+          user: user._id,
+          city: city, 
+          state: state || '',
+          specializations: ['All Pujas'], 
+          bio: `Specializes in: ${panditSpecialization || 'Vedic Rituals'}`, 
+          experience: parseInt(panditExperience) || 0,
+          feePerPuja: 1500, // Explicitly pass the default
+          subscription: { isActive: false }
+        });
+        
+        // Link back to user
+        user.panditProfile = panditProfile._id;
+        await user.save();
+      } catch (profileErr) {
+        // If profile creation fails, we should ideally delete the user but for now let's just throw
+        console.error('Pandit Profile Creation Error:', profileErr);
+        // Delete the user so they can try again
+        await User.findByIdAndDelete(user._id);
+        return res.status(400).json({ 
+          success: false, 
+          message: profileErr.message || 'Failed to create pandit profile. Please check all fields.' 
+        });
+      }
     }
 
     const token = user.getJWT();
@@ -58,7 +71,11 @@ exports.register = async (req, res, next) => {
       }
     });
   } catch (err) {
-    next(err);
+    console.error('Registration Error:', err);
+    res.status(err.statusCode || 500).json({
+      success: false,
+      message: err.message || 'Registration failed'
+    });
   }
 };
 
