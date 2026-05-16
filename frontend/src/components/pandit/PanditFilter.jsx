@@ -25,35 +25,35 @@ const PanditFilter = ({ onSearch, onFilterChange, onLocationRequest }) => {
   };
 
   return (
-    <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm sticky top-24">
-      <div className="flex items-center gap-2 mb-6 text-gray-800 font-bold text-lg">
-        <Filter size={20} className="text-orange-600" /> Filters
+    <div className="bg-white p-6 rounded-[32px] border border-brandborder shadow-sm sticky top-24">
+      <div className="flex items-center gap-2 mb-6 text-maroon font-bold text-lg font-serif">
+        <Filter size={20} className="text-saffron" /> Filters
       </div>
       
       <div className="space-y-6">
         <div>
-          <label className="block text-sm font-bold text-gray-700 mb-2">Search Name</label>
+          <label className="block text-sm font-bold text-textMid mb-2">Search Name</label>
           <div className="relative">
             <input 
               type="text" 
               placeholder="Search pandits..." 
               onChange={(e) => onSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-500 outline-none"
+              className="w-full pl-10 pr-4 py-3 rounded-xl border border-brandborder focus:ring-2 focus:ring-saffron outline-none bg-surface text-maroon font-medium"
             />
-            <Search size={16} className="absolute left-3 top-3 text-gray-400" />
+            <Search size={16} className="absolute left-4 top-3.5 text-textMuted" />
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-bold text-gray-700 mb-2">Location</label>
+          <label className="block text-sm font-bold text-textMid mb-2">Location</label>
           
           <button 
             onClick={handleGeolocation}
             disabled={isLocating}
-            className="w-full mb-3 flex items-center justify-center gap-2 bg-orange-50 text-orange-600 border border-orange-200 py-2 rounded-xl hover:bg-orange-100 transition-colors font-semibold text-sm disabled:opacity-50"
+            className="w-full mb-4 flex items-center justify-center gap-2 bg-saffron-light text-saffron border border-saffron/20 py-3 rounded-xl hover:bg-saffron hover:text-white transition-all font-bold text-sm disabled:opacity-50"
           >
             {isLocating ? (
-              <span className="w-4 h-4 border-2 border-orange-600 border-t-transparent rounded-full animate-spin"></span>
+              <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></span>
             ) : (
               <Navigation size={16} />
             )}
@@ -63,7 +63,7 @@ const PanditFilter = ({ onSearch, onFilterChange, onLocationRequest }) => {
           <div className="relative">
             <select 
               onChange={(e) => onFilterChange('location', e.target.value)}
-              className="w-full pl-10 pr-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-500 outline-none appearance-none"
+              className="w-full pl-10 pr-4 py-3 rounded-xl border border-brandborder focus:ring-2 focus:ring-saffron outline-none appearance-none bg-surface text-maroon font-medium"
             >
               <option value="">All Locations</option>
               <option value="Varanasi">Varanasi</option>
@@ -73,7 +73,7 @@ const PanditFilter = ({ onSearch, onFilterChange, onLocationRequest }) => {
               <option value="Jaipur">Jaipur</option>
               <option value="Haridwar">Haridwar</option>
             </select>
-            <MapPin size={16} className="absolute left-3 top-3 text-gray-400" />
+            <MapPin size={16} className="absolute left-4 top-3.5 text-textMuted" />
           </div>
         </div>
       </div>

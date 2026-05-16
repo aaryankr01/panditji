@@ -5,6 +5,7 @@ import Footer from '../components/common/Footer';
 import Loader from '../components/common/Loader';
 import PanditCard from '../components/pandit/PanditCard';
 import PanditFilter from '../components/pandit/PanditFilter';
+import { Search } from 'lucide-react';
 
 const PujaList = () => {
   const [pandits, setPandits] = useState([]);
@@ -53,13 +54,14 @@ const PujaList = () => {
   );
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50 font-sans">
+    <div className="flex flex-col min-h-screen bg-surface font-sans">
       <Navbar />
       
-      <div className="bg-orange-600 text-white py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto text-center">
+      <div className="bg-maroon text-white py-12 px-4 sm:px-6 lg:px-8 border-b-8 border-saffron relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-saffron opacity-10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <div className="max-w-7xl mx-auto text-center relative z-10">
           <h1 className="text-4xl font-bold font-serif mb-4">Find the Perfect Pandit</h1>
-          <p className="text-orange-100 max-w-2xl mx-auto">Browse our curated list of highly experienced, verified Pandits available for all your spiritual needs.</p>
+          <p className="text-maroon-light max-w-2xl mx-auto">Browse our curated list of highly experienced, verified Pandits available for all your spiritual needs.</p>
         </div>
       </div>
 
@@ -76,23 +78,23 @@ const PujaList = () => {
         {/* Main Content */}
         <div className="flex-1">
           {locationMessage && (
-            <div className="mb-6 bg-green-50 text-green-800 p-4 rounded-xl border border-green-200">
+            <div className="mb-6 bg-green-50 text-[#1E7D3C] p-4 rounded-xl border border-green-200">
               {locationMessage}
             </div>
           )}
 
-          <div className="mb-6 flex justify-between items-end border-b border-gray-200 pb-4">
-            <h2 className="text-2xl font-bold text-gray-800">Available Pandits</h2>
-            <span className="text-gray-500 text-sm">{filteredPandits.length} results</span>
+          <div className="mb-6 flex justify-between items-end border-b border-brandborder pb-4">
+            <h2 className="text-2xl font-bold font-serif text-maroon">Available Pandits</h2>
+            <span className="text-textMid text-sm font-bold">{filteredPandits.length} results</span>
           </div>
 
           {loading ? (
             <div className="py-20"><Loader size={48} /></div>
           ) : filteredPandits.length === 0 ? (
-            <div className="bg-white rounded-2xl p-12 text-center border border-gray-200">
-              <span className="text-4xl mb-4 block">🔍</span>
-              <h3 className="text-xl font-bold text-gray-800 mb-2">No Pandits Found</h3>
-              <p className="text-gray-500">Try adjusting your filters or search query.</p>
+            <div className="bg-white rounded-3xl p-12 text-center border border-brandborder shadow-sm">
+              <Search size={48} className="text-textMuted mx-auto mb-4 opacity-50" />
+              <h3 className="text-xl font-bold text-maroon mb-2">No Pandits Found</h3>
+              <p className="text-textMid">Try adjusting your filters or search query.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

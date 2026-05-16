@@ -101,7 +101,6 @@ exports.verifyPayment = async (req, res, next) => {
         paymentId: razorpay_payment_id
       }
     });
-
     // Notify Pandit that payment is complete
     if (global.io) {
       const pId = booking.pandit.toString();

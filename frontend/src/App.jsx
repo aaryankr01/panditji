@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import useAuthStore from './store/useAuthStore';
 import { Toaster } from 'react-hot-toast';
 import GlobalNotificationListener from './components/common/GlobalNotificationListener';
+import FloatingSupport from './components/common/FloatingSupport';
 
 // Common
 import ProtectedRoute from './components/common/ProtectedRoute';
@@ -15,6 +16,8 @@ import PujaList from './pages/PujaList';
 import BookAPuja from './pages/BookAPuja';
 import PanditProfile from './pages/PanditProfile';
 import TermsOfService from './pages/TermsOfService';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import Guidelines from './pages/Guidelines';
 
 // User Pages
 import DevoteeDashboard from './pages/DevoteeDashboard';
@@ -41,6 +44,7 @@ function App() {
     <>
       <Toaster />
       <GlobalNotificationListener />
+      <FloatingSupport />
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<Home />} />
@@ -48,6 +52,8 @@ function App() {
         <Route path="/pandits" element={<PujaList />} />
         <Route path="/pandit/:id" element={<PanditProfile />} />
         <Route path="/terms" element={<TermsOfService />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/guidelines" element={<Guidelines />} />
 
       {/* Auth Routes */}
       <Route path="/login" element={isAuthenticated ? <Navigate to="/" /> : <Login />} />

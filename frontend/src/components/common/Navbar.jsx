@@ -19,48 +19,48 @@ const Navbar = () => {
     '/devotee-dashboard';
 
   return (
-    <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
+    <nav className="bg-white border-b border-brandborder sticky top-0 z-50 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
 
           {/* Brand */}
-          <Link to="/" className="flex-shrink-0">
+          <Link to="/" className="flex-shrink-0 hover:opacity-90 transition-opacity">
             <BrandWordmark />
           </Link>
 
           {/* Nav links */}
           <div className="hidden md:flex items-center gap-8">
-            <Link to="/pujas"   className="text-sm font-semibold text-gray-600 hover:text-orange-600 transition-colors">Book a Puja</Link>
-            <Link to="/pandits" className="text-sm font-semibold text-gray-600 hover:text-orange-600 transition-colors">Find Pandits</Link>
-            <a href="/#about" className="text-sm font-semibold text-gray-600 hover:text-orange-600 transition-colors">About Us</a>
+            <Link to="/pujas"   className="text-sm font-bold text-textMid hover:text-saffron transition-colors">Book a Puja</Link>
+            <Link to="/pandits" className="text-sm font-bold text-textMid hover:text-saffron transition-colors">Find Pandits</Link>
+            <a href="/#about" className="text-sm font-bold text-textMid hover:text-saffron transition-colors">About Us</a>
           </div>
 
           {/* Auth */}
           <div className="flex items-center gap-3">
             {!isAuthenticated ? (
               <>
-                <Link to="/login" className="text-sm font-semibold text-gray-700 hover:text-orange-600 transition-colors px-3 py-2 rounded-lg hover:bg-gray-50">
+                <Link to="/login" className="text-sm font-bold text-maroon hover:text-saffron transition-colors px-3 py-2 rounded-lg hover:bg-saffron-light">
                   Log in
                 </Link>
-                <Link to="/register" className="text-sm font-bold bg-orange-600 hover:bg-orange-700 text-white px-5 py-2.5 rounded-xl transition-colors shadow-sm">
+                <Link to="/register" className="text-sm font-bold bg-saffron hover:bg-saffron-dark text-white px-5 py-2.5 rounded-xl transition-all shadow-md shadow-saffron/20 hover:-translate-y-0.5">
                   Get Started
                 </Link>
               </>
             ) : (
               <div className="flex items-center gap-3">
-                <Link to={dashboardPath} className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors group">
-                  <div className="w-8 h-8 rounded-full bg-orange-600 text-white flex items-center justify-center text-sm font-bold">
+                <Link to={dashboardPath} className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-surface border border-transparent hover:border-brandborder transition-all group">
+                  <div className="w-8 h-8 rounded-full bg-saffron text-white flex items-center justify-center text-sm font-bold shadow-sm">
                     {user?.firstName?.charAt(0) || <UserIcon size={14} />}
                   </div>
                   <div className="hidden sm:block text-left">
-                    <p className="text-sm font-bold text-gray-800 leading-none">{user?.firstName}</p>
-                    <p className="text-xs text-gray-500 capitalize leading-none mt-0.5">{user?.role}</p>
+                    <p className="text-sm font-bold text-maroon leading-none group-hover:text-saffron transition-colors">{user?.firstName}</p>
+                    <p className="text-xs text-textMuted capitalize leading-none mt-0.5">{user?.role}</p>
                   </div>
-                  <ChevronDown size={14} className="text-gray-400 hidden sm:block" />
+                  <ChevronDown size={14} className="text-textMuted hidden sm:block group-hover:text-saffron transition-colors" />
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+                  className="p-2 text-textMuted hover:text-maroon hover:bg-maroon-light rounded-xl transition-colors"
                   title="Sign out"
                 >
                   <LogOut size={18} />

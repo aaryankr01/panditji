@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
 import useAuthStore from '../../store/useAuthStore';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import Loader from '../common/Loader';
 
 const LoginForm = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
+  const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState('');
   const { login, isLoading } = useAuthStore();
   const navigate = useNavigate();
+  const location = useLocation();
+  const redirect = new URLSearchParams(location.search).get('redirect');
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
@@ -16,8 +19,13 @@ const LoginForm = () => {
     setError('');
     const res = await login(formData.email, formData.password);
     if (res.success) {
-      if (res.user.role === 'pandit') navigate('/pandit-dashboard');
-      else navigate('/devotee-dashboard');
+      if (redirect) {
+        navigate(redirect);
+      } else if (res.user.role === 'pandit') {
+        navigate('/pandit-dashboard');
+      } else {
+        navigate('/devotee-dashboard');
+      }
     } else {
       setError(res.message);
     }
@@ -27,33 +35,48 @@ const LoginForm = () => {
     <form onSubmit={handleSubmit} className="space-y-4">
       {error && <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm font-medium">{error}</div>}
       <div>
-        <label className="block text-sm font-bold text-gray-700 mb-1">Email Address</label>
+        <label className="block text-sm font-bold text-textMid mb-1">Email Address</label>
         <input 
           type="email" 
           name="email"
           value={formData.email}
           onChange={handleChange}
           required
-          className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all"
+          className="w-full px-4 py-3 rounded-xl border border-brandborder focus:ring-2 focus:ring-saffron focus:border-saffron outline-none transition-all text-maroon"
           placeholder="you@example.com"
         />
       </div>
       <div>
-        <label className="block text-sm font-bold text-gray-700 mb-1">Password</label>
+        <label className="block text-sm font-bold text-textMid mb-1">Password</label>
         <input 
           type="password" 
           name="password"
           value={formData.password}
           onChange={handleChange}
           required
-          className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all"
+          className="w-full px-4 py-3 rounded-xl border border-brandborder focus:ring-2 focus:ring-saffron focus:border-saffron outline-none transition-all text-maroon"
           placeholder="••••••••"
         />
       </div>
+      {/* Agreements Checklist */}
+      <div className="mt-4">
+        <label className="flex items-start gap-3 cursor-pointer group">
+          <input 
+            type="checkbox" 
+            checked={agreed}
+            onChange={(e) => setAgreed(e.target.checked)}
+            className="mt-0.5 w-4 h-4 rounded border-brandborder text-saffron focus:ring-saffron bg-white cursor-pointer"
+          />
+          <span className="text-[11px] text-textMuted group-hover:text-maroon transition-colors leading-tight">
+            I agree to the <Link to="/terms" target="_blank" className="font-bold text-saffron hover:underline">Terms of Service</Link>, <Link to="/privacy" target="_blank" className="font-bold text-saffron hover:underline">Privacy Policy</Link>, and <Link to="/guidelines" target="_blank" className="font-bold text-saffron hover:underline">Community Guidelines</Link>.
+          </span>
+        </label>
+      </div>
+
       <button 
         type="submit" 
-        disabled={isLoading}
-        className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-4 rounded-xl transition-colors shadow-md flex justify-center items-center h-12"
+        disabled={isLoading || !agreed}
+        className="w-full bg-saffron hover:bg-saffron-dark disabled:bg-brandborder disabled:text-textMuted disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-xl transition-all shadow-md shadow-saffron/20 flex justify-center items-center h-12"
       >
         {isLoading ? <Loader size={20} className="text-white" /> : 'Log In'}
       </button>
