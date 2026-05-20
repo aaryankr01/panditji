@@ -44,7 +44,6 @@ const BookAPuja = () => {
 
   // Modals
   const [showDetailsModal, setShowDetailsModal] = useState(false);
-  const [showEPujaModal, setShowEPujaModal] = useState(false);
 
   const [bookingType, setBookingType] = useState('doorstep');
 
@@ -84,20 +83,15 @@ const BookAPuja = () => {
   const handleBookNowClick = (puja) => {
     setSelectedPuja(puja);
     setShowDetailsModal(false);
-    setShowEPujaModal(true);
-  };
-
-  const proceedWithBooking = (type) => {
-    setBookingType(type);
-    setShowEPujaModal(false);
-    setStep(2); // Go to Location step
+    setBookingType('doorstep');
+    setStep(2); // Go directly to Step 2
   };
 
   const proceedToDashboard = () => {
     const queryParams = new URLSearchParams({
       city: city,
       puja: selectedPuja.name,
-      mode: bookingType === 'epuja' ? 'online' : 'in-person'
+      mode: 'in-person'
     }).toString();
 
     if (isAuthenticated) {
@@ -349,71 +343,6 @@ const BookAPuja = () => {
                   <ArrowRight size={20} /> Book This Puja
                 </button>
               </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* E-PUJA MODAL */}
-      {showEPujaModal && selectedPuja && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-maroon/60 backdrop-blur-sm" onClick={() => setShowEPujaModal(false)} />
-          <div className="bg-white w-full max-w-2xl rounded-[32px] overflow-hidden relative z-10 shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col">
-            <button
-              onClick={() => setShowEPujaModal(false)}
-              className="absolute top-6 right-6 p-2 hover:bg-surface rounded-full transition-colors z-20"
-            >
-              <X size={20} className="text-maroon" />
-            </button>
-
-            <div className="flex border-b border-brandborder shrink-0">
-              <button
-                onClick={() => setBookingType('doorstep')}
-                className={`flex-1 py-6 font-bold text-sm transition-all ${bookingType === 'doorstep' ? 'bg-white text-saffron border-b-2 border-saffron' : 'bg-surface text-textMuted'}`}
-              >
-                Book a Pandit (Doorstep)
-              </button>
-              <button
-                onClick={() => setBookingType('epuja')}
-                className={`flex-1 py-6 font-bold text-sm transition-all ${bookingType === 'epuja' ? 'bg-white text-saffron border-b-2 border-saffron' : 'bg-surface text-textMuted'}`}
-              >
-                Book an E-Puja
-              </button>
-            </div>
-
-            <div className="p-10 overflow-y-auto">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-12 h-12 bg-saffron-light text-saffron rounded-xl flex items-center justify-center shrink-0">
-                  {bookingType === 'epuja' ? <Video size={24} /> : <Home size={24} />}
-                </div>
-                <h3 className="text-2xl font-bold font-serif text-maroon">
-                  {bookingType === 'epuja' ? 'E-Puja Booking' : 'Doorstep Puja Booking'}
-                </h3>
-              </div>
-
-              <div className="space-y-4 text-textMid mb-8">
-                <p className="font-medium text-sm">
-                  {bookingType === 'epuja'
-                    ? 'E-Puja is an easy way to book and perform Hindu rituals online from your home. A qualified pandit conducts the puja live through a video call and guides you through each step of the ritual.'
-                    : 'Traditional doorstep puja where a verified Pandit visits your home with all necessary Samagri to perform the sacred rituals.'}
-                </p>
-                <div className="space-y-2 bg-surface p-4 rounded-xl border border-brandborder">
-                  <p className="font-bold text-maroon text-sm">How it works:</p>
-                  <ul className="space-y-2 text-sm">
-                    <li className="flex items-start gap-2"><CheckCircle size={16} className="text-[#1E7D3C] mt-0.5 shrink-0" /> Select the puja, date, and time.</li>
-                    <li className="flex items-start gap-2"><CheckCircle size={16} className="text-[#1E7D3C] mt-0.5 shrink-0" /> {bookingType === 'epuja' ? 'Join the live video session with the pandit.' : 'Pandit reaches your location on time.'}</li>
-                    <li className="flex items-start gap-2"><CheckCircle size={16} className="text-[#1E7D3C] mt-0.5 shrink-0" /> Follow the guided ritual and ask questions during the puja.</li>
-                  </ul>
-                </div>
-              </div>
-
-              <button
-                onClick={() => proceedWithBooking(bookingType)}
-                className="w-full py-4 bg-saffron text-white font-bold rounded-2xl shadow-lg shadow-saffron/20 hover:bg-saffron-dark transition-all flex items-center justify-center gap-2"
-              >
-                {bookingType === 'epuja' ? <Video size={20} /> : <ArrowRight size={20} />}
-                {bookingType === 'epuja' ? 'Continue with E-puja' : 'Continue with Doorstep'}
-              </button>
             </div>
           </div>
         </div>

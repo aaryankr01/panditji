@@ -18,6 +18,7 @@ import PanditProfile from './pages/PanditProfile';
 import TermsOfService from './pages/TermsOfService';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import Guidelines from './pages/Guidelines';
+import EPujaPage from './pages/EPujaPage';
 
 // User Pages
 import DevoteeDashboard from './pages/DevoteeDashboard';
@@ -54,6 +55,7 @@ function App() {
         <Route path="/terms" element={<TermsOfService />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/guidelines" element={<Guidelines />} />
+        <Route path="/e-puja" element={<EPujaPage />} />
 
       {/* Auth Routes */}
       <Route path="/login" element={isAuthenticated ? <Navigate to="/" /> : <Login />} />

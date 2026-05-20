@@ -8,12 +8,6 @@ const bookingSchema = new mongoose.Schema(
     pujaType: {
       type: String,
       required: true,
-      enum: [
-        'Griha Pravesh', 'Satyanarayan Katha', 'Vivah Ceremony',
-        'Mundan Ceremony', 'Navratri Puja', 'Durga Puja',
-        'Havan & Yagya', 'Naamkaran', 'Ganesh Puja',
-        'Lakshmi Puja', 'Rudrabhishek', 'Surya Puja', 'Other',
-      ],
     },
     scheduledDate: { type: Date, required: true },
     scheduledTime: { type: String, required: true },

@@ -24,6 +24,7 @@ const paymentRoutes = require('./routes/payments');
 const reviewRoutes = require('./routes/reviews');
 const userRoutes = require('./routes/users');
 const supportRoutes = require('./routes/support');
+const pujaRoutes = require('./routes/pujas');
 
 // Connect DB
 connectDB();
@@ -102,6 +103,7 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/support', supportRoutes);
+app.use('/api/pujas', pujaRoutes);
 
 // Inject io into bookingController for real-time broadcasts
 const bookingController = require('./controllers/bookingController');

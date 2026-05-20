@@ -32,6 +32,7 @@ const Navbar = () => {
           <div className="hidden md:flex items-center gap-8">
             <Link to="/pujas"   className="text-sm font-bold text-textMid hover:text-saffron transition-colors">Book a Puja</Link>
             <Link to="/pandits" className="text-sm font-bold text-textMid hover:text-saffron transition-colors">Find Pandits</Link>
+            <Link to="/e-puja"  className="text-sm font-bold text-textMid hover:text-saffron transition-colors">E-Puja</Link>
             <a href="/#about" className="text-sm font-bold text-textMid hover:text-saffron transition-colors">About Us</a>
           </div>
 

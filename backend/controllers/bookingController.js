@@ -120,7 +120,26 @@ exports.getBookings = async (req, res, next) => {
   try {
     const userId = req.user.id;
     const role = req.user.role;
-    let query = role === 'devotee' ? { devotee: userId } : { pandit: userId };
+    let query;
+
+    if (role === 'devotee') {
+      query = { devotee: userId };
+    } else {
+      // For pandit: show bookings assigned to them OR pending unassigned bookings (online or in their city)
+      query = {
+        $or: [
+          { pandit: userId },
+          {
+            status: 'pending',
+            pandit: null,
+            $or: [
+              { pujaMode: 'online' },
+              { city: { $regex: new RegExp(`^${req.user.city || ''}$`, 'i') } }
+            ]
+          }
+        ]
+      };
+    }
 
     const bookings = await Booking.find(query)
       .populate('devotee', 'firstName lastName email phone city')
