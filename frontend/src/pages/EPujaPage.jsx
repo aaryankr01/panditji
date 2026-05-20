@@ -5,12 +5,32 @@ import toast from "react-hot-toast";
 import useAuthStore from "../store/useAuthStore";
 import Navbar from "../components/common/Navbar";
 import Footer from "../components/common/Footer";
+import { Star, Clock } from 'lucide-react';
 
-const categories = ["All", "Devotional", "Remedial", "Festival", "Celebration", "Ancestral"];
+const categories = ['All', 'Home', 'Wedding', 'Devotional', 'Festival', 'Ritual', 'Remedial', 'Life Events'];
 
-const pujaEmojis = {
-  Devotional: "🙏", Remedial: "🔯", Festival: "🪔", Celebration: "🎊", Ancestral: "🪷"
-};
+const initialPujas = [
+  { _id: 1, name: 'Rudrabhishek', image: '/pictures/rudrabhisek.png', rating: 4.8, conducted: 875, isPopular: true, desc: 'Lord Shiva abhisheka for peace and prosperity.', longDesc: 'Rudrabhishek is a highly auspicious puja dedicated to Lord Shiva. It involves bathing the Shiva Lingam with sacred items like milk, honey, and gangajal while chanting powerful mantras. This brings peace, prosperity, and removes negative energies.', duration: '2-3 hrs', price: 3100, category: 'Devotional' },
+  { _id: 2, name: 'Sunderkand Path', image: '/pictures/sunderkand.png', rating: 4.5, conducted: 187, isPopular: true, desc: 'Recitation of Hanumanji\'s glory.', longDesc: 'Sunderkand Path is the recitation of the fifth chapter of the Ramcharitmanas, which highlights the glory, devotion, and triumphs of Lord Hanuman. It brings courage, confidence, and removes obstacles from one\'s path.', duration: '4-5 hrs', price: 3500, category: 'Devotional' },
+  { _id: 3, name: 'Griha Pravesh', image: '/pictures/grihaparvesh.png', rating: 4.9, conducted: 540, isPopular: true, desc: 'Blessings for your new home.', longDesc: 'Griha Pravesh is a Hindu ceremony performed on the occasion of an individual\'s first time entering their new home. It cleanses the space of any negative energies and invites divine blessings for a peaceful living.', duration: '3-4 hrs', price: 5100, category: 'Home' },
+  { _id: 4, name: 'Vivah Ceremony', image: '/pictures/vivahceremony.png', rating: 4.7, conducted: 320, isPopular: false, desc: 'Sacred marriage ceremonies.', longDesc: 'A complete traditional Hindu wedding ceremony guided by a knowledgeable Pandit. It includes all crucial rituals like Kanyadaan, Mangal Phera, and Saptapadi, ensuring the couple begins their new journey with divine blessings.', duration: '6-8 hrs', price: 11000, category: 'Wedding' },
+  { _id: 5, name: 'Satyanarayan Katha', image: '/pictures/satnaraynkatha.png', rating: 4.6, conducted: 410, isPopular: true, desc: 'Traditional thanksgiving story.', longDesc: 'The Satyanarayan Katha is a popular ritual performed to express gratitude to Lord Vishnu. It is often conducted during auspicious occasions like housewarmings, marriages, or simply for the general well-being of the family.', duration: '2-3 hrs', price: 2100, category: 'Devotional' },
+  { _id: 6, name: 'Mundan Ceremony', image: '/pictures/mundanceremony.png', rating: 4.5, conducted: 215, isPopular: false, desc: 'First haircut ritual for child.', longDesc: 'Mundan is a highly auspicious ceremony where a child receives their first haircut. It is believed to purify the child, free them from past life karma, and promote healthy mental and physical growth.', duration: '1-2 hrs', price: 2100, category: 'Life Events' },
+  { _id: 7, name: 'Navratri Puja', image: '/pictures/navratripuja.png', rating: 4.8, conducted: 630, isPopular: true, desc: '9 days of Goddess Durga worship.', longDesc: 'A powerful 9-day puja dedicated to the nine forms of Goddess Durga. This puja invokes divine feminine energy, bringing strength, prosperity, and protection to the devotee\'s household.', duration: '1-2 hrs/day', price: 3100, category: 'Festival' },
+  { _id: 8, name: 'Durga Puja', image: '/pictures/durgapuja.png', rating: 4.9, conducted: 410, isPopular: false, desc: 'Elaborate worship of Maa Durga.', longDesc: 'An elaborate and grand worship of Goddess Durga, celebrating her victory over Mahishasura. This puja is performed to overcome evil forces, obstacles, and to seek power and courage.', duration: '4-5 hrs', price: 5100, category: 'Festival' },
+  { _id: 9, name: 'Havan & Yagya', image: '/pictures/havanand%20yagya.png', rating: 4.7, conducted: 820, isPopular: true, desc: 'Fire sacrifice for purification.', longDesc: 'Havan is a sacred fire ritual where offerings are made to the fire god, Agni. The chanting of mantras along with the fire purifies the environment, eliminates negativity, and brings spiritual upliftment.', duration: '2-3 hrs', price: 3100, category: 'Ritual' },
+  { _id: 10, name: 'Naamkaran', image: '/pictures/namkaran.png', rating: 4.6, conducted: 345, isPopular: false, desc: 'Naming ceremony for newborns.', longDesc: 'The Naamkaran ceremony is the official naming of a newborn baby. According to Vedic astrology, the name is chosen based on the child\'s birth star (Nakshatra) to ensure a prosperous and auspicious life.', duration: '1-2 hrs', price: 2100, category: 'Life Events' },
+  { _id: 11, name: 'Ganesh Puja', image: '/pictures/ganeshpuja.png', rating: 4.9, conducted: 1120, isPopular: true, desc: 'Worship of Lord Ganesha for success.', longDesc: 'Lord Ganesha is the remover of obstacles and the god of new beginnings. This puja is highly recommended before starting any new venture, business, or significant life event to ensure success.', duration: '1-2 hrs', price: 2100, category: 'Devotional' },
+  { _id: 12, name: 'Lakshmi Puja', image: '/pictures/lakshmipuja.png', rating: 4.8, conducted: 950, isPopular: true, desc: 'Goddess of wealth worship.', longDesc: 'Lakshmi Puja is performed to invite Goddess Lakshmi, the deity of wealth, fortune, and prosperity, into one\'s home or business. It is especially significant during Diwali to ensure financial stability.', duration: '1-2 hrs', price: 2100, category: 'Festival' },
+  { _id: 13, name: 'Surya Puja', image: '/pictures/suryapuja.png', rating: 4.5, conducted: 120, isPopular: false, desc: 'Sun God worship for health.', longDesc: 'Surya Puja honors the Sun God, who is the source of all life and energy. It is performed for good health, vitality, success in career, and to mitigate the negative effects of the Sun in one\'s horoscope.', duration: '1-2 hrs', price: 2100, category: 'Ritual' },
+  { _id: 14, name: 'Kaal Sarp Dosh', image: '/pictures/kaalsarpdosh.png', rating: 4.6, conducted: 290, isPopular: false, desc: 'Remedial puja for Kaal Sarp Dosh.', longDesc: 'This remedial puja is specifically for individuals who have Kaal Sarp Dosh in their Kundali. It neutralizes the malefic effects of Rahu and Ketu, bringing relief from struggles and unlocking blocked success.', duration: '3-4 hrs', price: 5500, category: 'Remedial' },
+  { _id: 15, name: 'Vastu Shanti', image: '/pictures/vastushanti.png', rating: 4.7, conducted: 410, isPopular: false, desc: 'Removing vastu defects from home.', longDesc: 'Vastu Shanti is performed to correct any architectural or directional faults (Vastu Doshas) in a building. It appeases Vastu Purusha, ensuring peace, harmony, and prosperity for the inhabitants.', duration: '3-4 hrs', price: 6100, category: 'Home' },
+  { _id: 16, name: 'Maha Mrityunjaya', image: '/pictures/maha%20mrityunjaya.png', rating: 4.9, conducted: 560, isPopular: false, desc: 'Jaap for health and longevity.', longDesc: 'The Maha Mrityunjaya Jaap is a highly potent chant dedicated to Lord Shiva. It is performed to overcome severe illnesses, prevent untimely death, and grant the devotee longevity and spiritual growth.', duration: '5-6 hrs', price: 3100, category: 'Remedial' },
+  { _id: 17, name: 'Annaprashan', image: '/pictures/annaprashann.png', rating: 4.4, conducted: 180, isPopular: false, desc: 'First solid food ritual for baby.', longDesc: 'Annaprashan marks the milestone of a baby consuming solid food for the first time. The puja invokes blessings for the child\'s health, digestion, and a life filled with abundance and nourishment.', duration: '1-2 hrs', price: 1500, category: 'Life Events' },
+  { _id: 18, name: 'Navagraha Puja', image: '/pictures/navgarahpuja.png', rating: 4.5, conducted: 310, isPopular: false, desc: 'Worship of nine planets.', longDesc: 'Navagraha Puja aims to appease all nine astrological planets. It balances their energies, mitigating adverse planetary alignments (Doshas) and amplifying the positive influences in one\'s life.', duration: '2-3 hrs', price: 3500, category: 'Remedial' },
+  { _id: 19, name: 'Lakshmi Narayan', image: '/pictures/lakshminarayan.png', rating: 4.8, conducted: 430, isPopular: false, desc: 'Joint worship of Vishnu and Lakshmi.', longDesc: 'This puja is dedicated to the divine couple, Lord Vishnu and Goddess Lakshmi. It is performed to seek marital bliss, harmonious family life, and sustained material and spiritual prosperity.', duration: '2-3 hrs', price: 2500, category: 'Devotional' },
+  { _id: 20, name: 'Janmashtami Puja', image: '/pictures/janmashtamipuja.png', rating: 4.9, conducted: 780, isPopular: true, desc: 'Lord Krishna birth celebration.', longDesc: 'Celebrated on the birth anniversary of Lord Krishna, this puja involves midnight prayers, chanting, and offering Makhan Mishri. It fills the home with joy, love, and divine grace.', duration: '2-3 hrs', price: 3100, category: 'Festival' },
+];
 
 const steps = [
   { icon: "🌐", title: "Visit PanditJi", desc: "Go to our website to explore puja services and details." },
@@ -30,123 +50,42 @@ const advantages = [
   "Follow every custom with complete Hindu Rituals.",
 ];
 
-function StarRating({ rating }) {
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-      {[1, 2, 3, 4, 5].map(i => (
-        <svg key={i} width="14" height="14" viewBox="0 0 24 24" fill={i <= Math.floor(rating) ? "#f59e0b" : i - 0.5 <= rating ? "url(#half)" : "#e5e7eb"}>
-          <defs>
-            <linearGradient id="half"><stop offset="50%" stopColor="#f59e0b" /><stop offset="50%" stopColor="#e5e7eb" /></linearGradient>
-          </defs>
-          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-        </svg>
-      ))}
-      <span style={{ fontSize: 12, color: "#6b7280", marginLeft: 2 }}>{rating}</span>
-    </div>
-  );
-}
-
 function PujaCard({ puja, onBook }) {
-  const bgColors = {
-    Devotional: "linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%)",
-    Remedial: "linear-gradient(135deg, #fdf4ff 0%, #fae8ff 100%)",
-    Festival: "linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)",
-    Celebration: "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)",
-    Ancestral: "linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%)",
-  };
-
   return (
-    <div style={{
-      background: "#fff",
-      borderRadius: 16,
-      overflow: "hidden",
-      boxShadow: "0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04)",
-      border: "1px solid #f3f4f6",
-      transition: "transform 0.2s, box-shadow 0.2s",
-      cursor: "pointer",
-      display: "flex",
-      flexDirection: "column",
-    }}
-      onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = "0 8px 24px rgba(0,0,0,0.12)"; }}
-      onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.08)"; }}
-    >
-      {/* Image placeholder with gradient */}
-      <div style={{
-        background: bgColors[puja.category] || bgColors.Devotional,
-        height: 180,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        position: "relative",
-        fontSize: 56,
-      }}>
-        {pujaEmojis[puja.category] || "🙏"}
-        {puja.discount && (
-          <div style={{
-            position: "absolute",
-            top: 10,
-            left: 10,
-            background: "#ef4444",
-            color: "#fff",
-            fontSize: 11,
-            fontWeight: 700,
-            padding: "3px 8px",
-            borderRadius: 20,
-          }}>{puja.discount}% OFF</div>
-        )}
-        {puja.tag && (
-          <div style={{
-            position: "absolute",
-            top: 10,
-            right: 10,
-            background: "#7c3aed",
-            color: "#fff",
-            fontSize: 10,
-            fontWeight: 600,
-            padding: "3px 8px",
-            borderRadius: 20,
-          }}>{puja.tag}</div>
+    <div className="group bg-white rounded-3xl overflow-hidden border border-brandborder shadow-sm hover:shadow-2xl transition-all duration-500 flex flex-col">
+      <div className="relative h-48 overflow-hidden shrink-0">
+        <img src={puja.image || '/pictures/rudrabhisek.png'} alt={puja.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+        {puja.isPopular && (
+          <div className="absolute top-4 left-4 bg-saffron text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-lg">
+            Popular
+          </div>
         )}
       </div>
-
-      <div style={{ padding: "16px", flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
-        <div style={{ fontSize: 13, color: "#9ca3af", fontWeight: 500, textTransform: "uppercase", letterSpacing: 0.5 }}>
-          {puja.category}
-        </div>
-        <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#111827", lineHeight: 1.3 }}>
+      <div className="p-6 flex flex-col flex-1">
+        <h3 className="text-xl font-bold font-serif text-maroon mb-1 group-hover:text-saffron transition-colors">
           {puja.name}
         </h3>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontSize: 20, fontWeight: 800, color: "#ea580c" }}>
-            ₹{puja.price.toLocaleString("en-IN")}
-          </span>
-          {puja.originalPrice && (
-            <span style={{ fontSize: 13, color: "#9ca3af", textDecoration: "line-through" }}>
-              ₹{puja.originalPrice.toLocaleString("en-IN")}
-            </span>
-          )}
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-1">
+            {[1, 2, 3, 4, 5].map(i => <Star key={i} size={12} className="fill-gold text-gold" />)}
+            <span className="text-xs font-bold text-maroon ml-1">{puja.rating || 4.5}</span>
+          </div>
+          <span className="text-saffron font-bold">₹{puja.price.toLocaleString("en-IN")}</span>
         </div>
 
-        <StarRating rating={puja.rating} />
+        <div className="flex items-center gap-2 text-xs text-textMid mb-4 bg-surface px-3 py-1.5 rounded-lg w-fit">
+          <Clock size={14} className="text-saffron" />
+          <span className="font-medium">{puja.duration || '1-2 hrs'}</span>
+        </div>
 
-        <div style={{ marginTop: "auto", paddingTop: 12 }}>
+        <p className="text-textMid text-xs mb-6 line-clamp-2 flex-1">{puja.desc || 'Perform this auspicious puja with our expert Pandits.'}</p>
+
+        <div className="flex gap-3 mt-auto">
           <button
             onClick={() => onBook(puja)}
-            style={{
-              width: "100%",
-              background: "linear-gradient(135deg, #ea580c 0%, #dc2626 100%)",
-              color: "#fff",
-              border: "none",
-              borderRadius: 8,
-              padding: "10px 16px",
-              fontWeight: 700,
-              fontSize: 14,
-              cursor: "pointer",
-              transition: "opacity 0.2s",
-            }}
-            onMouseEnter={e => e.currentTarget.style.opacity = "0.9"}
-            onMouseLeave={e => e.currentTarget.style.opacity = "1"}
+            className="w-full px-3 py-2.5 bg-saffron text-white font-bold rounded-xl hover:bg-saffron-dark transition-all shadow-md shadow-saffron/20 text-xs"
           >
             Book Now
           </button>
@@ -185,12 +124,14 @@ export default function EPujaPage() {
     const fetchPujas = async () => {
       try {
         const res = await axios.get("http://localhost:5000/api/pujas");
-        if (res.data && res.data.success) {
+        if (res.data && res.data.success && res.data.data.length > 0) {
           setPujas(res.data.data);
+        } else {
+          setPujas(initialPujas);
         }
       } catch (err) {
         console.error("Failed to load pujas from API:", err);
-        toast.error("Could not fetch Puja services from server.");
+        setPujas(initialPujas);
       } finally {
         setLoading(false);
       }
@@ -706,25 +647,14 @@ export default function EPujaPage() {
         </div>
 
         {/* Category pills */}
-        <div style={{ display: "flex", gap: 8, marginBottom: 32, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 8, marginBottom: 32, flexWrap: "wrap", justifyContent: "center" }}>
           {categories.map(cat => (
             <button
               key={cat}
               onClick={() => setActiveCategory(cat)}
-              style={{
-                padding: "8px 18px",
-                borderRadius: 24,
-                border: "1px solid",
-                borderColor: activeCategory === cat ? "#ea580c" : "#e5e7eb",
-                background: activeCategory === cat ? "#ea580c" : "#fff",
-                color: activeCategory === cat ? "#fff" : "#6b7280",
-                fontWeight: activeCategory === cat ? 700 : 500,
-                fontSize: 13,
-                cursor: "pointer",
-                transition: "all 0.2s",
-              }}
+              className={`px-5 py-2.5 rounded-full text-sm font-bold transition-all ${activeCategory === cat ? 'bg-saffron text-white shadow-lg' : 'bg-white border border-brandborder text-textMid hover:border-saffron hover:text-saffron'}`}
             >
-              {cat !== "All" && pujaEmojis[cat]} {cat}
+              {cat}
             </button>
           ))}
         </div>
