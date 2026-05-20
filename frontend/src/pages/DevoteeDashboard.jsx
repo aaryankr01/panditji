@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import useAuthStore from '../store/useAuthStore';
 import axios from 'axios';
 import { io } from 'socket.io-client';
-import { LogOut, MessageSquare, Search, Star, MapPin, AlertCircle, CheckCircle, BadgeCheck, Clock, Navigation, X, Calendar, Headphones, Video } from 'lucide-react';
+import { LogOut, MessageSquare, Search, Star, MapPin, AlertCircle, CheckCircle, BadgeCheck, Clock, Navigation, X, Calendar, Headphones, Video, Briefcase, Languages, Users } from 'lucide-react';
 import ChatInterface from '../components/ChatInterface';
 import SupportCare from '../components/SupportCare';
 
@@ -676,20 +676,22 @@ const DevoteeDashboard = () => {
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 18 }}>
                     {pandits.map(pandit => (
                       <div key={pandit._id} className="dd-pandit-card">
-                        {!isLocal && (
-                          <div style={{ position: 'absolute', top: 14, right: 14, background: C.saffronLt, border: `1px solid ${C.saffron}`, color: C.saffron, fontSize: 10, fontWeight: 800, padding: '3px 10px', borderRadius: 20, display: 'flex', alignItems: 'center', gap: 4 }}>
-                            <BadgeCheck size={11} /> Trusted
-                          </div>
-                        )}
-
-                        {/* Avatar + rating */}
+                        {/* Avatar + badges container */}
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
                           <div style={{ width: 54, height: 54, borderRadius: '50%', background: `linear-gradient(135deg,${C.saffron},${C.gold})`, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 900, flexShrink: 0 }}>
                             {pandit.firstName?.charAt(0)}
                           </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 4, background: C.goldLt, border: `1px solid ${C.gold}`, borderRadius: 20, padding: '4px 10px' }}>
-                            <Star size={13} fill={C.gold} color={C.gold} />
-                            <span style={{ fontSize: 12, fontWeight: 800, color: C.maroon }}>4.8</span>
+                          
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
+                            {!isLocal && (
+                              <div style={{ background: C.saffronLt, border: `1px solid ${C.saffron}`, color: C.saffron, fontSize: 10, fontWeight: 800, padding: '3px 10px', borderRadius: 20, display: 'flex', alignItems: 'center', gap: 4 }}>
+                                <BadgeCheck size={11} /> Trusted
+                              </div>
+                            )}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 4, background: C.goldLt, border: `1px solid ${C.gold}`, borderRadius: 20, padding: '4px 10px' }}>
+                              <Star size={13} fill={C.gold} color={C.gold} />
+                              <span style={{ fontSize: 12, fontWeight: 800, color: C.maroon }}>{pandit.panditProfile?.rating || '4.8'}</span>
+                            </div>
                           </div>
                         </div>
 
@@ -710,10 +712,38 @@ const DevoteeDashboard = () => {
                           )}
                         </div>
 
-                        <div style={{ background: C.surface, borderRadius: 8, padding: '9px 12px', fontSize: 12, color: C.textMid, marginBottom: 14, minHeight: 38 }}>
-                          <span style={{ fontWeight: 700, color: C.maroon }}>Expertise: </span>
-                          {pandit.panditProfile?.specializations?.join(', ') || pandit.panditProfile?.specialization || 'All Pujas'}
+                        <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
+                          <div style={{ flex: 1, background: C.maroonLt, borderRadius: 8, padding: '8px 10px', textAlign: 'center' }}>
+                            <div style={{ color: C.maroon, fontWeight: 800, fontSize: 13 }}>{pandit.panditProfile?.experience || 0}+ yrs</div>
+                            <div style={{ color: C.textMuted, fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Experience</div>
+                          </div>
                         </div>
+
+                        <div style={{ background: C.surface, borderRadius: 8, padding: '10px 12px', fontSize: 12, color: C.textMid, marginBottom: 12, border: `1px solid ${C.border}` }}>
+                          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6, marginBottom: 6 }}>
+                            <Briefcase size={13} style={{ marginTop: 2, flexShrink: 0, color: C.maroon }} />
+                            <div>
+                              <span style={{ fontWeight: 700, color: C.maroon }}>Expertise: </span>
+                              {pandit.panditProfile?.specializations?.join(', ') || pandit.panditProfile?.specialization || 'All Pujas'}
+                            </div>
+                          </div>
+                          
+                          {pandit.panditProfile?.languages?.length > 0 && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <Languages size={13} style={{ flexShrink: 0, color: C.maroon }} />
+                              <div>
+                                <span style={{ fontWeight: 700, color: C.maroon }}>Languages: </span>
+                                {pandit.panditProfile.languages.join(', ')}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {pandit.panditProfile?.bio && (
+                          <p style={{ fontSize: 11, color: C.textMuted, marginBottom: 14, fontStyle: 'italic', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.4 }}>
+                            "{pandit.panditProfile.bio}"
+                          </p>
+                        )}
 
                         <div style={{ display: 'flex', gap: 8 }}>
                           <button className="dd-btn dd-btn-maroon" style={{ flex: 1, justifyContent: 'center', fontSize: 13 }}
