@@ -47,6 +47,9 @@ const panditSchema = new mongoose.Schema(
     whatsappNumber: { type: String, default: '' },
     profilePhoto: { type: String, default: '' },
     documents: [{ type: String }], // verification docs
+    aadharNumber: { type: String, default: '' },
+    isAadharVerified: { type: Boolean, default: false },
+    aadharDetails: { type: Object, default: null }, // To store fetched KYC info
     subscription: {
       isActive: { type: Boolean, default: false },
       startDate: { type: Date },

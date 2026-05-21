@@ -828,6 +828,11 @@ const DevoteeDashboard = () => {
                         )}
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}>
+                        {booking.status === 'confirmed' && booking.paymentStatus === 'pending' && (
+                          <button className="dd-btn dd-btn-primary" style={{ fontSize: 12 }} onClick={() => handlePayment(booking)} disabled={loading}>
+                            💳 Pay Now
+                          </button>
+                        )}
                         {booking.pandit && booking.paymentStatus === 'paid' && (
                           <button className="dd-btn dd-btn-ghost" style={{ fontSize: 12 }} onClick={() => startChat(booking.pandit)}>
                             <MessageSquare size={14} /> Chat

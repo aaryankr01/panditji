@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../../store/useAuthStore';
 import axios from 'axios';
-import { Users, MessageSquare, LayoutDashboard, LogOut, Headphones, RefreshCw, Inbox, CheckCircle, Clock, XCircle, Send, Trash2 } from 'lucide-react';
+import { Users, MessageSquare, LayoutDashboard, LogOut, Headphones, RefreshCw, Inbox, CheckCircle, Clock, XCircle, Send, Trash2, Eye } from 'lucide-react';
 
 const AdminDashboard = () => {
   const { user, token, logout } = useAuthStore();
@@ -11,7 +11,10 @@ const AdminDashboard = () => {
   const [usersList, setUsersList] = useState([]);
   const [paymentsList, setPaymentsList] = useState([]);
   const [activeTab, setActiveTab] = useState('overview');
-  const [filters, setFilters] = useState({ search: '', role: '' });
+  const [filters, setFilters] = useState({ search: '', role: '', verification: 'all' });
+  const [selectedUserModal, setSelectedUserModal] = useState(null);
+  const [bookingsList, setBookingsList] = useState([]);
+  const [selectedBookingModal, setSelectedBookingModal] = useState(null);
   const [tickets, setTickets] = useState([]);
   const [ticketFilter, setTicketFilter] = useState('all');
   const [selectedTicket, setSelectedTicket] = useState(null);
@@ -45,6 +48,11 @@ const AdminDashboard = () => {
           headers: { Authorization: `Bearer ${token}` }
         });
         setTickets(ticketsRes.data.data);
+
+        const bookingsRes = await axios.get('http://localhost:5000/api/admin/bookings', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setBookingsList(bookingsRes.data.data || []);
       } catch (err) {
         console.error(err);
       }
@@ -104,10 +112,40 @@ const AdminDashboard = () => {
     } catch { alert('Failed to delete ticket'); }
   };
 
+  const handleApprovePandit = async (id) => {
+    if (!window.confirm('Approve this Pandit?')) return;
+    try {
+      await axios.patch(`http://localhost:5000/api/admin/users/${id}/approve-pandit`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const usersRes = await axios.get('http://localhost:5000/api/admin/users', { headers: { Authorization: `Bearer ${token}` } });
+      setUsersList(usersRes.data.data);
+    } catch (err) { alert('Failed to approve'); }
+  };
+
+  const handleRejectPandit = async (id) => {
+    if (!window.confirm('Reject this Pandit?')) return;
+    try {
+      await axios.patch(`http://localhost:5000/api/admin/users/${id}/reject-pandit`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const usersRes = await axios.get('http://localhost:5000/api/admin/users', { headers: { Authorization: `Bearer ${token}` } });
+      setUsersList(usersRes.data.data);
+    } catch (err) { alert('Failed to reject'); }
+  };
+
   const filteredUsers = usersList.filter(u => {
     const matchesSearch = `${u.firstName} ${u.lastName} ${u.email}`.toLowerCase().includes(filters.search.toLowerCase());
     const matchesRole = !filters.role || u.role === filters.role;
-    return matchesSearch && matchesRole;
+    let matchesVerification = true;
+    if (filters.verification !== 'all' && u.role === 'pandit') {
+      if (filters.verification === 'verified') matchesVerification = !!u.panditProfile?.isApproved;
+      else if (filters.verification === 'pending') matchesVerification = !u.panditProfile?.isApproved && (u.panditProfile?.documents?.length > 0);
+      else if (filters.verification === 'unverified') matchesVerification = !u.panditProfile?.isApproved && !(u.panditProfile?.documents?.length > 0);
+    } else if (filters.verification !== 'all' && u.role !== 'pandit') {
+      matchesVerification = false;
+    }
+    return matchesSearch && matchesRole && matchesVerification;
   });
 
   return (
@@ -176,23 +214,35 @@ const AdminDashboard = () => {
             {activeTab === 'support' && 'Support Tickets'}
           </h2>
           {activeTab === 'users' && (
-            <div className="flex gap-4">
+            <div className="flex gap-3 flex-wrap">
                <input 
                  type="text" 
                  placeholder="Search users..." 
-                 className="p-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 outline-none w-64"
+                 className="p-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 outline-none w-56"
                  value={filters.search}
                  onChange={(e) => setFilters({...filters, search: e.target.value})}
                />
                <select 
                  className="p-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 outline-none"
                  value={filters.role}
-                 onChange={(e) => setFilters({...filters, role: e.target.value})}
+                 onChange={(e) => setFilters({...filters, role: e.target.value, verification: 'all'})}
                >
                  <option value="">All Roles</option>
                  <option value="pandit">Pandits</option>
                  <option value="devotee">Devotees</option>
                </select>
+               {(filters.role === 'pandit' || filters.role === '') && (
+                 <select 
+                   className="p-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 outline-none"
+                   value={filters.verification}
+                   onChange={(e) => setFilters({...filters, verification: e.target.value})}
+                 >
+                   <option value="all">All Status</option>
+                   <option value="verified">✅ Verified</option>
+                   <option value="pending">🟡 Pending</option>
+                   <option value="unverified">🔴 Unverified</option>
+                 </select>
+               )}
             </div>
           )}
         </div>
@@ -209,7 +259,7 @@ const AdminDashboard = () => {
             </div>
 
             {/* Users Table Summary */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6">
               <div className="p-6 border-b border-gray-100">
                 <h3 className="text-lg font-bold text-gray-800">Recent Registrations</h3>
               </div>
@@ -240,6 +290,67 @@ const AdminDashboard = () => {
                 </tbody>
               </table>
             </div>
+
+            {/* Recent Bookings */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+                <h3 className="text-lg font-bold text-gray-800">Recent Bookings</h3>
+                <button onClick={() => navigate('/admin/bookings')} className="text-sm text-orange-600 font-semibold hover:underline">View All →</button>
+              </div>
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
+                    <th className="p-4 font-semibold">Devotee</th>
+                    <th className="p-4 font-semibold">Pandit (Accepted By)</th>
+                    <th className="p-4 font-semibold">Puja Type</th>
+                    <th className="p-4 font-semibold">Scheduled</th>
+                    <th className="p-4 font-semibold">Fee</th>
+                    <th className="p-4 font-semibold">Mode</th>
+                    <th className="p-4 font-semibold">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {bookingsList.slice(0, 8).map((b) => {
+                    const statusConfig = {
+                      pending: 'bg-yellow-100 text-yellow-700',
+                      confirmed: 'bg-green-100 text-green-700',
+                      'in-progress': 'bg-blue-100 text-blue-700',
+                      completed: 'bg-indigo-100 text-indigo-700',
+                      cancelled: 'bg-gray-100 text-gray-600',
+                      rejected: 'bg-red-100 text-red-700',
+                    };
+                    return (
+                      <tr key={b._id} onClick={() => setSelectedBookingModal(b)}
+                        className="border-b border-gray-50 hover:bg-orange-50/30 cursor-pointer transition-colors text-sm">
+                        <td className="p-4 font-medium text-gray-800">{b.devotee?.firstName} {b.devotee?.lastName}</td>
+                        <td className="p-4 text-gray-600">
+                          {b.pandit ? `Pt. ${b.pandit.firstName} ${b.pandit.lastName}` : <span className="text-gray-400 italic text-xs">Awaiting acceptance</span>}
+                        </td>
+                        <td className="p-4 text-gray-700">{b.pujaType}</td>
+                        <td className="p-4 text-gray-500 text-xs">
+                          {b.scheduledDate ? new Date(b.scheduledDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
+                          {b.scheduledTime && <span className="block text-gray-400">{b.scheduledTime}</span>}
+                        </td>
+                        <td className="p-4 font-bold text-gray-800">₹{(b.fee || 0).toLocaleString()}</td>
+                        <td className="p-4">
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+                            b.pujaMode === 'online' ? 'bg-purple-100 text-purple-700' : 'bg-orange-100 text-orange-700'
+                          }`}>
+                            {b.pujaMode === 'online' ? '🎥 Online' : '🏠 In-Person'}
+                          </span>
+                        </td>
+                        <td className="p-4">
+                          <span className={`px-2 py-1 rounded-full text-xs font-bold capitalize ${statusConfig[b.status] || 'bg-gray-100 text-gray-600'}`}>
+                            {b.status}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+              {bookingsList.length === 0 && <div className="p-8 text-center text-gray-400 text-sm">No bookings yet.</div>}
+            </div>
           </>
         )}
 
@@ -256,12 +367,13 @@ const AdminDashboard = () => {
                   <th className="p-4 font-semibold">Email</th>
                   <th className="p-4 font-semibold">Role</th>
                   <th className="p-4 font-semibold">City</th>
-                  <th className="p-4 font-semibold">Joined</th>
+                  <th className="p-4 font-semibold">Verification</th>
+                  <th className="p-4 font-semibold">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredUsers.map((u) => (
-                  <tr key={u._id} className="border-b border-gray-50 hover:bg-gray-50/50">
+                  <tr key={u._id} onClick={() => setSelectedUserModal(u)} className="border-b border-gray-50 hover:bg-orange-50/40 cursor-pointer transition-colors text-sm">
                     <td className="p-4 font-medium text-gray-800">{u.firstName} {u.lastName}</td>
                     <td className="p-4 text-gray-600">{u.email}</td>
                     <td className="p-4">
@@ -272,7 +384,41 @@ const AdminDashboard = () => {
                       </span>
                     </td>
                     <td className="p-4 text-gray-600">{u.city}</td>
-                    <td className="p-4 text-gray-500 text-sm">{new Date(u.createdAt).toLocaleDateString()}</td>
+                    <td className="p-4">
+                      {u.role === 'pandit' ? (
+                        u.panditProfile?.isApproved ? (
+                          <span className="px-2 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700">Verified</span>
+                        ) : u.panditProfile?.documents?.length > 0 ? (
+                          <span className="px-2 py-1 rounded-full text-xs font-bold bg-orange-100 text-orange-700">Pending</span>
+                        ) : (
+                          <span className="px-2 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700">Unverified</span>
+                        )
+                      ) : (
+                        <span className="text-gray-400">—</span>
+                      )}
+                    </td>
+                    <td className="p-4">
+                      {u.role === 'pandit' && (
+                        <div className="flex gap-2">
+                          {u.panditProfile?.documents?.length > 0 && (
+                            <a href={u.panditProfile.documents[0]} target="_blank" rel="noopener noreferrer" 
+                               className="p-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100" title="View Document">
+                              <Eye size={16} />
+                            </a>
+                          )}
+                          {!u.panditProfile?.isApproved && u.panditProfile?.documents?.length > 0 && (
+                            <>
+                              <button onClick={() => handleApprovePandit(u._id)} className="p-1.5 bg-green-50 text-green-600 rounded-lg hover:bg-green-100" title="Approve">
+                                <CheckCircle size={16} />
+                              </button>
+                              <button onClick={() => handleRejectPandit(u._id)} className="p-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100" title="Reject">
+                                <XCircle size={16} />
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -455,6 +601,215 @@ const AdminDashboard = () => {
           </div>
         )}
       </div>
+
+      {/* User Profile Modal */}
+      {selectedUserModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setSelectedUserModal(null)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className={`p-6 rounded-t-2xl ${selectedUserModal.role === 'pandit' ? 'bg-gradient-to-r from-orange-500 to-amber-500' : 'bg-gradient-to-r from-blue-500 to-indigo-500'}`}>
+              <div className="flex justify-between items-start">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center text-white text-2xl font-bold">
+                    {selectedUserModal.firstName?.charAt(0)}{selectedUserModal.lastName?.charAt(0)}
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-white">{selectedUserModal.role === 'pandit' ? 'Pt. ' : ''}{selectedUserModal.firstName} {selectedUserModal.lastName}</h3>
+                    <p className="text-white/80 text-sm">{selectedUserModal.email}</p>
+                    <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-bold ${selectedUserModal.role === 'pandit' ? 'bg-orange-900/40 text-orange-100' : 'bg-blue-900/40 text-blue-100'}`}>
+                      {selectedUserModal.role.toUpperCase()}
+                    </span>
+                  </div>
+                </div>
+                <button onClick={() => setSelectedUserModal(null)} className="text-white/70 hover:text-white transition-colors text-3xl leading-none font-light">&times;</button>
+              </div>
+            </div>
+            <div className="p-6 space-y-5">
+              <div>
+                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Basic Information</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-gray-50 rounded-xl p-3">
+                    <p className="text-xs text-gray-400 mb-1">Phone</p>
+                    <p className="font-semibold text-gray-800 text-sm">{selectedUserModal.phone || '—'}</p>
+                  </div>
+                  <div className="bg-gray-50 rounded-xl p-3">
+                    <p className="text-xs text-gray-400 mb-1">City</p>
+                    <p className="font-semibold text-gray-800 text-sm">{selectedUserModal.city || '—'}</p>
+                  </div>
+                  <div className="bg-gray-50 rounded-xl p-3">
+                    <p className="text-xs text-gray-400 mb-1">Joined</p>
+                    <p className="font-semibold text-gray-800 text-sm">{new Date(selectedUserModal.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                  </div>
+                  <div className="bg-gray-50 rounded-xl p-3">
+                    <p className="text-xs text-gray-400 mb-1">Account Status</p>
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${selectedUserModal.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                      {selectedUserModal.isActive ? 'Active' : 'Inactive'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {selectedUserModal.role === 'pandit' && selectedUserModal.panditProfile && (
+                <>
+                  <hr className="border-gray-100" />
+                  <div>
+                    <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Professional Details</h4>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-orange-50 rounded-xl p-3">
+                        <p className="text-xs text-gray-400 mb-1">Experience</p>
+                        <p className="font-bold text-orange-700 text-sm">{selectedUserModal.panditProfile.experience || 0} Years</p>
+                      </div>
+                      <div className="bg-orange-50 rounded-xl p-3">
+                        <p className="text-xs text-gray-400 mb-1">Fee Per Puja</p>
+                        <p className="font-bold text-green-700 text-sm">₹{selectedUserModal.panditProfile.feePerPuja || 0}</p>
+                      </div>
+                      {selectedUserModal.panditProfile.specializations?.length > 0 && (
+                        <div className="col-span-2 bg-gray-50 rounded-xl p-3">
+                          <p className="text-xs text-gray-400 mb-2">Specializations</p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {selectedUserModal.panditProfile.specializations.map((s, i) => (
+                              <span key={i} className="px-2 py-0.5 bg-orange-100 text-orange-700 rounded-full text-xs font-semibold">{s}</span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {selectedUserModal.panditProfile.bio && (
+                        <div className="col-span-2 bg-gray-50 rounded-xl p-3">
+                          <p className="text-xs text-gray-400 mb-1">Bio</p>
+                          <p className="text-sm text-gray-700 leading-relaxed">{selectedUserModal.panditProfile.bio}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <hr className="border-gray-100" />
+                  <div>
+                    <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Aadhar Verification</h4>
+                    {selectedUserModal.panditProfile.isApproved ? (
+                      <div className="flex items-center gap-2 bg-green-50 text-green-700 p-3 rounded-xl font-semibold text-sm">
+                        <CheckCircle size={18} /> Verified &amp; Approved
+                      </div>
+                    ) : selectedUserModal.panditProfile.documents?.length > 0 ? (
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2 bg-orange-50 text-orange-700 p-3 rounded-xl font-semibold text-sm">
+                          <Clock size={18} /> Pending Admin Review
+                        </div>
+                        {selectedUserModal.panditProfile.aadharNumber && (
+                          <p className="text-sm text-gray-600 px-1"><span className="font-semibold">Aadhar:</span> XXXX XXXX {selectedUserModal.panditProfile.aadharNumber.slice(-4)}</p>
+                        )}
+                        <a href={selectedUserModal.panditProfile.documents[0]} target="_blank" rel="noopener noreferrer"
+                           className="flex items-center gap-2 text-blue-600 hover:underline text-sm font-medium px-1">
+                          <Eye size={16} /> View Uploaded Aadhar Document
+                        </a>
+                        <div className="flex gap-3 pt-1">
+                          <button onClick={() => { handleApprovePandit(selectedUserModal._id); setSelectedUserModal(null); }}
+                            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-green-500 text-white font-bold rounded-xl hover:bg-green-600 transition-colors text-sm">
+                            <CheckCircle size={16} /> Approve
+                          </button>
+                          <button onClick={() => { handleRejectPandit(selectedUserModal._id); setSelectedUserModal(null); }}
+                            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 transition-colors text-sm">
+                            <XCircle size={16} /> Reject
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 bg-red-50 text-red-700 p-3 rounded-xl font-semibold text-sm">
+                        <XCircle size={18} /> No Document Uploaded Yet
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Booking Detail Modal */}
+      {selectedBookingModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setSelectedBookingModal(null)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="bg-gradient-to-r from-orange-500 to-amber-500 p-6 rounded-t-2xl">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="text-xl font-bold text-white">{selectedBookingModal.pujaType}</h3>
+                  <p className="text-orange-100 text-xs mt-1">ID: {selectedBookingModal._id}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="px-3 py-1 rounded-full text-xs font-bold bg-white/20 text-white capitalize">{selectedBookingModal.status}</span>
+                  <button onClick={() => setSelectedBookingModal(null)} className="text-white/70 hover:text-white text-3xl leading-none font-light">&times;</button>
+                </div>
+              </div>
+            </div>
+            <div className="p-6 space-y-5">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-blue-50 rounded-2xl p-4">
+                  <p className="text-xs font-bold text-blue-400 uppercase tracking-wider mb-2">Devotee (Booked By)</p>
+                  <p className="font-bold text-gray-800">{selectedBookingModal.devotee?.firstName} {selectedBookingModal.devotee?.lastName}</p>
+                  <p className="text-sm text-gray-500">{selectedBookingModal.devotee?.email}</p>
+                  <p className="text-sm text-gray-500">{selectedBookingModal.devotee?.phone || '—'}</p>
+                </div>
+                <div className="bg-orange-50 rounded-2xl p-4">
+                  <p className="text-xs font-bold text-orange-400 uppercase tracking-wider mb-2">Pandit (Accepted By)</p>
+                  {selectedBookingModal.pandit ? (
+                    <>
+                      <p className="font-bold text-gray-800">Pt. {selectedBookingModal.pandit.firstName} {selectedBookingModal.pandit.lastName}</p>
+                      <p className="text-sm text-gray-500">{selectedBookingModal.pandit.email}</p>
+                      <p className="text-sm text-gray-500">{selectedBookingModal.pandit.phone || '—'}</p>
+                    </>
+                  ) : <p className="text-gray-400 italic text-sm">Not yet assigned</p>}
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-gray-50 rounded-xl p-3">
+                  <p className="text-xs text-gray-400 mb-1">Scheduled</p>
+                  <p className="font-semibold text-gray-800 text-sm">{selectedBookingModal.scheduledDate ? new Date(selectedBookingModal.scheduledDate).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' }) : '—'}</p>
+                  <p className="text-xs text-gray-500">{selectedBookingModal.scheduledTime || ''}</p>
+                </div>
+                <div className="bg-gray-50 rounded-xl p-3">
+                  <p className="text-xs text-gray-400 mb-1">Fee & Payment</p>
+                  <p className="font-bold text-green-700 text-sm">₹{(selectedBookingModal.fee || 0).toLocaleString()}</p>
+                  <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full capitalize ${selectedBookingModal.paymentStatus === 'paid' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{selectedBookingModal.paymentStatus}</span>
+                </div>
+                <div className="bg-gray-50 rounded-xl p-3">
+                  <p className="text-xs text-gray-400 mb-1">Mode</p>
+                  <p className="font-semibold text-gray-800 text-sm capitalize">{selectedBookingModal.pujaMode || 'in-person'}</p>
+                </div>
+                <div className="bg-gray-50 rounded-xl p-3">
+                  <p className="text-xs text-gray-400 mb-1">City</p>
+                  <p className="font-semibold text-gray-800 text-sm">{selectedBookingModal.city || '—'}</p>
+                </div>
+                <div className="col-span-2 bg-gray-50 rounded-xl p-3">
+                  <p className="text-xs text-gray-400 mb-1">Address</p>
+                  <p className="font-semibold text-gray-700 text-sm">{selectedBookingModal.address || '—'}</p>
+                </div>
+                {selectedBookingModal.notes && (
+                  <div className="col-span-2 bg-blue-50 rounded-xl p-3">
+                    <p className="text-xs text-gray-400 mb-1">Notes</p>
+                    <p className="text-sm text-gray-700">{selectedBookingModal.notes}</p>
+                  </div>
+                )}
+                {selectedBookingModal.videoLink && (
+                  <div className="col-span-2 bg-purple-50 rounded-xl p-3">
+                    <p className="text-xs text-gray-400 mb-1">Video Link</p>
+                    <a href={selectedBookingModal.videoLink} target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:underline text-sm break-all">{selectedBookingModal.videoLink}</a>
+                  </div>
+                )}
+                {selectedBookingModal.cancellationReason && (
+                  <div className="col-span-2 bg-red-50 rounded-xl p-3">
+                    <p className="text-xs text-red-400 font-bold mb-1 uppercase">Cancellation Reason</p>
+                    <p className="text-sm text-gray-700">{selectedBookingModal.cancellationReason}</p>
+                    {selectedBookingModal.cancelledBy && <p className="text-xs text-red-500 mt-1">Cancelled by: <span className="font-bold capitalize">{selectedBookingModal.cancelledBy}</span></p>}
+                  </div>
+                )}
+              </div>
+              <div className="flex justify-between text-xs text-gray-400 border-t border-gray-100 pt-3">
+                <span>Created: {new Date(selectedBookingModal.createdAt).toLocaleString('en-IN')}</span>
+                <span>Updated: {new Date(selectedBookingModal.updatedAt).toLocaleString('en-IN')}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

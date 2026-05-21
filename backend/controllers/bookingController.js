@@ -146,6 +146,23 @@ exports.getBookings = async (req, res, next) => {
       .populate('pandit', 'firstName lastName email phone city')
       .sort('-createdAt');
 
+    const now = new Date();
+    for (let booking of bookings) {
+      if (booking.status === 'pending' && booking.scheduledDate && booking.scheduledTime) {
+        try {
+          const dateStr = booking.scheduledDate.toISOString().split('T')[0];
+          const scheduledDateTime = new Date(`${dateStr}T${booking.scheduledTime}:00`);
+          if (scheduledDateTime < now) {
+            booking.status = 'cancelled';
+            booking.cancellationReason = 'Auto-cancelled because the scheduled time has passed.';
+            await booking.save();
+          }
+        } catch (e) {
+          console.error("Error checking date for booking:", booking._id, e);
+        }
+      }
+    }
+
     res.status(200).json({ success: true, count: bookings.length, data: bookings });
   } catch (err) {
     next(err);

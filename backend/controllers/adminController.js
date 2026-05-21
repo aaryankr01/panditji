@@ -2,6 +2,7 @@ const User = require('../models/User');
 const { Message } = require('../models/Message');
 const Booking = require('../models/Booking');
 const Payment = require('../models/Payment');
+const Pandit = require('../models/Pandit');
 
 // @desc    Get all users (optionally filtered by role)
 // @route   GET /api/admin/users?role=pandit
@@ -96,6 +97,48 @@ exports.getAllPayments = async (req, res, next) => {
       .populate('pandit', 'firstName lastName')
       .sort('-createdAt');
     res.status(200).json({ success: true, count: payments.length, data: payments });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Approve Pandit Profile
+// @route   PATCH /api/admin/users/:id/approve-pandit
+// @access  Private/Admin
+exports.approvePandit = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user || user.role !== 'pandit' || !user.panditProfile) {
+      return res.status(404).json({ success: false, message: 'Pandit not found' });
+    }
+
+    await Pandit.findByIdAndUpdate(user.panditProfile, {
+      isApproved: true,
+      isAadharVerified: true
+    });
+
+    res.status(200).json({ success: true, message: 'Pandit approved successfully' });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Reject Pandit Profile
+// @route   PATCH /api/admin/users/:id/reject-pandit
+// @access  Private/Admin
+exports.rejectPandit = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user || user.role !== 'pandit' || !user.panditProfile) {
+      return res.status(404).json({ success: false, message: 'Pandit not found' });
+    }
+
+    await Pandit.findByIdAndUpdate(user.panditProfile, {
+      isApproved: false,
+      isAadharVerified: false
+    });
+
+    res.status(200).json({ success: true, message: 'Pandit rejected' });
   } catch (err) {
     next(err);
   }

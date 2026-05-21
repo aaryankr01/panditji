@@ -166,18 +166,70 @@ exports.getMyProfile = async (req, res, next) => {
 // @access  Private/Pandit
 exports.updateProfile = async (req, res, next) => {
   try {
-    const { specialization, experience, bio, city } = req.body;
+    const { firstName, lastName, phone, city, specializations, experience, bio, feePerPuja } = req.body;
     
     // Update user details
-    const user = await User.findByIdAndUpdate(req.user.id, { city }, { new: true, runValidators: true });
+    const userUpdates = {};
+    if (firstName) userUpdates.firstName = firstName;
+    if (lastName) userUpdates.lastName = lastName;
+    if (phone) userUpdates.phone = phone;
+    if (city) userUpdates.city = city;
+
+    const user = await User.findByIdAndUpdate(req.user.id, userUpdates, { new: true, runValidators: true });
 
     // Update pandit profile details
     if (user.panditProfile) {
-      await Pandit.findByIdAndUpdate(user.panditProfile, { specialization, experience, bio }, { new: true, runValidators: true });
+      const panditUpdates = {};
+      if (specializations) panditUpdates.specializations = specializations;
+      if (experience !== undefined) panditUpdates.experience = experience;
+      if (bio) panditUpdates.bio = bio;
+      if (feePerPuja !== undefined) panditUpdates.feePerPuja = feePerPuja;
+
+      await Pandit.findByIdAndUpdate(user.panditProfile, panditUpdates, { new: true, runValidators: true });
     }
 
     const updatedUser = await User.findById(req.user.id).populate('panditProfile');
     res.status(200).json({ success: true, data: updatedUser });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Upload Aadhar document for verification
+// @route   POST /api/pandits/aadhar/upload
+// @access  Private/Pandit
+exports.uploadAadharDocument = async (req, res, next) => {
+  try {
+    const { aadharNumber } = req.body;
+
+    if (!aadharNumber || aadharNumber.length !== 12) {
+      return res.status(400).json({ success: false, message: 'Please provide a valid 12-digit Aadhar number' });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'Please upload an Aadhar card image' });
+    }
+
+    const user = await User.findById(req.user.id);
+    if (!user.panditProfile) {
+      return res.status(400).json({ success: false, message: 'Pandit profile not found' });
+    }
+
+    // Save document URL (from Cloudinary) and mark for review
+    await Pandit.findByIdAndUpdate(user.panditProfile, {
+      aadharNumber,
+      isAadharVerified: false, // Pending admin review
+      isApproved: false, // Hidden until verified
+      $push: { documents: req.file.path } // Add to documents array
+    });
+
+    const updatedUser = await User.findById(req.user.id).populate('panditProfile');
+
+    res.status(200).json({ 
+      success: true, 
+      message: 'Aadhar document uploaded successfully. Please wait 24 hours for admin verification.',
+      data: updatedUser 
+    });
   } catch (err) {
     next(err);
   }

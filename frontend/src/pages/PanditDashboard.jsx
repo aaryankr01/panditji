@@ -5,7 +5,7 @@ import axios from 'axios';
 import { io } from 'socket.io-client';
 import {
   LogOut, Calendar, MessageSquare, CheckCircle, XCircle,
-  MapPin, Clock, Bell, Phone, User, AlertCircle, Trash2, Headphones, Video
+  MapPin, Clock, Bell, Phone, User, AlertCircle, Trash2, Headphones, Video, ShieldCheck, Save
 } from 'lucide-react';
 import ChatInterface from '../components/ChatInterface';
 import SupportCare from '../components/SupportCare';
@@ -87,6 +87,15 @@ const PanditDashboard = () => {
   const timerRef = useRef(null);
   const [countdown, setCountdown] = useState(30);
 
+  // Profile Edit State
+  const [editForm, setEditForm] = useState({ firstName: '', lastName: '', phone: '', city: '', bio: '', experience: 0, feePerPuja: 1500, specializations: [] });
+  const [savingProfile, setSavingProfile] = useState(false);
+  
+  // Aadhar Upload State
+  const [aadharNumber, setAadharNumber] = useState('');
+  const [aadharFile, setAadharFile] = useState(null);
+  const [verifyingAadhar, setVerifyingAadhar] = useState(false);
+
   useEffect(() => {
     if (!token || user?.role !== 'pandit') { navigate('/'); return; }
 
@@ -108,6 +117,16 @@ const PanditDashboard = () => {
         const res = await axios.get(`${API}/pandits/my-profile`, { headers: { Authorization: `Bearer ${token}` } });
         const data = res.data.data;
         setProfileData(data);
+        setEditForm({
+          firstName: data.firstName || '',
+          lastName: data.lastName || '',
+          phone: data.phone || '',
+          city: data.city || '',
+          bio: data.panditProfile?.bio || '',
+          experience: data.panditProfile?.experience || 0,
+          feePerPuja: data.panditProfile?.feePerPuja || 1500,
+          specializations: data.panditProfile?.specializations || []
+        });
         
         const sub = data.panditProfile?.subscription;
         if (!sub || !sub.isActive || !sub.endDate || new Date(sub.endDate) < new Date()) {
@@ -288,6 +307,52 @@ const PanditDashboard = () => {
     } catch { alert('Failed to delete booking'); }
   };
 
+  const handleSaveProfile = async () => {
+    setSavingProfile(true);
+    try {
+      const res = await axios.patch(`${API}/pandits/profile`, editForm, { headers: { Authorization: `Bearer ${token}` } });
+      setProfileData(res.data.data);
+      updateUser(res.data.data); // Update local user state if needed
+      alert('Profile updated successfully!');
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to update profile');
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
+  const handleUploadAadhar = async () => {
+    if (aadharNumber.length !== 12) {
+      alert('Please enter a valid 12-digit Aadhar number.');
+      return;
+    }
+    if (!aadharFile) {
+      alert('Please select an Aadhar card image to upload.');
+      return;
+    }
+    setVerifyingAadhar(true);
+    const formData = new FormData();
+    formData.append('aadharNumber', aadharNumber);
+    formData.append('document', aadharFile);
+
+    try {
+      const res = await axios.post(`${API}/pandits/aadhar/upload`, formData, { 
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        } 
+      });
+      setProfileData(res.data.data);
+      alert('Aadhar document uploaded successfully! Please wait up to 24 hours for admin verification.');
+      setAadharFile(null);
+      setAadharNumber('');
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to upload document');
+    } finally {
+      setVerifyingAadhar(false);
+    }
+  };
+
   const renderBadge = (status) => {
     const map = {
       pending: { bg: C.goldLt, c: C.gold },
@@ -407,6 +472,7 @@ const PanditDashboard = () => {
           {[
             { id: 'bookings', label: 'Booking Requests', icon: Calendar },
             { id: 'chat', label: 'Messages', icon: MessageSquare },
+            { id: 'profile', label: 'My Profile', icon: User },
             { id: 'support', label: 'Support Care', icon: Headphones },
           ].map(tab => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
@@ -608,6 +674,92 @@ const PanditDashboard = () => {
           {activeTab === 'support' && (
             <div style={{ maxWidth: 900, margin: '0 auto' }}>
               <SupportCare userRole="pandit" />
+            </div>
+          )}
+
+          {activeTab === 'profile' && (
+            <div style={{ maxWidth: 900, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 24 }}>
+              
+              {/* Aadhar Verification Status */}
+              <div style={{ background: '#fff', padding: 24, borderRadius: 24, border: `1px solid ${C.border}`, boxShadow: '0 4px 12px rgba(0,0,0,0.02)' }}>
+                <h2 style={{ fontFamily: "'Playfair Display',serif", fontSize: 20, fontWeight: 700, color: C.maroon, marginBottom: 16 }}>Aadhar eKYC Verification</h2>
+                
+                {profileData?.panditProfile?.isAadharVerified ? (
+                  <div style={{ background: C.successLt, color: C.success, padding: 16, borderRadius: 12, display: 'flex', alignItems: 'center', gap: 12, fontWeight: 700 }}>
+                    <ShieldCheck size={24} />
+                    Aadhar Verified & Profile Approved
+                  </div>
+                ) : profileData?.panditProfile?.documents?.length > 0 ? (
+                  <div style={{ background: C.goldLt, color: C.gold, padding: 16, borderRadius: 12, display: 'flex', alignItems: 'center', gap: 12, fontWeight: 700 }}>
+                    <AlertCircle size={24} />
+                    Verification Pending (Please allow up to 24 hours for Admin approval)
+                  </div>
+                ) : (
+                  <div style={{ background: C.surface, padding: 20, borderRadius: 16 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                      <p style={{ fontSize: 14, color: C.textMid }}>Upload your Aadhar Card for manual verification by our Admin team.</p>
+                      <input 
+                        type="text" 
+                        placeholder="Enter 12-digit Aadhar Number" 
+                        value={aadharNumber}
+                        onChange={e => setAadharNumber(e.target.value.replace(/\D/g, '').slice(0, 12))}
+                        style={{ padding: 12, borderRadius: 8, border: `1px solid ${C.border}`, outline: 'none' }}
+                      />
+                      <input 
+                        type="file" 
+                        accept="image/*"
+                        onChange={e => setAadharFile(e.target.files[0])}
+                        style={{ padding: 12, borderRadius: 8, border: `1px solid ${C.border}`, outline: 'none', background: '#fff' }}
+                      />
+                      <button onClick={handleUploadAadhar} disabled={verifyingAadhar} className="dd-btn dd-btn-primary" style={{ width: 'fit-content' }}>
+                        {verifyingAadhar ? 'Uploading...' : 'Upload Document'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Edit Profile Form */}
+              <div style={{ background: '#fff', padding: 24, borderRadius: 24, border: `1px solid ${C.border}`, boxShadow: '0 4px 12px rgba(0,0,0,0.02)' }}>
+                <h2 style={{ fontFamily: "'Playfair Display',serif", fontSize: 20, fontWeight: 700, color: C.maroon, marginBottom: 20 }}>Personal & Professional Details</h2>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <label style={{ fontSize: 13, fontWeight: 700, color: C.textMid }}>First Name</label>
+                    <input type="text" value={editForm.firstName} onChange={e => setEditForm({...editForm, firstName: e.target.value})} style={{ padding: 12, borderRadius: 8, border: `1px solid ${C.border}`, outline: 'none' }} />
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <label style={{ fontSize: 13, fontWeight: 700, color: C.textMid }}>Last Name</label>
+                    <input type="text" value={editForm.lastName} onChange={e => setEditForm({...editForm, lastName: e.target.value})} style={{ padding: 12, borderRadius: 8, border: `1px solid ${C.border}`, outline: 'none' }} />
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <label style={{ fontSize: 13, fontWeight: 700, color: C.textMid }}>Phone Number</label>
+                    <input type="text" value={editForm.phone} onChange={e => setEditForm({...editForm, phone: e.target.value})} style={{ padding: 12, borderRadius: 8, border: `1px solid ${C.border}`, outline: 'none' }} />
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <label style={{ fontSize: 13, fontWeight: 700, color: C.textMid }}>City</label>
+                    <input type="text" value={editForm.city} onChange={e => setEditForm({...editForm, city: e.target.value})} style={{ padding: 12, borderRadius: 8, border: `1px solid ${C.border}`, outline: 'none' }} />
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <label style={{ fontSize: 13, fontWeight: 700, color: C.textMid }}>Experience (Years)</label>
+                    <input type="number" value={editForm.experience} onChange={e => setEditForm({...editForm, experience: parseInt(e.target.value) || 0})} style={{ padding: 12, borderRadius: 8, border: `1px solid ${C.border}`, outline: 'none' }} />
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <label style={{ fontSize: 13, fontWeight: 700, color: C.textMid }}>Fee Per Puja (₹)</label>
+                    <input type="number" value={editForm.feePerPuja} onChange={e => setEditForm({...editForm, feePerPuja: parseInt(e.target.value) || 0})} style={{ padding: 12, borderRadius: 8, border: `1px solid ${C.border}`, outline: 'none' }} />
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, gridColumn: '1 / -1' }}>
+                    <label style={{ fontSize: 13, fontWeight: 700, color: C.textMid }}>Bio / About</label>
+                    <textarea rows="4" value={editForm.bio} onChange={e => setEditForm({...editForm, bio: e.target.value})} style={{ padding: 12, borderRadius: 8, border: `1px solid ${C.border}`, outline: 'none', resize: 'vertical' }} />
+                  </div>
+                </div>
+
+                <div style={{ marginTop: 24, paddingTop: 24, borderTop: `1px solid ${C.border}`, display: 'flex', justifyContent: 'flex-end' }}>
+                  <button onClick={handleSaveProfile} disabled={savingProfile} className="dd-btn dd-btn-primary">
+                    <Save size={18} /> {savingProfile ? 'Saving...' : 'Save Profile'}
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </main>

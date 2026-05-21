@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../store/useAuthStore';
 import api from '../utils/api';
 import AdminDashboardLayout from './AdminDashboard';
-import { Users, Search, Trash2 } from 'lucide-react';
+import { Users, Search, Trash2, Eye, CheckCircle, XCircle } from 'lucide-react';
 
 const ManagePandits = () => {
   const { user, token } = useAuthStore();
@@ -13,8 +13,32 @@ const ManagePandits = () => {
 
   useEffect(() => {
     if (!token || user?.role !== 'admin') { navigate('/admin/login'); return; }
-    api.get('/admin/users?role=pandit').then(res => setPandits(res.data.data)).catch(console.error);
+    fetchPandits();
   }, [token]);
+
+  const fetchPandits = () => {
+    api.get('/admin/users?role=pandit').then(res => setPandits(res.data.data)).catch(console.error);
+  };
+
+  const handleApprove = async (id) => {
+    if (!window.confirm('Approve this Pandit?')) return;
+    try {
+      await api.patch(`/admin/users/${id}/approve-pandit`);
+      fetchPandits();
+    } catch (err) {
+      alert('Failed to approve');
+    }
+  };
+
+  const handleReject = async (id) => {
+    if (!window.confirm('Reject this Pandit?')) return;
+    try {
+      await api.patch(`/admin/users/${id}/reject-pandit`);
+      fetchPandits();
+    } catch (err) {
+      alert('Failed to reject');
+    }
+  };
 
   const filtered = pandits.filter(p => 
     `${p.firstName} ${p.lastName} ${p.email}`.toLowerCase().includes(search.toLowerCase())
@@ -39,8 +63,8 @@ const ManagePandits = () => {
                 <th className="p-4 font-semibold">Email</th>
                 <th className="p-4 font-semibold">Phone</th>
                 <th className="p-4 font-semibold">City</th>
-                <th className="p-4 font-semibold">Joined</th>
-                <th className="p-4 font-semibold">Status</th>
+                <th className="p-4 font-semibold">Verification</th>
+                <th className="p-4 font-semibold">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -50,11 +74,34 @@ const ManagePandits = () => {
                   <td className="p-4 text-gray-600">{p.email}</td>
                   <td className="p-4 text-gray-600">{p.phone || '—'}</td>
                   <td className="p-4 text-gray-600">{p.city || '—'}</td>
-                  <td className="p-4 text-gray-500">{new Date(p.createdAt).toLocaleDateString()}</td>
                   <td className="p-4">
-                    <span className={`px-2 py-1 rounded-full text-xs font-bold ${p.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                      {p.isActive ? 'Active' : 'Inactive'}
-                    </span>
+                    {p.panditProfile?.isApproved ? (
+                      <span className="px-2 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700">Verified</span>
+                    ) : p.panditProfile?.documents?.length > 0 ? (
+                      <span className="px-2 py-1 rounded-full text-xs font-bold bg-orange-100 text-orange-700">Pending</span>
+                    ) : (
+                      <span className="px-2 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700">Unverified</span>
+                    )}
+                  </td>
+                  <td className="p-4">
+                    <div className="flex gap-2">
+                      {p.panditProfile?.documents?.length > 0 && (
+                        <a href={p.panditProfile.documents[0]} target="_blank" rel="noopener noreferrer" 
+                           className="p-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100" title="View Document">
+                          <Eye size={16} />
+                        </a>
+                      )}
+                      {!p.panditProfile?.isApproved && p.panditProfile?.documents?.length > 0 && (
+                        <>
+                          <button onClick={() => handleApprove(p._id)} className="p-1.5 bg-green-50 text-green-600 rounded-lg hover:bg-green-100" title="Approve">
+                            <CheckCircle size={16} />
+                          </button>
+                          <button onClick={() => handleReject(p._id)} className="p-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100" title="Reject">
+                            <XCircle size={16} />
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
