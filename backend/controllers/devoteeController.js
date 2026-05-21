@@ -17,11 +17,11 @@ exports.getMyProfile = async (req, res, next) => {
 // @access  Private/Devotee
 exports.updateProfile = async (req, res, next) => {
   try {
-    const { firstName, lastName, city, state, phone } = req.body;
+    const { firstName, lastName, city, state, phone, alternatePhone, pinnedLocation } = req.body;
     
     const user = await User.findByIdAndUpdate(
       req.user.id, 
-      { firstName, lastName, city, state, phone }, 
+      { firstName, lastName, city, state, phone, alternatePhone, pinnedLocation }, 
       { new: true, runValidators: true }
     ).select('-password');
 

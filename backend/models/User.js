@@ -45,6 +45,8 @@ const userSchema = new mongoose.Schema(
       trim: true,
     },
     state: { type: String, trim: true },
+    alternatePhone: { type: String, trim: true },
+    pinnedLocation: { type: String, trim: true },
     avatar: { type: String, default: '' },
     isActive: { type: Boolean, default: true },
     isVerified: { type: Boolean, default: false },

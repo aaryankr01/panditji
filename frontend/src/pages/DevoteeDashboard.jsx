@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import useAuthStore from '../store/useAuthStore';
 import axios from 'axios';
 import { io } from 'socket.io-client';
-import { LogOut, MessageSquare, Search, Star, MapPin, AlertCircle, CheckCircle, BadgeCheck, Clock, Navigation, X, Calendar, Headphones, Video, Briefcase, Languages, Users } from 'lucide-react';
+import { LogOut, MessageSquare, Search, Star, MapPin, AlertCircle, CheckCircle, BadgeCheck, Clock, Navigation, X, Calendar, Headphones, Video, Briefcase, Languages, Users, User } from 'lucide-react';
 import ChatInterface from '../components/ChatInterface';
 import SupportCare from '../components/SupportCare';
 
@@ -184,7 +184,7 @@ const DevoteeDashboard = () => {
   const [pandits, setPandits] = useState([]);
   const [isLocal, setIsLocal] = useState(true);
   const [locationMessage, setLocationMessage] = useState('');
-  const [activeTab, setActiveTab] = useState('discover');
+  const [activeTab, setActiveTab] = useState('bookings');
   const [payments, setPayments] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [selectedChatUser, setSelectedChatUser] = useState(null);
@@ -558,7 +558,7 @@ const DevoteeDashboard = () => {
         <div className="dd-sidebar">
           <div className="dd-sidebar-top">
             {/* Brand */}
-            <div className="dd-brand">
+            <div className="dd-brand" onClick={() => navigate('/')} style={{ cursor: 'pointer' }} title="Go to Home Page">
               <span className="dd-brand-om">🕉</span>
               <div>
                 <div className="dd-brand-name">PanditJi</div>
@@ -588,15 +588,19 @@ const DevoteeDashboard = () => {
 
           {/* Nav */}
           <nav className="dd-nav">
-            <NavItem icon={<Search size={16} />} label="Find Pandit" tab="discover" activeTab={activeTab} setActiveTab={setActiveTab} />
+            <NavItem icon={<User size={16} />} label="My Profile" tab="profile" activeTab={activeTab} setActiveTab={setActiveTab} />
             <NavItem icon={<Calendar size={16} />} label="My Bookings" tab="bookings" activeTab={activeTab} setActiveTab={setActiveTab} />
             <NavItem icon={<MessageSquare size={16} />} label="Messages" tab="chat" activeTab={activeTab} setActiveTab={setActiveTab} />
             <NavItem icon={<CheckCircle size={16} />} label="Bookings & Payments" tab="payments" activeTab={activeTab} setActiveTab={setActiveTab} />
             <NavItem icon={<Headphones size={16} />} label="Support" tab="support" activeTab={activeTab} setActiveTab={setActiveTab} />
           </nav>
 
-          <div className="dd-logout">
-            <button className="dd-logout-btn" onClick={handleLogout}>
+          <div className="dd-logout" style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <button className="dd-nav-item" onClick={() => navigate('/')} style={{ padding: '11px 14px' }}>
+              <span className="dd-nav-icon" style={{ background: 'transparent', color: C.textMid }}><Navigation size={16} /></span>
+              Back to Home
+            </button>
+            <button className="dd-logout-btn" onClick={handleLogout} style={{ borderTop: `1px solid ${C.border}`, borderRadius: 0, marginTop: 4, paddingTop: 16 }}>
               <LogOut size={16} /> Logout
             </button>
           </div>
@@ -608,156 +612,70 @@ const DevoteeDashboard = () => {
           {/* Topbar */}
           <header className="dd-topbar">
             <div className="dd-topbar-title">
-              {activeTab === 'discover' && 'Discover Pandits'}
+              {activeTab === 'profile' && 'My Profile'}
               {activeTab === 'bookings' && 'My Bookings'}
               {activeTab === 'chat' && 'Messages'}
               {activeTab === 'payments' && 'Bookings & Payments'}
               {activeTab === 'support' && 'Help & Support'}
             </div>
-            {activeTab === 'discover' && (
-              <button className="dd-loc-btn" onClick={handleLocationRequest} disabled={loading}>
-                <Navigation size={15} /> Use My Location
-              </button>
-            )}
           </header>
 
-          {/* Content */}
           <main style={{ flex: 1, overflowY: 'auto', padding: 24 }}>
 
-            {/* ─── DISCOVER ─── */}
-            {activeTab === 'discover' && (
-              <div>
-                {/* Location banner */}
-                {!loading && locationMessage && (
-                  <div style={{
-                    display: 'flex', alignItems: 'flex-start', gap: 12, padding: '14px 18px', borderRadius: 12, marginBottom: 20, border: '1px solid',
-                    background: isLocal ? C.successLt : C.goldLt,
-                    borderColor: isLocal ? '#A3D9B1' : '#E6C87A',
-                    color: isLocal ? C.success : C.gold
-                  }}>
-                    {isLocal ? <CheckCircle size={18} style={{ flexShrink: 0, marginTop: 1 }} /> : <AlertCircle size={18} style={{ flexShrink: 0, marginTop: 1 }} />}
+            {/* ─── PROFILE ─── */}
+            {activeTab === 'profile' && (
+              <div style={{ maxWidth: 600, margin: '0 auto', background: '#fff', borderRadius: 14, border: `1px solid ${C.border}`, padding: 24 }}>
+                <SectionTitle>Profile Details</SectionTitle>
+                <form onSubmit={async (e) => {
+                  e.preventDefault();
+                  const formData = new FormData(e.target);
+                  const data = Object.fromEntries(formData);
+                  try {
+                    const res = await axios.patch('http://localhost:5000/api/devotees/profile', data, { headers: { Authorization: `Bearer ${token}` } });
+                    updateUser(res.data.data);
+                    alert('Profile updated successfully!');
+                  } catch (err) {
+                    alert('Failed to update profile');
+                  }
+                }} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                     <div>
-                      <p style={{ fontWeight: 700, fontSize: 13 }}>{isLocal ? 'Pandits available near you!' : `No pandits found in ${user?.city}`}</p>
-                      <p style={{ fontSize: 12, marginTop: 2, opacity: 0.85 }}>{locationMessage}</p>
+                      <label style={lbl}>First Name</label>
+                      <input name="firstName" defaultValue={user?.firstName} required style={inp} />
+                    </div>
+                    <div>
+                      <label style={lbl}>Last Name</label>
+                      <input name="lastName" defaultValue={user?.lastName} required style={inp} />
                     </div>
                   </div>
-                )}
-
-                {/* Popular puja pills — 99pandit style */}
-                <div style={{ marginBottom: 22 }}>
-                  <p style={{ fontSize: 12, fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 10 }}>Popular Pujas</p>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                    {['Griha Pravesh', 'Satyanarayan Katha', 'Vivah Ceremony', 'Havan & Yagya', 'Ganesh Puja', 'Durga Puja', 'Rudrabhishek'].map(p => (
-                      <span key={p} className="dd-puja-pill">🕉 {p}</span>
-                    ))}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                    <div>
+                      <label style={lbl}>Primary Phone</label>
+                      <input name="phone" defaultValue={user?.phone} required style={inp} />
+                    </div>
+                    <div>
+                      <label style={lbl}>Alternate Phone</label>
+                      <input name="alternatePhone" defaultValue={user?.alternatePhone} placeholder="Optional" style={inp} />
+                    </div>
                   </div>
-                </div>
-
-                {!loading && !isLocal && pandits.length > 0 && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-                    <BadgeCheck size={18} color={C.saffron} />
-                    <h2 style={{ fontWeight: 700, fontSize: 14, color: C.textMid }}>Top Trusted Pandits from Major Cities</h2>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                    <div>
+                      <label style={lbl}>City</label>
+                      <input name="city" defaultValue={user?.city} required style={inp} />
+                    </div>
+                    <div>
+                      <label style={lbl}>State</label>
+                      <input name="state" defaultValue={user?.state} style={inp} />
+                    </div>
                   </div>
-                )}
-
-                {loading ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 0', gap: 16 }}>
-                    <div style={{ fontSize: 48 }} className="pulse">🕉</div>
-                    <div style={{ width: 36, height: 36, border: `4px solid ${C.border}`, borderTopColor: C.saffron, borderRadius: '50%' }} className="spin" />
-                    <p style={{ color: C.textMuted, fontSize: 13 }}>Finding Pandits near you...</p>
+                  <div>
+                    <label style={lbl}>Pinned Location (Address)</label>
+                    <input name="pinnedLocation" defaultValue={user?.pinnedLocation} placeholder="e.g., Block A, Phase 1..." style={inp} />
                   </div>
-                ) : pandits.length === 0 ? (
-                  <div style={{ textAlign: 'center', padding: '60px 20px' }}>
-                    <div style={{ fontSize: 64, marginBottom: 16 }}>🔱</div>
-                    <h3 style={{ fontWeight: 700, color: C.maroon, fontSize: 18, marginBottom: 8 }}>No Pandits Available</h3>
-                    <p style={{ color: C.textMuted, fontSize: 14 }}>We couldn't find any pandits at the moment. Please try again later.</p>
-                  </div>
-                ) : (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 18 }}>
-                    {pandits.map(pandit => (
-                      <div key={pandit._id} className="dd-pandit-card">
-                        {/* Avatar + badges container */}
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
-                          <div style={{ width: 54, height: 54, borderRadius: '50%', background: `linear-gradient(135deg,${C.saffron},${C.gold})`, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 900, flexShrink: 0 }}>
-                            {pandit.firstName?.charAt(0)}
-                          </div>
-                          
-                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
-                            {!isLocal && (
-                              <div style={{ background: C.saffronLt, border: `1px solid ${C.saffron}`, color: C.saffron, fontSize: 10, fontWeight: 800, padding: '3px 10px', borderRadius: 20, display: 'flex', alignItems: 'center', gap: 4 }}>
-                                <BadgeCheck size={11} /> Trusted
-                              </div>
-                            )}
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 4, background: C.goldLt, border: `1px solid ${C.gold}`, borderRadius: 20, padding: '4px 10px' }}>
-                              <Star size={13} fill={C.gold} color={C.gold} />
-                              <span style={{ fontSize: 12, fontWeight: 800, color: C.maroon }}>{pandit.panditProfile?.rating || '4.8'}</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        <h3 style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: 17, color: C.maroon, marginBottom: 4 }}>
-                          Pt. {pandit.firstName} {pandit.lastName}
-                        </h3>
-
-                        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 4, fontSize: 12, color: C.textMid, marginBottom: 10 }}>
-                          <MapPin size={13} color={C.saffron} />
-                          <span>{pandit.city}</span>
-                          {pandit.distance !== undefined && (
-                            <span style={{ background: C.saffronLt, color: C.saffron, fontWeight: 700, padding: '2px 8px', borderRadius: 12, fontSize: 11 }}>
-                              {pandit.distance < 1 ? '< 1' : Math.round(pandit.distance)} km
-                            </span>
-                          )}
-                          {!isLocal && !pandit.distance && (
-                            <span style={{ color: C.saffron, fontWeight: 600, fontSize: 11 }}>(Nearby City)</span>
-                          )}
-                        </div>
-
-                        <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
-                          <div style={{ flex: 1, background: C.maroonLt, borderRadius: 8, padding: '8px 10px', textAlign: 'center' }}>
-                            <div style={{ color: C.maroon, fontWeight: 800, fontSize: 13 }}>{pandit.panditProfile?.experience || 0}+ yrs</div>
-                            <div style={{ color: C.textMuted, fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Experience</div>
-                          </div>
-                        </div>
-
-                        <div style={{ background: C.surface, borderRadius: 8, padding: '10px 12px', fontSize: 12, color: C.textMid, marginBottom: 12, border: `1px solid ${C.border}` }}>
-                          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6, marginBottom: 6 }}>
-                            <Briefcase size={13} style={{ marginTop: 2, flexShrink: 0, color: C.maroon }} />
-                            <div>
-                              <span style={{ fontWeight: 700, color: C.maroon }}>Expertise: </span>
-                              {pandit.panditProfile?.specializations?.join(', ') || pandit.panditProfile?.specialization || 'All Pujas'}
-                            </div>
-                          </div>
-                          
-                          {pandit.panditProfile?.languages?.length > 0 && (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                              <Languages size={13} style={{ flexShrink: 0, color: C.maroon }} />
-                              <div>
-                                <span style={{ fontWeight: 700, color: C.maroon }}>Languages: </span>
-                                {pandit.panditProfile.languages.join(', ')}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-
-                        {pandit.panditProfile?.bio && (
-                          <p style={{ fontSize: 11, color: C.textMuted, marginBottom: 14, fontStyle: 'italic', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.4 }}>
-                            "{pandit.panditProfile.bio}"
-                          </p>
-                        )}
-
-                        <div style={{ display: 'flex', gap: 8 }}>
-                          <button className="dd-btn dd-btn-maroon" style={{ flex: 1, justifyContent: 'center', fontSize: 13 }}
-                            onClick={() => handleOpenBookingModal(pandit._id)}>
-                            Book Now
-                          </button>
-                          <button className="dd-btn dd-btn-ghost" style={{ padding: '9px 14px' }} onClick={() => startChat(pandit)}>
-                            <MessageSquare size={17} />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                  <button type="submit" className="dd-btn dd-btn-primary" style={{ marginTop: 8, justifyContent: 'center' }}>
+                    Save Changes
+                  </button>
+                </form>
               </div>
             )}
 
