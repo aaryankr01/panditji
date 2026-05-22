@@ -1,12 +1,256 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
 import { 
   ArrowRight, CheckCircle, Users, Star, Shield, 
   Home as HomeIcon, BookOpen, Heart, Scissors, Flame, 
-  Droplets, Calendar, Sparkles, MapPin, Zap
+  Droplets, Calendar, Sparkles, MapPin, Zap, ChevronLeft, ChevronRight, Sun, Moon
 } from 'lucide-react';
+
+// ─── Hindu Panchang helpers (no library needed) ───────────────────────────
+
+const HINDI_MONTHS = [
+  'चैत्र','वैशाख','ज्येष्ठ','आषाढ़','श्रावण','भाद्रपद',
+  'आश्विन','कार्तिक','मार्गशीर्ष','पौष','माघ','फाल्गुन'
+];
+const ENGLISH_MONTHS = [
+  'Chaitra','Vaishakha','Jyeshtha','Ashadha','Shravana','Bhadrapada',
+  'Ashwin','Kartik','Margashirsha','Pausha','Magha','Phalguna'
+];
+const TITHIS = [
+  'Pratipada','Dwitiya','Tritiya','Chaturthi','Panchami',
+  'Shashthi','Saptami','Ashtami','Navami','Dashami',
+  'Ekadashi','Dwadashi','Trayodashi','Chaturdashi','Purnima / Amavasya'
+];
+const NAKSHATRAS = [
+  'Ashwini','Bharani','Krittika','Rohini','Mrigashira','Ardra',
+  'Punarvasu','Pushya','Ashlesha','Magha','Purva Phalguni','Uttara Phalguni',
+  'Hasta','Chitra','Swati','Vishakha','Anuradha','Jyeshtha',
+  'Mula','Purva Ashadha','Uttara Ashadha','Shravana','Dhanishtha','Shatabhisha',
+  'Purva Bhadrapada','Uttara Bhadrapada','Revati'
+];
+const YOGAS = [
+  'Vishkamba','Priti','Ayushman','Saubhagya','Shobhana','Atiganda',
+  'Sukarma','Dhriti','Shula','Ganda','Vriddhi','Dhruva',
+  'Vyaghata','Harshana','Vajra','Siddhi','Vyatipata','Variyan',
+  'Parigha','Shiva','Siddha','Sadhya','Shubha','Shukla',
+  'Brahma','Indra','Vaidhriti'
+];
+const VARAS = ['Ravivar','Somvar','Mangalvar','Budhvar','Guruvar','Shukravar','Shanivar'];
+const VARA_EN = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+// Julian Day Number from Gregorian date
+const julianDay = (y, m, d) => {
+  const a = Math.floor((14 - m) / 12);
+  const yr = y + 4800 - a;
+  const mo = m + 12 * a - 3;
+  return d + Math.floor((153 * mo + 2) / 5) + 365 * yr + Math.floor(yr / 4) - Math.floor(yr / 100) + Math.floor(yr / 400) - 32045;
+};
+
+const getPanchang = (date) => {
+  const y = date.getFullYear(), m = date.getMonth() + 1, d = date.getDate();
+  const jd = julianDay(y, m, d);
+  // Vikram Samvat approx start JD = 1558466 (57.5 years ahead of CE)
+  const VSepoch = 1558466;
+  const daysSinceVS = jd - VSepoch;
+  const samvatYear = Math.floor(daysSinceVS / 365.25) + 1;
+  // Synodic month = 29.53059 days; JD of a known new moon (Jan 6 2000) = 2451549.5
+  const knownNM = 2451549.5;
+  const synodicMonth = 29.53059;
+  const lunarAge = ((jd - knownNM) % synodicMonth + synodicMonth) % synodicMonth;
+  const tithiIndex = Math.floor(lunarAge / (synodicMonth / 30));
+  const tithiName = TITHIS[Math.min(tithiIndex, 14)];
+  const isPurnima = tithiIndex === 14 && lunarAge > 14.5;
+  const isAmavasya = tithiIndex === 14 && lunarAge < 14.5;
+  const isEkadashi = tithiIndex === 10;
+  // Nakshatra: sidereal moon longitude divided into 27 parts
+  const nakshatraIndex = Math.floor(((jd - 2451545) * 13.176396) % 27 + 27) % 27;
+  // Yoga: sum of sun+moon longitude / (360/27)
+  const yogaIndex = Math.floor(((jd - 2451545) * 0.9856 * 2) % 27 + 27) % 27;
+  // Hindu month: based on solar longitude into 12 Rashis
+  const sunLong = (((jd - 2451545) * 0.9856) % 360 + 360) % 360;
+  const hindMonthIdx = Math.floor(sunLong / 30);
+  return {
+    samvatYear,
+    hindMonth: ENGLISH_MONTHS[hindMonthIdx],
+    hindMonthHindi: HINDI_MONTHS[hindMonthIdx],
+    tithi: isPurnima ? 'Purnima' : isAmavasya ? 'Amavasya' : tithiName,
+    nakshatra: NAKSHATRAS[nakshatraIndex],
+    yoga: YOGAS[yogaIndex],
+    vara: VARAS[date.getDay()],
+    varaEn: VARA_EN[date.getDay()],
+    isAuspicious: isEkadashi || isPurnima,
+    isSpecial: isAmavasya,
+    lunarAge,
+  };
+};
+
+// ─── Hindu Calendar Component ─────────────────────────────────────────────
+const GREG_MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+const HinduCalendar = () => {
+  const today = new Date();
+  const [viewDate, setViewDate] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
+  const [selected, setSelected] = useState(today);
+
+  const year = viewDate.getFullYear();
+  const month = viewDate.getMonth();
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const todayPanchang = getPanchang(selected);
+
+  const prevMonth = () => setViewDate(new Date(year, month - 1, 1));
+  const nextMonth = () => setViewDate(new Date(year, month + 1, 1));
+
+  const cells = [];
+  for (let i = 0; i < firstDay; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+
+  const isToday = (d) => d === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+  const isSelected = (d) => d === selected.getDate() && month === selected.getMonth() && year === selected.getFullYear();
+
+  return (
+    <section id="panchang" className="py-24 px-4 bg-surface relative overflow-hidden">
+      <div className="absolute top-0 left-0 w-64 h-64 bg-gold-light rounded-full blur-3xl opacity-40 -z-10" />
+      <div className="absolute bottom-0 right-0 w-80 h-80 bg-saffron-light rounded-full blur-3xl opacity-30 -z-10" />
+
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-14">
+          <span className="text-saffron font-black text-sm uppercase tracking-widest mb-3 block">📿 Vedic Panchang</span>
+          <h2 className="text-4xl lg:text-5xl font-black text-maroon font-serif mb-4">
+            Hindu <span className="text-saffron italic">Calendar</span>
+          </h2>
+          <p className="text-textMid max-w-xl mx-auto">
+            Explore auspicious tithis, nakshatras, and yogas to plan your puja on the most sacred days.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
+
+          {/* ── Calendar Grid ── */}
+          <div className="lg:col-span-3 bg-white rounded-[32px] border border-brandborder shadow-xl shadow-saffron-light/20 overflow-hidden">
+            {/* Month nav */}
+            <div style={{ background: 'linear-gradient(135deg, #7B1D0E 0%, #C45F06 100%)' }} className="p-6 flex items-center justify-between">
+              <button onClick={prevMonth} className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-all">
+                <ChevronLeft size={20} />
+              </button>
+              <div className="text-center">
+                <p className="text-white font-black text-xl">{GREG_MONTHS[month]} {year}</p>
+                <p className="text-white/70 text-sm font-medium mt-1">विक्रम संवत {getPanchang(new Date(year, month, 15)).samvatYear}</p>
+              </div>
+              <button onClick={nextMonth} className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-all">
+                <ChevronRight size={20} />
+              </button>
+            </div>
+
+            {/* Day headers */}
+            <div className="grid grid-cols-7 bg-maroon-light border-b border-brandborder">
+              {['Su','Mo','Tu','We','Th','Fr','Sa'].map(d => (
+                <div key={d} className="py-3 text-center text-xs font-black text-maroon uppercase tracking-wider">{d}</div>
+              ))}
+            </div>
+
+            {/* Date cells */}
+            <div className="grid grid-cols-7 p-3 gap-1">
+              {cells.map((d, i) => {
+                if (!d) return <div key={i} />;
+                const cellDate = new Date(year, month, d);
+                const p = getPanchang(cellDate);
+                const auspicious = p.isAuspicious;
+                const special = p.isSpecial;
+                const todayCell = isToday(d);
+                const sel = isSelected(d);
+
+                return (
+                  <button
+                    key={i}
+                    onClick={() => setSelected(cellDate)}
+                    className={`
+                      relative flex flex-col items-center justify-start p-1.5 rounded-2xl transition-all duration-200 min-h-[60px]
+                      ${sel ? 'bg-maroon text-white shadow-lg scale-105' :
+                        todayCell ? 'bg-saffron text-white shadow-md' :
+                        auspicious ? 'bg-gold-light hover:bg-yellow-100 border border-gold/30' :
+                        special ? 'bg-purpleTheme-light hover:bg-purple-100 border border-purpleTheme/20' :
+                        'hover:bg-saffron-light'}
+                    `}
+                  >
+                    <span className={`text-sm font-black leading-none ${sel ? 'text-white' : todayCell ? 'text-white' : auspicious ? 'text-gold' : special ? 'text-purpleTheme' : 'text-maroon'}`}>
+                      {d}
+                    </span>
+                    <span className={`text-[8px] font-bold mt-1 leading-tight text-center ${sel || todayCell ? 'text-white/80' : 'text-textMuted'}`} style={{ fontSize: '7px' }}>
+                      {p.tithi.split(' ')[0].substring(0, 6)}
+                    </span>
+                    {auspicious && !sel && !todayCell && (
+                      <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-gold" />
+                    )}
+                    {special && !sel && !todayCell && (
+                      <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-purpleTheme" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Legend */}
+            <div className="px-5 pb-5 flex flex-wrap gap-4 text-xs font-bold text-textMid">
+              <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-saffron inline-block" /> Today</span>
+              <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-maroon inline-block" /> Selected</span>
+              <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-gold inline-block" /> Auspicious (Ekadashi / Purnima)</span>
+              <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-purpleTheme inline-block" /> Amavasya</span>
+            </div>
+          </div>
+
+          {/* ── Panchang Detail Panel ── */}
+          <div className="lg:col-span-2 flex flex-col gap-5">
+            {/* Date title */}
+            <div className="bg-white rounded-[28px] border border-brandborder p-6 shadow-sm">
+              <div className="flex items-center gap-3 mb-4">
+                {todayPanchang.lunarAge < 15 ? <Sun size={22} className="text-saffron" /> : <Moon size={22} className="text-purpleTheme" />}
+                <div>
+                  <p className="font-black text-maroon text-lg leading-none">
+                    {selected.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+                  </p>
+                  <p className="text-textMuted text-sm mt-1">{todayPanchang.varaEn} · {todayPanchang.vara}</p>
+                </div>
+              </div>
+              <div className="bg-saffron-light rounded-2xl px-4 py-3 text-center">
+                <p className="text-xs font-black text-saffron-dark uppercase tracking-widest">Vikram Samvat</p>
+                <p className="font-black text-maroon text-2xl font-serif">{todayPanchang.samvatYear}</p>
+              </div>
+            </div>
+
+            {/* Panchang rows */}
+            {[
+              { label: 'Tithi', value: todayPanchang.tithi, icon: '🌙', color: 'bg-gold-light text-gold', special: todayPanchang.isAuspicious || todayPanchang.isSpecial },
+              { label: 'Hindu Month', value: `${todayPanchang.hindMonth} (${todayPanchang.hindMonthHindi})`, icon: '📅', color: 'bg-saffron-light text-saffron' },
+              { label: 'Nakshatra', value: todayPanchang.nakshatra, icon: '⭐', color: 'bg-purpleTheme-light text-purpleTheme' },
+              { label: 'Yoga', value: todayPanchang.yoga, icon: '🕉️', color: 'bg-maroon-light text-maroon' },
+              { label: 'Vara (Day)', value: `${todayPanchang.vara} (${todayPanchang.varaEn})`, icon: '☀️', color: 'bg-gold-light text-gold' },
+            ].map(({ label, value, icon, color, special }) => (
+              <div key={label} className={`bg-white rounded-[20px] border ${special ? 'border-gold shadow-lg shadow-gold/10' : 'border-brandborder'} p-4 flex items-center gap-4 shadow-sm`}>
+                <div className={`w-10 h-10 rounded-2xl ${color} flex items-center justify-center text-lg flex-shrink-0`}>{icon}</div>
+                <div>
+                  <p className="text-xs font-black uppercase tracking-wider text-textMuted">{label}</p>
+                  <p className="font-bold text-maroon text-sm mt-0.5">{value}</p>
+                </div>
+                {special && <span className="ml-auto text-xs font-black text-gold bg-gold-light px-2 py-1 rounded-full">Auspicious</span>}
+              </div>
+            ))}
+
+            {/* CTA */}
+            <Link to="/pujas" className="flex items-center justify-center gap-2 bg-maroon text-white font-black py-4 px-6 rounded-2xl hover:bg-saffron transition-all duration-300 shadow-lg shadow-maroon/20">
+              <Calendar size={18} /> Book Puja on this Date <ArrowRight size={16} />
+            </Link>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 const PUJA_TYPES = [
   { name: 'Griha Pravesh', icon: HomeIcon, color: 'saffron', desc: 'Start your journey in your new home with divine blessings.' },
@@ -181,6 +425,9 @@ const Home = () => {
           </div>
         </div>
       </section>
+
+      {/* Hindu Panchang Calendar */}
+      <HinduCalendar />
 
       {/* Puja Categories Section */}
       <section className="py-24 px-4 bg-surface overflow-hidden relative">
