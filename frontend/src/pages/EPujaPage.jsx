@@ -50,7 +50,8 @@ const advantages = [
   "Follow every custom with complete Hindu Rituals.",
 ];
 
-function PujaCard({ puja, onBook }) {
+function PujaCard({ puja, onBook, clientType, getCalculatedPrice }) {
+  const calcPrice = getCalculatedPrice(puja.price);
   return (
     <div className="group bg-white rounded-3xl overflow-hidden border border-brandborder shadow-sm hover:shadow-2xl transition-all duration-500 flex flex-col">
       <div className="relative h-48 overflow-hidden shrink-0">
@@ -72,12 +73,19 @@ function PujaCard({ puja, onBook }) {
             {[1, 2, 3, 4, 5].map(i => <Star key={i} size={12} className="fill-gold text-gold" />)}
             <span className="text-xs font-bold text-maroon ml-1">{puja.rating || 4.5}</span>
           </div>
-          <span className="text-saffron font-bold">₹{puja.price.toLocaleString("en-IN")}</span>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+            <span style={{ fontSize: 11, textDecoration: 'line-through', color: '#9ca3af' }}>₹{puja.price.toLocaleString("en-IN")}</span>
+            <span className="text-saffron font-bold text-base">₹{calcPrice.toLocaleString("en-IN")}</span>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2 text-xs text-textMid mb-4 bg-surface px-3 py-1.5 rounded-lg w-fit">
+        <div className="flex items-center gap-2 text-xs text-textMid mb-2 bg-surface px-3 py-1.5 rounded-lg w-fit">
           <Clock size={14} className="text-saffron" />
           <span className="font-medium">{puja.duration || '1-2 hrs'}</span>
+        </div>
+
+        <div style={{ fontSize: 10, color: clientType === "international" ? "#dc2626" : "#16a34a", fontWeight: 700, marginBottom: 12 }}>
+          {clientType === "international" ? "🌐 International Rate (2x)" : "🪔 Domestic Discount (30% Off)"}
         </div>
 
         <p className="text-textMid text-xs mb-6 line-clamp-2 flex-1">{puja.desc || 'Perform this auspicious puja with our expert Pandits.'}</p>
@@ -103,6 +111,11 @@ export default function EPujaPage() {
   const [bookedPuja, setBookedPuja] = useState(null);
   const [heroSlide, setHeroSlide] = useState(0);
 
+  // Geolocation and pricing states
+  const [clientType, setClientType] = useState(null); // 'domestic' | 'international' | null
+  const [checkingLocation, setCheckingLocation] = useState(true);
+  const [locationError, setLocationError] = useState(null);
+
   // New booking form modal state variables
   const [selectedPujaForBooking, setSelectedPujaForBooking] = useState(null);
   const [bookingFormDate, setBookingFormDate] = useState("");
@@ -119,6 +132,70 @@ export default function EPujaPage() {
     { title: "Satyanarayan", subtitle: "E-Puja", desc: "Sacred Puja For Peace, Happiness & Prosperity", hindi: "सुख, शांति और समृद्धि के लिए पावन पूजा" },
     { title: "Kaal Sarp Dosh", subtitle: "E-Puja", desc: "Remove planetary obstacles from your life", hindi: "ग्रह दोषों से मुक्ति के लिए ऑनलाइन पूजा" },
   ];
+
+  // Pricing engine
+  const getCalculatedPrice = (basePrice) => {
+    if (clientType === "international") {
+      return basePrice * 2;
+    }
+    return Math.round(basePrice * 0.7);
+  };
+
+  const detectClientType = () => {
+    setCheckingLocation(true);
+    setLocationError(null);
+    if (!navigator.geolocation) {
+      setLocationError("Geolocation is not supported by your browser. Please enable permissions or use a modern browser.");
+      setCheckingLocation(false);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        try {
+          // Verify with a Nominatim reverse geocode lookup
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
+          );
+          const data = await response.json();
+          const countryCode = data.address?.country_code?.toLowerCase();
+          
+          if (countryCode) {
+            if (countryCode === "in") {
+              setClientType("domestic");
+            } else {
+              setClientType("international");
+            }
+          } else {
+            // Coordinate boundaries fallback for India
+            const isInsideIndia = latitude >= 8.0 && latitude <= 38.0 && longitude >= 68.0 && longitude <= 98.0;
+            setClientType(isInsideIndia ? "domestic" : "international");
+          }
+        } catch (err) {
+          console.error("Reverse geocoding error, falling back to bounds:", err);
+          const isInsideIndia = latitude >= 8.0 && latitude <= 38.0 && longitude >= 68.0 && longitude <= 98.0;
+          setClientType(isInsideIndia ? "domestic" : "international");
+        } finally {
+          setCheckingLocation(false);
+        }
+      },
+      (error) => {
+        console.error("Geolocation error:", error);
+        let errorMsg = "Please allow location access to continue.";
+        if (error.code === error.PERMISSION_DENIED) {
+          errorMsg = "Location access was denied. Sharing location is mandatory to calculate the proper Vedic service fee (domestic vs. international rates). Please enable location permissions in your browser settings.";
+        }
+        setLocationError(errorMsg);
+        setCheckingLocation(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
+
+  useEffect(() => {
+    detectClientType();
+  }, []);
 
   useEffect(() => {
     const fetchPujas = async () => {
@@ -200,7 +277,7 @@ export default function EPujaPage() {
         address: bookingFormAddress || "Zoom Video Call / Online",
         city: bookingFormCity || user?.city || "Online",
         notes: bookingFormNotes || `E-Puja requested online for ${selectedPujaForBooking.name}`,
-        fee: selectedPujaForBooking.price,
+        fee: getCalculatedPrice(selectedPujaForBooking.price),
         pujaMode: "online",
         panditId: null
       };
@@ -228,9 +305,169 @@ export default function EPujaPage() {
     }
   };
 
+  if (checkingLocation) {
+    return (
+      <div style={{
+        minHeight: "100vh",
+        background: "linear-gradient(135deg, #7b1d0e 0%, #2c1a0e 100%)",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        color: "#fff",
+        fontFamily: "'Segoe UI', system-ui, sans-serif",
+        padding: 24,
+        textAlign: "center"
+      }}>
+        <div style={{
+          width: 100,
+          height: 100,
+          background: "rgba(255, 255, 255, 0.08)",
+          border: "2px dashed #e8710a",
+          borderRadius: "50%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: 48,
+          marginBottom: 32,
+          animation: "spin 12s linear infinite"
+        }}>
+          ॐ
+        </div>
+        <h2 style={{ fontSize: 28, fontWeight: 800, margin: "0 0 12px", fontFamily: "'Playfair Display', serif" }}>
+          Detecting Your Sacred Location
+        </h2>
+        <p style={{ color: "rgba(255, 255, 255, 0.8)", fontSize: 16, maxWidth: 420, margin: 0, lineHeight: 1.6 }}>
+          We are scanning your location coordinates to determine your region. This enables customized Vedic priest matching and accurate pricing structures.
+        </p>
+        <div style={{
+          marginTop: 40,
+          width: 32,
+          height: 32,
+          border: "3px solid rgba(255,255,255,0.2)",
+          borderTopColor: "#e8710a",
+          borderRadius: "50%",
+          animation: "spin 1s linear infinite"
+        }} />
+        <style>{`
+          @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    );
+  }
+
+  if (locationError) {
+    return (
+      <div style={{
+        minHeight: "100vh",
+        background: "linear-gradient(135deg, #7b1d0e 0%, #2c1a0e 100%)",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        color: "#fff",
+        fontFamily: "'Segoe UI', system-ui, sans-serif",
+        padding: 24,
+        textAlign: "center"
+      }}>
+        <div style={{
+          background: "rgba(255,255,255,0.06)",
+          backdropFilter: "blur(12px)",
+          border: "1px solid rgba(255,255,255,0.12)",
+          borderRadius: 32,
+          padding: "48px 32px",
+          maxWidth: 480,
+          width: "100%",
+          boxShadow: "0 24px 80px rgba(0, 0, 0, 0.4)",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center"
+        }}>
+          <div style={{
+            width: 80,
+            height: 80,
+            background: "rgba(232, 113, 10, 0.15)",
+            color: "#e8710a",
+            borderRadius: "50%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 36,
+            marginBottom: 24
+          }}>
+            📍
+          </div>
+          <h2 style={{ fontSize: 24, fontWeight: 800, margin: "0 0 16px", fontFamily: "'Playfair Display', serif" }}>
+            Location Access Required
+          </h2>
+          <p style={{ color: "rgba(255, 255, 255, 0.75)", fontSize: 14, margin: "0 0 32px", lineHeight: 1.6 }}>
+            {locationError}
+          </p>
+          <button
+            onClick={detectClientType}
+            style={{
+              width: "100%",
+              padding: "16px",
+              background: "linear-gradient(135deg, #e8710a 0%, #c45f06 100%)",
+              color: "#fff",
+              border: "none",
+              borderRadius: 16,
+              fontSize: 16,
+              fontWeight: 800,
+              cursor: "pointer",
+              boxShadow: "0 8px 24px rgba(232, 113, 10, 0.3)",
+              transition: "transform 0.2s"
+            }}
+            onMouseEnter={e => e.currentTarget.style.transform = "scale(1.02)"}
+            onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
+          >
+            Grant Location Access
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ minHeight: "100vh", background: "#fafaf8", fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
       <Navbar />
+
+      {/* Geolocation Status Notification Banner */}
+      <div style={{
+        background: clientType === "international" 
+          ? "linear-gradient(90deg, #1e1b4b 0%, #312e81 100%)" 
+          : "linear-gradient(90deg, #022c22 0%, #064e3b 100%)",
+        color: "#fff",
+        padding: "14px 24px",
+        textAlign: "center",
+        fontSize: 14,
+        fontWeight: 600,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 8,
+        borderBottom: "1px solid rgba(255,255,255,0.1)",
+        boxShadow: "0 4px 12px rgba(0,0,0,0.05)"
+      }}>
+        {clientType === "international" ? (
+          <>
+            <span>🌐</span>
+            <span>
+              <strong>International Client Detected!</strong> Outside India location recognized. International service rate applied (Base Price Doubled).
+            </span>
+          </>
+        ) : (
+          <>
+            <span>🪔</span>
+            <span>
+              <strong>Domestic Client Detected!</strong> India location recognized. Special <strong>30% discount</strong> has been applied to all E-Puja services.
+            </span>
+          </>
+        )}
+      </div>
 
       {/* Toast notification */}
       {bookedPuja && (
@@ -449,7 +686,17 @@ export default function EPujaPage() {
                 marginTop: 4,
               }}>
                 <span style={{ fontSize: 14, color: "#6b4c3b", fontWeight: 600 }}>Total Fee:</span>
-                <span style={{ fontSize: 18, color: "#e8710a", fontWeight: 800 }}>₹{selectedPujaForBooking.price.toLocaleString("en-IN")}</span>
+                <div style={{ textAlign: "right" }}>
+                  <span style={{ fontSize: 13, color: "#9ca3af", textDecoration: "line-through", marginRight: 8 }}>
+                    ₹{selectedPujaForBooking.price.toLocaleString("en-IN")}
+                  </span>
+                  <span style={{ fontSize: 18, color: "#e8710a", fontWeight: 800 }}>
+                    ₹{getCalculatedPrice(selectedPujaForBooking.price).toLocaleString("en-IN")}
+                  </span>
+                  <div style={{ fontSize: 10, color: clientType === "international" ? "#dc2626" : "#16a34a", fontWeight: 700, marginTop: 2 }}>
+                    {clientType === "international" ? "🌐 International Rate (Double)" : "🪔 Domestic Discount (30% Off)"}
+                  </div>
+                </div>
               </div>
 
               {/* Form Buttons */}
@@ -677,7 +924,7 @@ export default function EPujaPage() {
             marginBottom: 60,
           }}>
             {filtered.map(puja => (
-              <PujaCard key={puja._id} puja={puja} onBook={handleOpenBookingModal} />
+              <PujaCard key={puja._id} puja={puja} onBook={handleOpenBookingModal} clientType={clientType} getCalculatedPrice={getCalculatedPrice} />
             ))}
           </div>
         )}

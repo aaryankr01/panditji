@@ -86,6 +86,7 @@ const PanditDashboard = () => {
   const socketRef = useRef(null);
   const timerRef = useRef(null);
   const [countdown, setCountdown] = useState(30);
+  const [cancellationToast, setCancellationToast] = useState(null); // { pujaType, devotee }
 
   // Profile Edit State
   const [editForm, setEditForm] = useState({ firstName: '', lastName: '', phone: '', city: '', bio: '', experience: 0, feePerPuja: 1500, specializations: [] });
@@ -161,6 +162,16 @@ const PanditDashboard = () => {
 
     socket.on('paymentConfirmed', ({ bookingId }) => {
       setBookings(prev => prev.map(b => b._id === bookingId ? { ...b, paymentStatus: 'paid' } : b));
+    });
+
+    // Fired when a devotee cancels a booking the pandit already accepted
+    socket.on('bookingCancelledByDevotee', ({ bookingId, pujaType, devotee }) => {
+      // Update the booking status in the list
+      setBookings(prev => prev.map(b => b._id === bookingId ? { ...b, status: 'cancelled' } : b));
+      // Show a dismissible toast notification
+      setCancellationToast({ pujaType, devotee });
+      // Auto-dismiss after 8 seconds
+      setTimeout(() => setCancellationToast(null), 8000);
     });
 
     return () => socket.disconnect();
@@ -359,6 +370,7 @@ const PanditDashboard = () => {
       confirmed: { bg: C.successLt, c: C.success },
       completed: { bg: C.purpleLt, c: C.purple },
       rejected: { bg: C.redLt, c: C.red },
+      cancelled: { bg: '#F3F4F6', c: '#6B7280' },
     };
     const s = map[status] || map.pending;
     return (
@@ -371,6 +383,26 @@ const PanditDashboard = () => {
   return (
     <div style={{ display: 'flex', height: '100vh', background: C.surface, fontFamily: "'Poppins', sans-serif" }}>
       <style>{G}</style>
+
+      {/* ═══ CANCELLATION TOAST (devotee cancelled a paid/accepted booking) ═══ */}
+      {cancellationToast && (
+        <div style={{ position: 'fixed', top: 20, right: 20, zIndex: 2000, background: '#fff', borderRadius: 16, boxShadow: '0 8px 32px rgba(0,0,0,0.18)', border: `1.5px solid ${C.red}`, maxWidth: 360, overflow: 'hidden', animation: 'fadeIn 0.3s ease' }}>
+          <div style={{ background: C.redLt, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10, borderBottom: `1px solid rgba(192,57,43,0.15)` }}>
+            <XCircle size={20} color={C.red} />
+            <span style={{ fontWeight: 800, color: C.red, fontSize: 14 }}>Booking Cancelled by Devotee</span>
+            <button onClick={() => setCancellationToast(null)} style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: C.red }}>
+              ✕
+            </button>
+          </div>
+          <div style={{ padding: '14px 16px' }}>
+            <p style={{ fontSize: 13, color: C.textMid, lineHeight: 1.6 }}>
+              <strong style={{ color: C.maroon }}>{cancellationToast.devotee}</strong> has cancelled their{' '}
+              <strong style={{ color: C.maroon }}>{cancellationToast.pujaType}</strong> booking.
+              The slot is now free.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* ═══ INCOMING BOOKING POPUP (Ola/Uber style) ═══ */}
       {incomingRequest && (
@@ -604,7 +636,7 @@ const PanditDashboard = () => {
                           </>
                         )}
 
-                        {(booking.status === 'completed' || booking.status === 'rejected') && (
+                        {(booking.status === 'completed' || booking.status === 'rejected' || booking.status === 'cancelled') && (
                           <button className="dd-btn dd-btn-red" onClick={() => deleteBooking(booking._id)} title="Delete History">
                             <Trash2 size={16} /> Delete
                           </button>

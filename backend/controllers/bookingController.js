@@ -169,13 +169,15 @@ exports.getBookings = async (req, res, next) => {
   }
 };
 
-// @desc    Update booking status
+// @desc    Update booking status (pandit / admin use)
 // @route   PATCH /api/bookings/:id/status
 // @access  Private/Pandit
 exports.updateBookingStatus = async (req, res, next) => {
   try {
     const { status } = req.body;
-    const booking = await Booking.findById(req.params.id);
+    const booking = await Booking.findById(req.params.id)
+      .populate('devotee', 'firstName lastName phone city')
+      .populate('pandit', 'firstName lastName phone city');
 
     if (!booking) return res.status(404).json({ success: false, message: 'Booking not found' });
 
@@ -184,8 +186,86 @@ exports.updateBookingStatus = async (req, res, next) => {
 
     // Notify devotee of status change
     if (_io) {
-      const devoteeSocketId = global.activeUsers?.get(booking.devotee.toString());
+      const devoteeSocketId = global.activeUsers?.get(booking.devotee._id.toString());
       if (devoteeSocketId) _io.to(devoteeSocketId).emit('bookingStatusUpdated', { bookingId: booking._id, status });
+    }
+
+    res.status(200).json({ success: true, data: booking });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Devotee cancels their own booking
+// @route   PATCH /api/bookings/:id/cancel
+// @access  Private/Devotee
+exports.cancelBooking = async (req, res, next) => {
+  try {
+    const devoteeId = req.user.id;
+    const booking = await Booking.findById(req.params.id)
+      .populate('devotee', 'firstName lastName phone city')
+      .populate('pandit', 'firstName lastName phone city');
+
+    if (!booking) {
+      return res.status(404).json({ success: false, message: 'Booking not found' });
+    }
+
+    // Only the devotee who made the booking can cancel
+    if (booking.devotee._id.toString() !== devoteeId) {
+      return res.status(403).json({ success: false, message: 'Not authorised to cancel this booking' });
+    }
+
+    // Already cancelled or completed
+    if (['cancelled', 'completed', 'rejected'].includes(booking.status)) {
+      return res.status(400).json({ success: false, message: `Booking is already ${booking.status}` });
+    }
+
+    // Block self-cancellation if payment is already done — must contact admin
+    if (booking.paymentStatus === 'paid') {
+      return res.status(403).json({
+        success: false,
+        message: 'This booking is already paid. Please contact admin or Pandit Ji to cancel and process a refund.',
+        requiresAdminContact: true,
+      });
+    }
+
+    // Block cancellation if the scheduled time has already passed
+    if (booking.scheduledDate && booking.scheduledTime) {
+      try {
+        const dateStr = new Date(booking.scheduledDate).toISOString().split('T')[0];
+        const scheduledAt = new Date(`${dateStr}T${booking.scheduledTime}:00`);
+        if (scheduledAt <= new Date()) {
+          return res.status(400).json({
+            success: false,
+            message: 'This booking cannot be cancelled because its scheduled time has already passed.',
+          });
+        }
+      } catch (e) {
+        console.error('Date parse error in cancelBooking:', e);
+      }
+    }
+
+    // Allow cancel for: pending OR confirmed-but-unpaid (and still upcoming)
+    booking.status = 'cancelled';
+    booking.cancelledBy = 'devotee';
+    booking.cancellationReason = req.body.reason || 'Cancelled by devotee';
+    await booking.save();
+
+    // Notify the assigned pandit (if any) via socket
+    if (_io && booking.pandit) {
+      const panditSocketId = global.activeUsers?.get(booking.pandit._id.toString());
+      if (panditSocketId) {
+        _io.to(panditSocketId).emit('bookingCancelledByDevotee', {
+          bookingId: booking._id,
+          pujaType: booking.pujaType,
+          devotee: `${booking.devotee.firstName} ${booking.devotee.lastName}`,
+        });
+      }
+    }
+
+    // Also broadcast to all pandits so it disappears from their queue
+    if (_io) {
+      _io.to('all_pandits').emit('bookingTaken', { bookingId: booking._id.toString() });
     }
 
     res.status(200).json({ success: true, data: booking });

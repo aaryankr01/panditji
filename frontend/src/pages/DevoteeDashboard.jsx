@@ -7,7 +7,6 @@ import { LogOut, MessageSquare, Search, Star, MapPin, AlertCircle, CheckCircle, 
 import ChatInterface from '../components/ChatInterface';
 import SupportCare from '../components/SupportCare';
 
-/* ─── Razorpay loader (unchanged) ─── */
 const loadRazorpayScript = () =>
   new Promise((resolve) => {
     const script = document.createElement('script');
@@ -17,7 +16,6 @@ const loadRazorpayScript = () =>
     document.body.appendChild(script);
   });
 
-/* ─── Puja prices (unchanged) ─── */
 const PUJA_PRICES = {
   'Rudrabhishek': 3100,
   'Sunderkand Path': 3500,
@@ -42,19 +40,18 @@ const PUJA_PRICES = {
   'Other': 1500,
 };
 
-/* ─── Design tokens inspired by 99pandit.com ─── */
 const C = {
-  saffron: '#E8710A',   // main brand — 99pandit's CTA orange
+  saffron: '#E8710A',
   saffronDk: '#C45F06',
   saffronLt: '#FFF3E8',
-  maroon: '#7B1D0E',   // 99pandit's heading color
+  maroon: '#7B1D0E',
   maroonLt: '#F9EDE8',
-  gold: '#C8960C',   // Om symbol accent
+  gold: '#C8960C',
   goldLt: '#FFF8E1',
-  purple: '#5B2D8E',   // 99pandit top nav purple
+  purple: '#5B2D8E',
   purpleLt: '#F3EEFF',
   white: '#FFFFFF',
-  surface: '#FAF7F2',   // warm off-white page bg
+  surface: '#FAF7F2',
   card: '#FFFFFF',
   border: '#EAD9CC',
   text: '#2C1A0E',
@@ -66,7 +63,6 @@ const C = {
   redLt: '#FDECEC',
 };
 
-/* ─── Shared UI Helpers ─── */
 const SectionTitle = ({ children }) => (
   <h2 style={{ fontFamily: "'Playfair Display',serif", fontSize: 20, fontWeight: 700, color: C.maroon, marginBottom: 16, borderBottom: `2px solid ${C.border}`, paddingBottom: 8 }}>{children}</h2>
 );
@@ -74,98 +70,72 @@ const lbl = { display: 'block', fontSize: 13, fontWeight: 700, color: C.textMid,
 const inp = { width: '100%', border: `1px solid ${C.border}`, borderRadius: 10, padding: '10px 14px', fontSize: 14, outline: 'none', background: C.surface, fontFamily: "'Poppins',sans-serif", color: C.text };
 const sel = { ...inp, cursor: 'pointer' };
 
-/* ─── Global styles ─── */
+// *** UPDATE THIS with your real admin phone number (country code + number, no +) ***
+const ADMIN_PHONE = '919999999999';
+
 const G = `
   @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;900&display=swap');
-
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  .dd-root { font-family: 'Poppins', sans-serif; background: ${C.surface}; height: 100vh; display: flex; overflow: hidden; position: relative; }
-
-  /* Sidebar */
-  .dd-sidebar { width: 236px; background: ${C.white}; border-right: 1px solid ${C.border}; display: flex; flex-direction: column; flex-shrink: 0; }
-  .dd-sidebar-top { background: linear-gradient(160deg, ${C.maroon} 0%, ${C.purple} 100%); padding: 0 0 20px; }
+  .dd-root { font-family: 'Poppins', sans-serif; background: #FAF7F2; height: 100vh; display: flex; overflow: hidden; position: relative; }
+  .dd-sidebar { width: 236px; background: #FFFFFF; border-right: 1px solid #EAD9CC; display: flex; flex-direction: column; flex-shrink: 0; }
+  .dd-sidebar-top { background: linear-gradient(160deg, #7B1D0E 0%, #5B2D8E 100%); padding: 0 0 20px; }
   .dd-brand { display: flex; align-items: center; gap: 10px; padding: 18px 20px 14px; border-bottom: 1px solid rgba(255,255,255,0.12); margin-bottom: 16px; }
   .dd-brand-om { font-size: 26px; line-height: 1; }
   .dd-brand-name { font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 900; color: #fff; letter-spacing: 0.3px; line-height: 1.1; }
   .dd-brand-sub { font-size: 9px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.55); margin-top: 2px; }
-
   .dd-profile-area { text-align: center; padding: 0 20px; }
   .dd-avatar-wrap { position: relative; display: inline-block; margin-bottom: 10px; }
   .dd-avatar-img { width: 62px; height: 62px; border-radius: 50%; object-fit: cover; border: 3px solid rgba(255,255,255,0.4); }
   .dd-avatar-initials { width: 62px; height: 62px; border-radius: 50%; background: rgba(255,255,255,0.18); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 800; border: 3px solid rgba(255,255,255,0.3); }
-  .dd-cam-btn { position: absolute; bottom: 0; right: 0; width: 22px; height: 22px; border-radius: 50%; background: ${C.saffron}; border: 2px solid #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+  .dd-cam-btn { position: absolute; bottom: 0; right: 0; width: 22px; height: 22px; border-radius: 50%; background: #E8710A; border: 2px solid #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; }
   .dd-user-name { font-weight: 700; font-size: 14px; color: #fff; }
   .dd-user-city { display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 11px; color: rgba(255,255,255,0.6); margin-top: 4px; }
-
-  /* Nav */
   .dd-nav { flex: 1; padding: 8px 12px; }
-  .dd-nav-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 11px 14px; border-radius: 10px; font-size: 13.5px; font-weight: 500; color: ${C.textMid}; background: transparent; border: none; cursor: pointer; text-align: left; transition: all 0.15s; margin-bottom: 2px; }
-  .dd-nav-item:hover { background: ${C.saffronLt}; color: ${C.saffron}; }
-  .dd-nav-item.active { background: ${C.saffronLt}; color: ${C.saffron}; font-weight: 700; border-left: 3px solid ${C.saffron}; }
-  .dd-nav-icon { width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: ${C.maroonLt}; flex-shrink: 0; }
-  .dd-nav-item.active .dd-nav-icon { background: ${C.saffron}; color: #fff !important; }
-  .dd-nav-item:hover .dd-nav-icon { background: ${C.saffron}; color: #fff !important; }
-
-  .dd-logout { padding: 12px 16px; border-top: 1px solid ${C.border}; }
-  .dd-logout-btn { display: flex; align-items: center; gap: 10px; width: 100%; padding: 11px 14px; border-radius: 10px; font-size: 13px; font-weight: 600; color: ${C.textMuted}; background: transparent; border: none; cursor: pointer; transition: all 0.15s; }
-  .dd-logout-btn:hover { background: ${C.redLt}; color: ${C.red}; }
-
-  /* Topbar */
-  .dd-topbar { height: 58px; background: ${C.white}; border-bottom: 1px solid ${C.border}; display: flex; align-items: center; padding: 0 28px; justify-content: space-between; flex-shrink: 0; }
-  .dd-topbar-title { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; color: ${C.maroon}; display: flex; align-items: center; gap: 8px; }
+  .dd-nav-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 11px 14px; border-radius: 10px; font-size: 13.5px; font-weight: 500; color: #6B4C3B; background: transparent; border: none; cursor: pointer; text-align: left; transition: all 0.15s; margin-bottom: 2px; }
+  .dd-nav-item:hover { background: #FFF3E8; color: #E8710A; }
+  .dd-nav-item.active { background: #FFF3E8; color: #E8710A; font-weight: 700; border-left: 3px solid #E8710A; }
+  .dd-nav-icon { width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: #F9EDE8; flex-shrink: 0; }
+  .dd-nav-item.active .dd-nav-icon { background: #E8710A; color: #fff !important; }
+  .dd-nav-item:hover .dd-nav-icon { background: #E8710A; color: #fff !important; }
+  .dd-logout { padding: 12px 16px; border-top: 1px solid #EAD9CC; }
+  .dd-logout-btn { display: flex; align-items: center; gap: 10px; width: 100%; padding: 11px 14px; border-radius: 10px; font-size: 13px; font-weight: 600; color: #A07060; background: transparent; border: none; cursor: pointer; transition: all 0.15s; }
+  .dd-logout-btn:hover { background: #FDECEC; color: #C0392B; }
+  .dd-topbar { height: 58px; background: #FFFFFF; border-bottom: 1px solid #EAD9CC; display: flex; align-items: center; padding: 0 28px; justify-content: space-between; flex-shrink: 0; }
+  .dd-topbar-title { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; color: #7B1D0E; display: flex; align-items: center; gap: 8px; }
   .dd-topbar-title::before { content: '🕉'; font-size: 18px; }
-  .dd-loc-btn { display: flex; align-items: center; gap: 7px; background: ${C.saffron}; color: #fff; font-size: 13px; font-weight: 700; padding: 8px 18px; border-radius: 24px; border: none; cursor: pointer; transition: background 0.15s; font-family: 'Poppins', sans-serif; }
-  .dd-loc-btn:hover { background: ${C.saffronDk}; }
-  .dd-loc-btn:disabled { opacity: 0.6; }
-
-  /* Cards */
-  .dd-pandit-card { background: ${C.white}; border-radius: 14px; padding: 22px; border: 1px solid ${C.border}; box-shadow: 0 2px 8px rgba(123,29,14,0.06); transition: all 0.2s; position: relative; overflow: hidden; }
-  .dd-pandit-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, ${C.saffron}, ${C.gold}); }
+  .dd-pandit-card { background: #FFFFFF; border-radius: 14px; padding: 22px; border: 1px solid #EAD9CC; box-shadow: 0 2px 8px rgba(123,29,14,0.06); transition: all 0.2s; position: relative; overflow: hidden; }
+  .dd-pandit-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #E8710A, #C8960C); }
   .dd-pandit-card:hover { box-shadow: 0 8px 24px rgba(123,29,14,0.12); transform: translateY(-2px); }
-
-  .dd-booking-card { background: ${C.white}; border-radius: 12px; border: 1px solid ${C.border}; box-shadow: 0 1px 4px rgba(123,29,14,0.06); transition: box-shadow 0.2s; overflow: hidden; }
+  .dd-booking-card { background: #FFFFFF; border-radius: 12px; border: 1px solid #EAD9CC; box-shadow: 0 1px 4px rgba(123,29,14,0.06); transition: box-shadow 0.2s; overflow: hidden; }
   .dd-booking-card:hover { box-shadow: 0 4px 16px rgba(123,29,14,0.10); }
-
-  /* Status badges */
   .dd-badge { display: inline-block; border-radius: 4px; font-size: 10px; font-weight: 800; padding: 3px 10px; text-transform: uppercase; letter-spacing: 0.8px; }
   .dd-badge-pending   { background: #FFF3CD; color: #856404; }
-  .dd-badge-confirmed { background: ${C.successLt}; color: ${C.success}; }
-  .dd-badge-completed { background: ${C.purpleLt}; color: ${C.purple}; }
-  .dd-badge-rejected  { background: ${C.redLt}; color: ${C.red}; }
-
-  /* Buttons */
+  .dd-badge-confirmed { background: #E8F5EE; color: #1E7D3C; }
+  .dd-badge-completed { background: #F3EEFF; color: #5B2D8E; }
+  .dd-badge-rejected  { background: #FDECEC; color: #C0392B; }
+  .dd-badge-cancelled { background: #F3F4F6; color: #6B7280; }
   .dd-btn { display: inline-flex; align-items: center; gap: 6px; font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 13px; border: none; cursor: pointer; border-radius: 8px; padding: 9px 18px; transition: all 0.15s; letter-spacing: 0.2px; }
   .dd-btn:active { transform: scale(0.97); }
-  .dd-btn-primary { background: ${C.saffron}; color: #fff; box-shadow: 0 3px 10px rgba(232,113,10,0.30); }
-  .dd-btn-primary:hover { background: ${C.saffronDk}; }
-  .dd-btn-ghost { background: ${C.saffronLt}; color: ${C.saffron}; border: 1.5px solid ${C.saffron}; }
+  .dd-btn-primary { background: #E8710A; color: #fff; box-shadow: 0 3px 10px rgba(232,113,10,0.30); }
+  .dd-btn-primary:hover { background: #C45F06; }
+  .dd-btn-ghost { background: #FFF3E8; color: #E8710A; border: 1.5px solid #E8710A; }
   .dd-btn-ghost:hover { background: #ffe3cc; }
-  .dd-btn-success { background: ${C.success}; color: #fff; }
-  .dd-btn-danger  { background: ${C.red}; color: #fff; }
-  .dd-btn-maroon  { background: ${C.maroon}; color: #fff; }
+  .dd-btn-success { background: #1E7D3C; color: #fff; }
+  .dd-btn-danger  { background: #C0392B; color: #fff; }
+  .dd-btn-maroon  { background: #7B1D0E; color: #fff; }
   .dd-btn-maroon:hover { background: #5c1208; }
-
-  /* Om pill tags for pujas */
-  .dd-puja-pill { display: inline-flex; align-items: center; gap: 5px; background: ${C.goldLt}; border: 1px solid #E6C87A; color: ${C.maroon}; font-size: 12px; font-weight: 600; padding: 5px 14px; border-radius: 24px; cursor: pointer; transition: all 0.15s; }
-  .dd-puja-pill:hover { background: ${C.gold}; color: #fff; border-color: ${C.gold}; }
-
-  /* Stat strip */
-  .dd-stat { background: ${C.white}; border-radius: 12px; border: 1px solid ${C.border}; padding: 16px 18px; display: flex; align-items: center; gap: 14px; }
-
-  /* Scrollbar */
+  .dd-puja-pill { display: inline-flex; align-items: center; gap: 5px; background: #FFF8E1; border: 1px solid #E6C87A; color: #7B1D0E; font-size: 12px; font-weight: 600; padding: 5px 14px; border-radius: 24px; cursor: pointer; transition: all 0.15s; }
+  .dd-puja-pill:hover { background: #C8960C; color: #fff; border-color: #C8960C; }
+  .dd-stat { background: #FFFFFF; border-radius: 12px; border: 1px solid #EAD9CC; padding: 16px 18px; display: flex; align-items: center; gap: 14px; }
   ::-webkit-scrollbar { width: 5px; }
-  ::-webkit-scrollbar-track { background: ${C.surface}; }
-  ::-webkit-scrollbar-thumb { background: ${C.border}; border-radius: 3px; }
-
+  ::-webkit-scrollbar-track { background: #FAF7F2; }
+  ::-webkit-scrollbar-thumb { background: #EAD9CC; border-radius: 3px; }
   .spin { animation: ddSpin 0.8s linear infinite; }
   @keyframes ddSpin { to { transform: rotate(360deg); } }
-
   .pulse { animation: ddPulse 1.6s ease-in-out infinite; }
   @keyframes ddPulse { 0%,100%{opacity:1} 50%{opacity:0.45} }
 `;
 
-/* ─── Reusable nav item ─── */
 const NavItem = ({ icon, label, tab, activeTab, setActiveTab }) => (
   <button className={`dd-nav-item ${activeTab === tab ? 'active' : ''}`} onClick={() => setActiveTab(tab)}>
     <span className="dd-nav-icon" style={{ color: activeTab === tab ? '#fff' : C.saffron }}>{icon}</span>
@@ -173,10 +143,124 @@ const NavItem = ({ icon, label, tab, activeTab, setActiveTab }) => (
   </button>
 );
 
-/* ─── Status badge ─── */
 const StatusBadge = ({ status }) => (
   <span className={`dd-badge dd-badge-${status}`}>{status}</span>
 );
+
+// Modal shown when devotee tries to cancel a PAID booking
+const CancelContactModal = ({ booking, onClose, onGoToChat }) => {
+  if (!booking) return null;
+  const bookingDateStr = booking.scheduledDate
+    ? new Date(booking.scheduledDate).toLocaleDateString('en-IN')
+    : '';
+  const waAdminMsg = encodeURIComponent(
+    `Hi, I need to cancel my booking.\n\nPuja: ${booking.pujaType}\nDate: ${bookingDateStr}\nBooking ID: ${booking._id}\n\nKindly assist with the cancellation and refund process.`
+  );
+  const waPanditMsg = booking.pandit ? encodeURIComponent(
+    `Namaste Panditji, I would like to request a cancellation for my booking.\n\nPuja: ${booking.pujaType}\nDate: ${bookingDateStr}\nBooking ID: ${booking._id}\n\nPlease guide me on the cancellation process.`
+  ) : '';
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(44,26,14,0.72)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+      <div style={{ background: '#fff', borderRadius: 18, maxWidth: 440, width: '100%', overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
+        {/* Header */}
+        <div style={{ background: 'linear-gradient(135deg, #7B1D0E 0%, #5B2D8E 100%)', padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', marginBottom: 2 }}>Cancel Paid Booking</div>
+            <h2 style={{ fontFamily: "'Playfair Display',serif", color: '#fff', fontWeight: 900, fontSize: 18 }}>
+              🕉 {booking.pujaType}
+            </h2>
+          </div>
+          <button onClick={onClose}
+            style={{ background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#fff' }}>
+            <X size={18} />
+          </button>
+        </div>
+
+        <div style={{ padding: '22px 24px' }}>
+          {/* Warning notice */}
+          <div style={{ background: '#FFF9E0', border: '1px solid #E6C87A', borderRadius: 10, padding: '12px 14px', fontSize: 13, color: '#856404', fontWeight: 600, marginBottom: 20, lineHeight: 1.6 }}>
+            ⚠️ This booking is <strong>paid</strong>. To cancel and request a refund, please contact our admin or your assigned Pandit Ji directly.
+          </div>
+
+          <p style={{ fontSize: 13, color: C.textMid, marginBottom: 14, fontWeight: 600 }}>Contact us to cancel:</p>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+
+            {/* WhatsApp Admin */}
+            <a
+              href={`https://wa.me/${ADMIN_PHONE}?text=${waAdminMsg}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ display: 'flex', alignItems: 'center', gap: 14, background: '#E8F9EE', border: '1.5px solid #25D366', borderRadius: 12, padding: '14px 16px', textDecoration: 'none' }}
+            >
+              <div style={{ width: 42, height: 42, borderRadius: '50%', background: '#25D366', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 22 }}>
+                📲
+              </div>
+              <div>
+                <div style={{ fontWeight: 800, color: '#1A6632', fontSize: 14 }}>WhatsApp Admin</div>
+                <div style={{ fontSize: 12, color: '#4CAF76', marginTop: 2 }}>Opens WhatsApp with pre-filled cancellation message</div>
+              </div>
+            </a>
+
+            {/* Call Admin */}
+            <a
+              href={`tel:+${ADMIN_PHONE}`}
+              style={{ display: 'flex', alignItems: 'center', gap: 14, background: '#F3EEFF', border: '1.5px solid #5B2D8E', borderRadius: 12, padding: '14px 16px', textDecoration: 'none' }}
+            >
+              <div style={{ width: 42, height: 42, borderRadius: '50%', background: '#5B2D8E', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 22 }}>
+                📞
+              </div>
+              <div>
+                <div style={{ fontWeight: 800, color: '#5B2D8E', fontSize: 14 }}>Call Admin</div>
+                <div style={{ fontSize: 12, color: '#7B5BB5', marginTop: 2 }}>Available 9 AM – 8 PM daily</div>
+              </div>
+            </a>
+
+            {/* WhatsApp Pandit (if phone available) */}
+            {booking.pandit?.phone && (
+              <a
+                href={`https://wa.me/${booking.pandit.phone.replace(/[^0-9]/g, '')}?text=${waPanditMsg}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ display: 'flex', alignItems: 'center', gap: 14, background: '#FFF8E1', border: '1.5px solid #C8960C', borderRadius: 12, padding: '14px 16px', textDecoration: 'none' }}
+              >
+                <div style={{ width: 42, height: 42, borderRadius: '50%', background: '#C8960C', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 22 }}>
+                  🧘
+                </div>
+                <div>
+                  <div style={{ fontWeight: 800, color: '#7B1D0E', fontSize: 14 }}>WhatsApp Pandit Ji</div>
+                  <div style={{ fontSize: 12, color: '#A07060', marginTop: 2 }}>
+                    Pt. {booking.pandit.firstName} {booking.pandit.lastName}
+                  </div>
+                </div>
+              </a>
+            )}
+
+            {/* Message Pandit via in-app chat */}
+            {booking.pandit && (
+              <div
+                style={{ display: 'flex', alignItems: 'center', gap: 14, background: '#FFF3E8', border: '1.5px solid #E8710A', borderRadius: 12, padding: '14px 16px', cursor: 'pointer' }}
+                onClick={() => { onClose(); if (onGoToChat) onGoToChat(booking.pandit); }}
+              >
+                <div style={{ width: 42, height: 42, borderRadius: '50%', background: '#E8710A', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 22 }}>
+                  💬
+                </div>
+                <div>
+                  <div style={{ fontWeight: 800, color: '#7B1D0E', fontSize: 14 }}>Chat with Pandit Ji</div>
+                  <div style={{ fontSize: 12, color: '#A07060', marginTop: 2 }}>
+                    Pt. {booking.pandit.firstName} {booking.pandit.lastName} — opens in Messages tab
+                  </div>
+                </div>
+              </div>
+            )}
+
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const DevoteeDashboard = () => {
   const { user, token, logout, updateUser } = useAuthStore();
@@ -193,6 +277,7 @@ const DevoteeDashboard = () => {
   const [waitingBooking, setWaitingBooking] = useState(null);
   const [acceptedBooking, setAcceptedBooking] = useState(null);
   const [bookingModal, setBookingModal] = useState({ isOpen: false, pandit: null });
+  const [cancelContactModal, setCancelContactModal] = useState(null);
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const intentCity = searchParams.get('city');
@@ -208,34 +293,54 @@ const DevoteeDashboard = () => {
     pujaMode: intentMode || 'in-person',
   });
   const socketRef = useRef(null);
+  const [clientType, setClientType] = useState('domestic');
 
-  /* ─── All logic below is UNCHANGED ─── */
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          let calculatedClient = (latitude >= 8.0 && latitude <= 38.0 && longitude >= 68.0 && longitude <= 98.0)
+            ? "domestic" : "international";
+          try {
+            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+            const data = await response.json();
+            const countryCode = data.address?.country_code?.toLowerCase();
+            if (countryCode) calculatedClient = countryCode === "in" ? "domestic" : "international";
+          } catch (err) { console.error("Reverse geocoding error:", err); }
+          setClientType(calculatedClient);
+        },
+        () => {
+          const intlCities = ['london', 'new york', 'dubai', 'singapore', 'toronto', 'sydney', 'california', 'new jersey', 'paris', 'tokyo'];
+          const userCity = user?.city?.toLowerCase() || '';
+          setClientType(intlCities.some(c => userCity.includes(c)) ? 'international' : 'domestic');
+        }
+      );
+    } else {
+      const intlCities = ['london', 'new york', 'dubai', 'singapore', 'toronto', 'sydney', 'california', 'new jersey', 'paris', 'tokyo'];
+      const userCity = user?.city?.toLowerCase() || '';
+      setClientType(intlCities.some(c => userCity.includes(c)) ? 'international' : 'domestic');
+    }
+  }, [user]);
+
+  const getCalculatedOnlineFee = (baseFee) => {
+    if (clientType === 'international') return baseFee * 2;
+    return Math.round(baseFee * 0.7);
+  };
+
   const fetchPandits = async (lat = null, lng = null) => {
     setLoading(true);
     try {
       let url = 'http://localhost:5000/api/pandits';
-      if (lat && lng) {
-        url += `?lat=${lat}&lng=${lng}`;
-      } else if (intentCity) {
-        url += `?city=${encodeURIComponent(intentCity)}`;
-      } else if (user?.city) {
-        url += `?city=${encodeURIComponent(user.city)}`;
-      }
+      if (lat && lng) url += `?lat=${lat}&lng=${lng}`;
+      else if (intentCity) url += `?city=${encodeURIComponent(intentCity)}`;
+      else if (user?.city) url += `?city=${encodeURIComponent(user.city)}`;
       const res = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } });
       setPandits(res.data.data);
       setIsLocal(res.data.isLocal ?? true);
       setLocationMessage(res.data.message || '');
     } catch (err) { console.error(err); }
     finally { setLoading(false); }
-  };
-
-  const handleLocationRequest = () => {
-    if (!navigator.geolocation) { alert('Geolocation is not supported by your browser'); return; }
-    setLoading(true);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => fetchPandits(pos.coords.latitude, pos.coords.longitude),
-      () => { alert('Unable to retrieve your location. Searching by city instead.'); fetchPandits(); }
-    );
   };
 
   const fetchConversations = useCallback(async () => {
@@ -266,7 +371,6 @@ const DevoteeDashboard = () => {
 
   useEffect(() => {
     if (!token || user?.role !== 'devotee') { navigate('/'); return; }
-    
     fetchPandits();
     fetchConversations();
     fetchMyBookings();
@@ -277,11 +381,9 @@ const DevoteeDashboard = () => {
     socket.on('connect', () => {
       socket.emit('join', { userId: user._id || user.id, role: 'devotee', city: user.city });
     });
-    
     socket.on('bookingAccepted', (booking) => {
       setAcceptedBooking(booking);
       setWaitingBooking(null);
-      // Update local state to avoid refresh
       setBookings(prev => {
         const exists = prev.find(b => b._id === booking._id);
         if (exists) return prev.map(b => b._id === booking._id ? booking : b);
@@ -290,21 +392,21 @@ const DevoteeDashboard = () => {
       setSelectedChatUser(booking.pandit);
       setActiveTab('chat');
     });
-
     socket.on('bookingLinkUpdated', ({ bookingId, videoLink }) => {
       setBookings(prev => prev.map(b => b._id === bookingId ? { ...b, videoLink } : b));
     });
-
     return () => socket.disconnect();
   }, [token, user, navigate, fetchConversations, fetchMyBookings, fetchMyPayments]);
 
   const handleLogout = () => { logout(); navigate('/'); };
   const startChat = (pandit) => { setSelectedChatUser(pandit); setActiveTab('chat'); };
+
   const handleOpenBookingModal = (panditId) => {
     const pandit = pandits.find(p => p._id === panditId);
     setBookingModal({ isOpen: true, pandit });
     setBookingForm(prev => ({ ...prev, address: user?.city || '' }));
   };
+
   const handleBookSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -313,12 +415,15 @@ const DevoteeDashboard = () => {
       const res = await axios.post('http://localhost:5000/api/bookings', {
         panditId: pandit._id, pujaType, date, time, address, city: user?.city, notes,
         pujaMode: bookingForm.pujaMode,
-        fee: bookingForm.pujaMode === 'online' ? (PUJA_PRICES[pujaType] || 1500) * 0.7 : (PUJA_PRICES[pujaType] || 1500),
+        fee: bookingForm.pujaMode === 'online'
+          ? getCalculatedOnlineFee(PUJA_PRICES[pujaType] || 1500)
+          : (PUJA_PRICES[pujaType] || 1500),
       }, { headers: { Authorization: `Bearer ${token}` } });
       setBookingModal({ isOpen: false, pandit: null });
       setWaitingBooking(res.data.data);
     } catch { alert('Failed to send booking request. Please try again.'); }
   };
+
   const deleteBooking = async (bookingId) => {
     if (!window.confirm('Are you sure you want to remove this booking from your history?')) return;
     try {
@@ -326,6 +431,27 @@ const DevoteeDashboard = () => {
       setBookings(bookings.filter(b => b._id !== bookingId));
     } catch { alert('Failed to delete booking'); }
   };
+
+  const cancelBooking = async (bookingId) => {
+    if (!window.confirm('Are you sure you want to cancel this booking?')) return;
+    try {
+      await axios.patch(
+        `http://localhost:5000/api/bookings/${bookingId}/cancel`,
+        { reason: 'Cancelled by devotee' },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setBookings(prev => prev.map(b => b._id === bookingId ? { ...b, status: 'cancelled' } : b));
+    } catch (err) {
+      const data = err.response?.data;
+      if (data?.requiresAdminContact) {
+        // Payment was made — show the contact modal instead of a plain error
+        const booking = bookings.find(b => b._id === bookingId);
+        if (booking) { setCancelContactModal(booking); return; }
+      }
+      alert(data?.message || 'Failed to cancel booking. Please try again.');
+    }
+  };
+
   const handleAvatarUpload = async (e) => {
     const file = e.target.files[0]; if (!file) return;
     const formData = new FormData(); formData.append('file', file);
@@ -334,6 +460,7 @@ const DevoteeDashboard = () => {
       updateUser({ avatar: res.data.avatarUrl });
     } catch { alert('Failed to upload profile picture'); }
   };
+
   const handlePayment = async (booking) => {
     const res = await loadRazorpayScript();
     if (!res) { alert('Razorpay SDK failed to load. Are you online?'); return; }
@@ -341,7 +468,6 @@ const DevoteeDashboard = () => {
       setLoading(true);
       const { data } = await axios.post('http://localhost:5000/api/payments/create-order', { bookingId: booking._id }, { headers: { Authorization: `Bearer ${token}` } });
       if (!data.success) { alert('Failed to initiate payment.'); setLoading(false); return; }
-      
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_YourKeyHere',
         amount: data.amount,
@@ -357,7 +483,6 @@ const DevoteeDashboard = () => {
               razorpay_signature: response.razorpay_signature,
               bookingId: booking._id
             }, { headers: { Authorization: `Bearer ${token}` } });
-            
             if (verifyRes.data.success) {
               alert('Payment Successful! You can now chat with the Pandit.');
               setAcceptedBooking(null);
@@ -372,38 +497,51 @@ const DevoteeDashboard = () => {
             alert('Payment verification failed.');
           }
         },
-        prefill: {
-          name: `${user.firstName} ${user.lastName}`,
-          email: user.email || ''
-        },
-        theme: { color: C.saffron }
+        prefill: { name: `${user.firstName} ${user.lastName}`, email: user.email || '' },
+        theme: { color: '#E8710A' }
       };
-      
       const rzp = new window.Razorpay(options);
       rzp.on('payment.failed', (r) => alert('Payment failed. ' + r.error.description));
       rzp.open();
     } catch (err) {
       alert(err.response?.data?.message || 'Error processing payment');
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   };
 
   const feeForForm = bookingForm.pujaMode === 'online'
-    ? Math.round((PUJA_PRICES[bookingForm.pujaType] || 1500) * 0.7)
+    ? getCalculatedOnlineFee(PUJA_PRICES[bookingForm.pujaType] || 1500)
     : (PUJA_PRICES[bookingForm.pujaType] || 1500);
 
-  /* ─── RENDER ─── */
+  // Returns true only if the booking's scheduled date+time is still in the future
+  const isBookingUpcoming = (booking) => {
+    if (!booking.scheduledDate) return false;
+    try {
+      const dateStr = new Date(booking.scheduledDate).toISOString().split('T')[0];
+      const time = booking.scheduledTime || '23:59';
+      const scheduledAt = new Date(`${dateStr}T${time}:00`);
+      return scheduledAt > new Date();
+    } catch { return false; }
+  };
+
   return (
     <>
       <style>{G}</style>
       <div className="dd-root">
 
-        {/* ════════════ WAITING OVERLAY ════════════ */}
+        {/* Cancel contact modal for paid bookings */}
+        {cancelContactModal && (
+          <CancelContactModal
+            booking={cancelContactModal}
+            onClose={() => setCancelContactModal(null)}
+            onGoToChat={(pandit) => { setSelectedChatUser(pandit); setActiveTab('chat'); }}
+          />
+        )}
+
+        {/* Waiting overlay */}
         {waitingBooking && (
           <div style={{ position: 'fixed', inset: 0, background: 'rgba(44,26,14,0.7)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
             <div style={{ background: '#fff', borderRadius: 20, maxWidth: 360, width: '100%', overflow: 'hidden', boxShadow: '0 24px 60px rgba(0,0,0,0.35)' }}>
-              <div style={{ background: `linear-gradient(135deg, ${C.maroon}, ${C.purple})`, padding: '28px 24px', textAlign: 'center' }}>
+              <div style={{ background: 'linear-gradient(135deg, #7B1D0E, #5B2D8E)', padding: '28px 24px', textAlign: 'center' }}>
                 <div style={{ fontSize: 48, marginBottom: 12 }}>🕉</div>
                 <div style={{ width: 40, height: 40, border: '4px solid rgba(255,255,255,0.4)', borderTopColor: '#fff', borderRadius: '50%', margin: '0 auto 14px' }} className="spin" />
                 <h2 style={{ color: '#fff', fontWeight: 800, fontSize: 18 }}>Finding a Pandit...</h2>
@@ -422,7 +560,7 @@ const DevoteeDashboard = () => {
           </div>
         )}
 
-        {/* ════════════ PANDIT ACCEPTED TOAST ════════════ */}
+        {/* Pandit accepted toast */}
         {acceptedBooking && (
           <div style={{ position: 'fixed', top: 16, right: 16, zIndex: 200, background: '#fff', borderRadius: 14, boxShadow: '0 8px 30px rgba(0,0,0,0.18)', border: `1.5px solid ${C.success}`, maxWidth: 340, overflow: 'hidden' }}>
             <div style={{ background: C.success, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -446,18 +584,15 @@ const DevoteeDashboard = () => {
                   Later
                 </button>
               </div>
-
             </div>
           </div>
         )}
 
-        {/* ════════════ BOOKING MODAL ════════════ */}
+        {/* Booking modal */}
         {bookingModal.isOpen && bookingModal.pandit && (
           <div style={{ position: 'fixed', inset: 0, background: 'rgba(44,26,14,0.72)', zIndex: 150, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
             <div style={{ background: '#fff', borderRadius: 18, maxWidth: 480, width: '100%', overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.3)', maxHeight: '90vh', overflowY: 'auto' }}>
-
-              {/* Modal header */}
-              <div style={{ background: `linear-gradient(135deg, ${C.maroon} 0%, ${C.purple} 100%)`, padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ background: 'linear-gradient(135deg, #7B1D0E 0%, #5B2D8E 100%)', padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
                   <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', marginBottom: 2 }}>Booking with</div>
                   <h2 style={{ fontFamily: "'Playfair Display',serif", color: '#fff', fontWeight: 900, fontSize: 20 }}>
@@ -469,38 +604,26 @@ const DevoteeDashboard = () => {
                   <X size={18} />
                 </button>
               </div>
-
               <form onSubmit={handleBookSubmit} style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
-
-                {/* Puja selector */}
                 <div>
                   <label style={lbl}>Select Puja Type</label>
                   <select required value={bookingForm.pujaType}
-                    onChange={e => setBookingForm({ ...bookingForm, pujaType: e.target.value })}
-                    style={sel}>
+                    onChange={e => setBookingForm({ ...bookingForm, pujaType: e.target.value })} style={sel}>
                     {Object.keys(PUJA_PRICES).map(p => (
                       <option key={p} value={p}>{p} — ₹{PUJA_PRICES[p].toLocaleString()}</option>
                     ))}
                   </select>
                 </div>
-
-                {/* Mode toggle */}
                 <div style={{ background: C.saffronLt, borderRadius: 10, padding: 4, display: 'flex', border: `1px solid ${C.border}` }}>
                   {['in-person', 'online'].map(mode => (
                     <button key={mode} type="button"
                       onClick={() => setBookingForm({ ...bookingForm, pujaMode: mode })}
-                      style={{
-                        flex: 1, padding: '9px', borderRadius: 7, border: 'none', cursor: 'pointer', fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 13, transition: 'all 0.15s',
-                        background: bookingForm.pujaMode === mode ? C.saffron : 'transparent',
-                        color: bookingForm.pujaMode === mode ? '#fff' : C.textMid
-                      }}>
+                      style={{ flex: 1, padding: '9px', borderRadius: 7, border: 'none', cursor: 'pointer', fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 13, transition: 'all 0.15s', background: bookingForm.pujaMode === mode ? C.saffron : 'transparent', color: bookingForm.pujaMode === mode ? '#fff' : C.textMid }}>
                       {mode === 'in-person' ? '🏠 In-Person' : '💻 Online'}
                       {mode === 'online' && <span style={{ fontSize: 10, marginLeft: 6, background: 'rgba(255,255,255,0.25)', padding: '1px 6px', borderRadius: 10 }}>-30%</span>}
                     </button>
                   ))}
                 </div>
-
-                {/* Date & time */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                   <div>
                     <label style={lbl}>📅 Date</label>
@@ -514,16 +637,12 @@ const DevoteeDashboard = () => {
                       onChange={e => setBookingForm({ ...bookingForm, time: e.target.value })} style={inp} />
                   </div>
                 </div>
-
-                {/* Address */}
                 <div>
                   <label style={lbl}>📍 Full Address</label>
                   <input type="text" required value={bookingForm.address}
                     onChange={e => setBookingForm({ ...bookingForm, address: e.target.value })}
                     placeholder="Enter your complete address" style={inp} />
                 </div>
-
-                {/* Notes */}
                 <div>
                   <label style={lbl}>📝 Special Requirements (Optional)</label>
                   <textarea rows={2} value={bookingForm.notes}
@@ -531,20 +650,22 @@ const DevoteeDashboard = () => {
                     placeholder="Any specific instructions for the pandit..."
                     style={{ ...inp, resize: 'none', lineHeight: 1.5 }} />
                 </div>
-
-                {/* Fee display */}
                 <div style={{ background: C.goldLt, border: `1px solid #E6C87A`, borderRadius: 10, padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div>
                     <div style={{ fontSize: 12, color: C.gold, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.6px' }}>Booking Fee</div>
                     {bookingForm.pujaMode === 'online' && (
-                      <div style={{ fontSize: 12, color: C.textMuted, textDecoration: 'line-through' }}>₹{(PUJA_PRICES[bookingForm.pujaType] || 1500).toLocaleString()}</div>
+                      <>
+                        <div style={{ fontSize: 12, color: C.textMuted, textDecoration: 'line-through' }}>₹{(PUJA_PRICES[bookingForm.pujaType] || 1500).toLocaleString()}</div>
+                        <div style={{ fontSize: 10, color: clientType === 'international' ? '#dc2626' : '#16a34a', fontWeight: 700, marginTop: 2 }}>
+                          {clientType === 'international' ? '🌐 International Rate (Double)' : '🪔 Domestic Discount (30% Off)'}
+                        </div>
+                      </>
                     )}
                   </div>
                   <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 26, fontWeight: 900, color: C.maroon }}>
                     ₹{feeForForm.toLocaleString()}
                   </div>
                 </div>
-
                 <button type="submit" className="dd-btn dd-btn-maroon"
                   style={{ width: '100%', justifyContent: 'center', fontSize: 15, padding: '13px', borderRadius: 10 }}>
                   🕉 Confirm Booking
@@ -554,19 +675,16 @@ const DevoteeDashboard = () => {
           </div>
         )}
 
-        {/* ════════════ SIDEBAR ════════════ */}
+        {/* ════ SIDEBAR ════ */}
         <div className="dd-sidebar">
           <div className="dd-sidebar-top">
-            {/* Brand */}
-            <div className="dd-brand" onClick={() => navigate('/')} style={{ cursor: 'pointer' }} title="Go to Home Page">
+            <div className="dd-brand" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
               <span className="dd-brand-om">🕉</span>
               <div>
                 <div className="dd-brand-name">PanditJi</div>
                 <div className="dd-brand-sub">Sacred Services</div>
               </div>
             </div>
-
-            {/* Profile */}
             <div className="dd-profile-area">
               <div className="dd-avatar-wrap">
                 {user?.avatar
@@ -578,15 +696,9 @@ const DevoteeDashboard = () => {
                 <input type="file" id="dd-avatar-upload" style={{ display: 'none' }} accept="image/*" onChange={handleAvatarUpload} />
               </div>
               <div className="dd-user-name">{user?.firstName} {user?.lastName}</div>
-              {user?.city && (
-                <div className="dd-user-city">
-                  <MapPin size={11} /> {user.city}
-                </div>
-              )}
+              {user?.city && <div className="dd-user-city"><MapPin size={11} /> {user.city}</div>}
             </div>
           </div>
-
-          {/* Nav */}
           <nav className="dd-nav">
             <NavItem icon={<User size={16} />} label="My Profile" tab="profile" activeTab={activeTab} setActiveTab={setActiveTab} />
             <NavItem icon={<Calendar size={16} />} label="My Bookings" tab="bookings" activeTab={activeTab} setActiveTab={setActiveTab} />
@@ -594,7 +706,6 @@ const DevoteeDashboard = () => {
             <NavItem icon={<CheckCircle size={16} />} label="Bookings & Payments" tab="payments" activeTab={activeTab} setActiveTab={setActiveTab} />
             <NavItem icon={<Headphones size={16} />} label="Support" tab="support" activeTab={activeTab} setActiveTab={setActiveTab} />
           </nav>
-
           <div className="dd-logout" style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             <button className="dd-nav-item" onClick={() => navigate('/')} style={{ padding: '11px 14px' }}>
               <span className="dd-nav-icon" style={{ background: 'transparent', color: C.textMid }}><Navigation size={16} /></span>
@@ -606,10 +717,8 @@ const DevoteeDashboard = () => {
           </div>
         </div>
 
-        {/* ════════════ MAIN ════════════ */}
+        {/* ════ MAIN ════ */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
-
-          {/* Topbar */}
           <header className="dd-topbar">
             <div className="dd-topbar-title">
               {activeTab === 'profile' && 'My Profile'}
@@ -622,7 +731,7 @@ const DevoteeDashboard = () => {
 
           <main style={{ flex: 1, overflowY: 'auto', padding: 24 }}>
 
-            {/* ─── PROFILE ─── */}
+            {/* PROFILE */}
             {activeTab === 'profile' && (
               <div style={{ maxWidth: 600, margin: '0 auto', background: '#fff', borderRadius: 14, border: `1px solid ${C.border}`, padding: 24 }}>
                 <SectionTitle>Profile Details</SectionTitle>
@@ -634,52 +743,30 @@ const DevoteeDashboard = () => {
                     const res = await axios.patch('http://localhost:5000/api/devotees/profile', data, { headers: { Authorization: `Bearer ${token}` } });
                     updateUser(res.data.data);
                     alert('Profile updated successfully!');
-                  } catch (err) {
-                    alert('Failed to update profile');
-                  }
+                  } catch { alert('Failed to update profile'); }
                 }} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                    <div>
-                      <label style={lbl}>First Name</label>
-                      <input name="firstName" defaultValue={user?.firstName} required style={inp} />
-                    </div>
-                    <div>
-                      <label style={lbl}>Last Name</label>
-                      <input name="lastName" defaultValue={user?.lastName} required style={inp} />
-                    </div>
+                    <div><label style={lbl}>First Name</label><input name="firstName" defaultValue={user?.firstName} required style={inp} /></div>
+                    <div><label style={lbl}>Last Name</label><input name="lastName" defaultValue={user?.lastName} required style={inp} /></div>
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                    <div>
-                      <label style={lbl}>Primary Phone</label>
-                      <input name="phone" defaultValue={user?.phone} required style={inp} />
-                    </div>
-                    <div>
-                      <label style={lbl}>Alternate Phone</label>
-                      <input name="alternatePhone" defaultValue={user?.alternatePhone} placeholder="Optional" style={inp} />
-                    </div>
+                    <div><label style={lbl}>Primary Phone</label><input name="phone" defaultValue={user?.phone} required style={inp} /></div>
+                    <div><label style={lbl}>Alternate Phone</label><input name="alternatePhone" defaultValue={user?.alternatePhone} placeholder="Optional" style={inp} /></div>
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                    <div>
-                      <label style={lbl}>City</label>
-                      <input name="city" defaultValue={user?.city} required style={inp} />
-                    </div>
-                    <div>
-                      <label style={lbl}>State</label>
-                      <input name="state" defaultValue={user?.state} style={inp} />
-                    </div>
+                    <div><label style={lbl}>City</label><input name="city" defaultValue={user?.city} required style={inp} /></div>
+                    <div><label style={lbl}>State</label><input name="state" defaultValue={user?.state} style={inp} /></div>
                   </div>
                   <div>
                     <label style={lbl}>Pinned Location (Address)</label>
                     <input name="pinnedLocation" defaultValue={user?.pinnedLocation} placeholder="e.g., Block A, Phase 1..." style={inp} />
                   </div>
-                  <button type="submit" className="dd-btn dd-btn-primary" style={{ marginTop: 8, justifyContent: 'center' }}>
-                    Save Changes
-                  </button>
+                  <button type="submit" className="dd-btn dd-btn-primary" style={{ marginTop: 8, justifyContent: 'center' }}>Save Changes</button>
                 </form>
               </div>
             )}
 
-            {/* ─── MY BOOKINGS ─── */}
+            {/* MY BOOKINGS */}
             {activeTab === 'bookings' && (
               <div style={{ maxWidth: 860, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {bookings.length === 0 ? (
@@ -690,13 +777,7 @@ const DevoteeDashboard = () => {
                   </div>
                 ) : bookings.map(booking => (
                   <div key={booking._id} className="dd-booking-card">
-                    {/* Color strip based on status */}
-                    <div style={{
-                      height: 4, background:
-                        booking.status === 'pending' ? C.gold :
-                          booking.status === 'confirmed' ? C.success :
-                            booking.status === 'completed' ? C.purple : C.red
-                    }} />
+                    <div style={{ height: 4, background: booking.status === 'pending' ? C.gold : booking.status === 'confirmed' ? C.success : booking.status === 'completed' ? C.purple : C.red }} />
                     <div style={{ padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14 }}>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10, flexWrap: 'wrap' }}>
@@ -745,23 +826,80 @@ const DevoteeDashboard = () => {
                           </div>
                         )}
                       </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}>
+
+                      {/* ── ACTION BUTTONS ── */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0, minWidth: 124, alignItems: 'stretch' }}>
+
+                        {/* CASE 1: confirmed + UNPAID */}
                         {booking.status === 'confirmed' && booking.paymentStatus === 'pending' && (
-                          <button className="dd-btn dd-btn-primary" style={{ fontSize: 12 }} onClick={() => handlePayment(booking)} disabled={loading}>
-                            💳 Pay Now
-                          </button>
+                          <>
+                            {/* Pay Now always shown — even for past (so they can settle) */}
+                            <button className="dd-btn dd-btn-primary" style={{ fontSize: 12, justifyContent: 'center' }}
+                              onClick={() => handlePayment(booking)} disabled={loading}>
+                              💳 Pay Now
+                            </button>
+                            {/* Cancel only if the puja hasn't happened yet */}
+                            {isBookingUpcoming(booking) && (
+                              <button
+                                className="dd-btn"
+                                style={{ fontSize: 12, justifyContent: 'center', background: '#FDECEC', color: C.red, border: `1.5px solid ${C.red}` }}
+                                onClick={() => cancelBooking(booking._id)}
+                              >
+                                ✕ Cancel Booking
+                              </button>
+                            )}
+                          </>
                         )}
-                        {booking.pandit && booking.paymentStatus === 'paid' && (
-                          <button className="dd-btn dd-btn-ghost" style={{ fontSize: 12 }} onClick={() => startChat(booking.pandit)}>
+
+                        {/* CASE 2: confirmed + PAID */}
+                        {booking.status === 'confirmed' && booking.paymentStatus === 'paid' && (
+                          <>
+                            {booking.pandit && (
+                              <button className="dd-btn dd-btn-ghost" style={{ fontSize: 12, justifyContent: 'center' }}
+                                onClick={() => startChat(booking.pandit)}>
+                                <MessageSquare size={14} /> Chat
+                              </button>
+                            )}
+                            {/* Cancel only if the puja hasn't happened yet */}
+                            {isBookingUpcoming(booking) && (
+                              <button
+                                className="dd-btn"
+                                style={{ fontSize: 11, justifyContent: 'center', background: '#FDECEC', color: C.red, border: `1.5px solid ${C.red}` }}
+                                onClick={() => setCancelContactModal(booking)}
+                              >
+                                ✕ Cancel Booking
+                              </button>
+                            )}
+                          </>
+                        )}
+
+                        {/* CASE 3: completed → Chat */}
+                        {booking.status === 'completed' && booking.pandit && (
+                          <button className="dd-btn dd-btn-ghost" style={{ fontSize: 12, justifyContent: 'center' }}
+                            onClick={() => startChat(booking.pandit)}>
                             <MessageSquare size={14} /> Chat
                           </button>
                         )}
-                        {(booking.status === 'completed' || booking.status === 'rejected' || booking.status === 'cancelled') && (
-                          <button className="dd-btn" onClick={() => deleteBooking(booking._id)}
-                            style={{ background: '#f5f0eb', color: C.textMid, fontSize: 12 }}>
-                            Delete
+
+                        {/* CASE 4: pending → Cancel only if still upcoming */}
+                        {booking.status === 'pending' && isBookingUpcoming(booking) && (
+                          <button
+                            className="dd-btn"
+                            style={{ fontSize: 12, justifyContent: 'center', background: '#FDECEC', color: C.red, border: `1.5px solid ${C.red}` }}
+                            onClick={() => cancelBooking(booking._id)}
+                          >
+                            ✕ Cancel Booking
                           </button>
                         )}
+
+                        {/* CASE 5: rejected / cancelled → Delete from history */}
+                        {(booking.status === 'rejected' || booking.status === 'cancelled') && (
+                          <button className="dd-btn" onClick={() => deleteBooking(booking._id)}
+                            style={{ background: '#f5f0eb', color: C.textMid, fontSize: 12, justifyContent: 'center' }}>
+                            🗑 Delete
+                          </button>
+                        )}
+
                       </div>
                     </div>
                   </div>
@@ -769,7 +907,7 @@ const DevoteeDashboard = () => {
               </div>
             )}
 
-            {/* ─── CHAT ─── */}
+            {/* CHAT */}
             {activeTab === 'chat' && (
               <div style={{ display: 'flex', height: 'calc(100vh - 106px)', gap: 16 }}>
                 <div style={{ width: 240, background: '#fff', borderRadius: 14, border: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
@@ -783,11 +921,7 @@ const DevoteeDashboard = () => {
                       </div>
                     ) : conversations.map(c => (
                       <div key={c._id} onClick={() => setSelectedChatUser(c)}
-                        style={{
-                          padding: '12px 16px', borderBottom: `1px solid ${C.surface}`, cursor: 'pointer', transition: 'background 0.12s',
-                          background: selectedChatUser?._id === c._id ? C.saffronLt : '#fff',
-                          borderLeft: selectedChatUser?._id === c._id ? `3px solid ${C.saffron}` : '3px solid transparent'
-                        }}>
+                        style={{ padding: '12px 16px', borderBottom: `1px solid ${C.surface}`, cursor: 'pointer', transition: 'background 0.12s', background: selectedChatUser?._id === c._id ? C.saffronLt : '#fff', borderLeft: selectedChatUser?._id === c._id ? `3px solid ${C.saffron}` : '3px solid transparent' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                           <div style={{ width: 36, height: 36, borderRadius: '50%', background: `linear-gradient(135deg,${C.saffron},${C.gold})`, color: '#fff', fontWeight: 800, fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                             {c.firstName?.charAt(0)}
@@ -807,18 +941,16 @@ const DevoteeDashboard = () => {
               </div>
             )}
 
-            {/* ─── SUPPORT ─── */}
+            {/* SUPPORT */}
             {activeTab === 'support' && (
               <div style={{ maxWidth: 800, margin: '0 auto' }}>
                 <SupportCare userRole="devotee" />
               </div>
             )}
 
-            {/* ─── PAYMENTS ─── */}
+            {/* PAYMENTS */}
             {activeTab === 'payments' && (
               <div style={{ maxWidth: 860, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 28 }}>
-
-                {/* Unpaid bookings */}
                 <div>
                   <SectionTitle>Active & Unpaid Bookings</SectionTitle>
                   {bookings.filter(b => b.status === 'confirmed' && b.paymentStatus === 'pending').length === 0 ? (
@@ -846,8 +978,6 @@ const DevoteeDashboard = () => {
                     </div>
                   ))}
                 </div>
-
-                {/* Payment history */}
                 <div>
                   <SectionTitle>Past Transactions</SectionTitle>
                   {payments.length === 0 ? (
@@ -864,9 +994,7 @@ const DevoteeDashboard = () => {
                         <div style={{ fontSize: 12, color: C.textMid }}>
                           {new Date(payment.createdAt).toLocaleDateString('en-IN')} · {new Date(payment.createdAt).toLocaleTimeString()}
                         </div>
-                        <div style={{ fontSize: 11, color: C.textMuted, marginTop: 2 }}>
-                          TXN: {payment.razorpayPaymentId}
-                        </div>
+                        <div style={{ fontSize: 11, color: C.textMuted, marginTop: 2 }}>TXN: {payment.razorpayPaymentId}</div>
                       </div>
                       <div style={{ textAlign: 'right' }}>
                         <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 22, fontWeight: 900, color: C.success }}>
@@ -881,6 +1009,7 @@ const DevoteeDashboard = () => {
                 </div>
               </div>
             )}
+
           </main>
         </div>
       </div>
