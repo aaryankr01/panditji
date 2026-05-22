@@ -7,6 +7,7 @@ const {
   deleteBooking,
   updateBookingLink,
   cancelBooking,
+  requestCancelBooking,
 } = require('../controllers/bookingController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
@@ -19,6 +20,7 @@ router.get('/', getBookings);
 
 // Devotee cancels their own booking (unpaid only — paid requires admin contact)
 router.patch('/:id/cancel', authorize('devotee'), cancelBooking);
+router.patch('/:id/request-cancel', authorize('devotee'), requestCancelBooking);
 
 // Pandit-only actions
 router.patch('/:id/accept', authorize('pandit'), acceptBooking);

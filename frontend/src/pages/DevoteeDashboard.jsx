@@ -114,6 +114,7 @@ const G = `
   .dd-badge-completed { background: #F3EEFF; color: #5B2D8E; }
   .dd-badge-rejected  { background: #FDECEC; color: #C0392B; }
   .dd-badge-cancelled { background: #F3F4F6; color: #6B7280; }
+  .dd-badge-cancellation_requested { background: #FEE2E2; color: #991B1B; }
   .dd-btn { display: inline-flex; align-items: center; gap: 6px; font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 13px; border: none; cursor: pointer; border-radius: 8px; padding: 9px 18px; transition: all 0.15s; letter-spacing: 0.2px; }
   .dd-btn:active { transform: scale(0.97); }
   .dd-btn-primary { background: #E8710A; color: #fff; box-shadow: 0 3px 10px rgba(232,113,10,0.30); }
@@ -148,8 +149,12 @@ const StatusBadge = ({ status }) => (
 );
 
 // Modal shown when devotee tries to cancel a PAID booking
-const CancelContactModal = ({ booking, onClose, onGoToChat }) => {
+// Modal shown when devotee tries to cancel a PAID booking
+const CancelContactModal = ({ booking, onClose, onGoToChat, onRequestCancel }) => {
   if (!booking) return null;
+  const [reason, setReason] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
   const bookingDateStr = booking.scheduledDate
     ? new Date(booking.scheduledDate).toLocaleDateString('en-IN')
     : '';
@@ -159,6 +164,17 @@ const CancelContactModal = ({ booking, onClose, onGoToChat }) => {
   const waPanditMsg = booking.pandit ? encodeURIComponent(
     `Namaste Panditji, I would like to request a cancellation for my booking.\n\nPuja: ${booking.pujaType}\nDate: ${bookingDateStr}\nBooking ID: ${booking._id}\n\nPlease guide me on the cancellation process.`
   ) : '';
+
+  const handleRequestSubmit = async (e) => {
+    e.preventDefault();
+    if (!reason.trim()) {
+      alert('Please provide a reason for cancellation.');
+      return;
+    }
+    setSubmitting(true);
+    await onRequestCancel(booking._id, reason);
+    setSubmitting(false);
+  };
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(44,26,14,0.72)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
@@ -177,13 +193,34 @@ const CancelContactModal = ({ booking, onClose, onGoToChat }) => {
           </button>
         </div>
 
-        <div style={{ padding: '22px 24px' }}>
+        <div style={{ padding: '22px 24px', maxHeight: 'calc(90vh - 80px)', overflowY: 'auto' }}>
           {/* Warning notice */}
           <div style={{ background: '#FFF9E0', border: '1px solid #E6C87A', borderRadius: 10, padding: '12px 14px', fontSize: 13, color: '#856404', fontWeight: 600, marginBottom: 20, lineHeight: 1.6 }}>
-            ⚠️ This booking is <strong>paid</strong>. To cancel and request a refund, please contact our admin or your assigned Pandit Ji directly.
+            ⚠️ This booking is <strong>paid</strong>. You can request cancellation and refund below (10% platform fee will be deducted), or contact admin / Pandit Ji.
           </div>
 
-          <p style={{ fontSize: 13, color: C.textMid, marginBottom: 14, fontWeight: 600 }}>Contact us to cancel:</p>
+          {/* Refund/Cancel Form */}
+          <form onSubmit={handleRequestSubmit} style={{ marginBottom: 20, background: '#fcfaf7', border: `1px solid ${C.border}`, borderRadius: 12, padding: 16 }}>
+            <label style={{ fontSize: 12, fontWeight: 700, color: C.maroon, display: 'block', marginBottom: 6 }}>Reason for Cancellation</label>
+            <textarea
+              value={reason}
+              onChange={e => setReason(e.target.value)}
+              placeholder="e.g. Health issue, Date changed, Personal reasons..."
+              required
+              rows={2}
+              style={{ width: '100%', padding: 10, borderRadius: 8, border: `1.5px solid ${C.border}`, fontSize: 12, resize: 'none', marginBottom: 12, outline: 'none', boxSizing: 'border-box' }}
+            />
+            <button
+              type="submit"
+              disabled={submitting}
+              className="dd-btn"
+              style={{ width: '100%', justifyContent: 'center', background: C.red, color: '#fff', fontSize: 12, border: 'none', cursor: 'pointer' }}
+            >
+              {submitting ? 'Submitting Request...' : 'Submit Cancellation & Refund Request'}
+            </button>
+          </form>
+
+          <p style={{ fontSize: 13, color: C.textMid, marginBottom: 14, fontWeight: 600 }}>Or contact us directly:</p>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
 
@@ -452,6 +489,21 @@ const DevoteeDashboard = () => {
     }
   };
 
+  const requestCancelBooking = async (bookingId, reason) => {
+    try {
+      await axios.patch(
+        `http://localhost:5000/api/bookings/${bookingId}/request-cancel`,
+        { reason },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setBookings(prev => prev.map(b => b._id === bookingId ? { ...b, status: 'cancellation_requested', cancellationReason: reason } : b));
+      alert('Cancellation & refund request submitted successfully! Admin will review and process your refund shortly.');
+      setCancelContactModal(null);
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to submit cancellation request. Please try again.');
+    }
+  };
+
   const handleAvatarUpload = async (e) => {
     const file = e.target.files[0]; if (!file) return;
     const formData = new FormData(); formData.append('file', file);
@@ -534,6 +586,7 @@ const DevoteeDashboard = () => {
             booking={cancelContactModal}
             onClose={() => setCancelContactModal(null)}
             onGoToChat={(pandit) => { setSelectedChatUser(pandit); setActiveTab('chat'); }}
+            onRequestCancel={requestCancelBooking}
           />
         )}
 
@@ -898,6 +951,13 @@ const DevoteeDashboard = () => {
                             style={{ background: '#f5f0eb', color: C.textMid, fontSize: 12, justifyContent: 'center' }}>
                             🗑 Delete
                           </button>
+                        )}
+
+                        {/* CASE 6: cancellation_requested */}
+                        {booking.status === 'cancellation_requested' && (
+                          <div style={{ fontSize: 11, color: C.textMid, fontWeight: 600, textAlign: 'center', background: '#F8FAFC', border: '1px dashed #CBD5E1', borderRadius: 8, padding: '8px 6px' }}>
+                            ⏳ Cancellation Request Pending Review
+                          </div>
                         )}
 
                       </div>

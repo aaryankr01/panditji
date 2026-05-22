@@ -274,6 +274,81 @@ exports.cancelBooking = async (req, res, next) => {
   }
 };
 
+// @desc    Devotee requests cancellation of paid booking
+// @route   PATCH /api/bookings/:id/request-cancel
+// @access  Private/Devotee
+exports.requestCancelBooking = async (req, res, next) => {
+  try {
+    const devoteeId = req.user.id;
+    const booking = await Booking.findById(req.params.id)
+      .populate('devotee', 'firstName lastName phone city')
+      .populate('pandit', 'firstName lastName phone city');
+
+    if (!booking) {
+      return res.status(404).json({ success: false, message: 'Booking not found' });
+    }
+
+    // Only the devotee who made the booking can cancel
+    if (booking.devotee._id.toString() !== devoteeId) {
+      return res.status(403).json({ success: false, message: 'Not authorised to request cancellation for this booking' });
+    }
+
+    // Must be confirmed and paid
+    if (booking.paymentStatus !== 'paid') {
+      return res.status(400).json({ success: false, message: 'Only paid bookings require cancellation requests. For unpaid bookings, please cancel directly.' });
+    }
+
+    if (booking.status !== 'confirmed') {
+      return res.status(400).json({ success: false, message: `Booking status must be confirmed to request cancellation (current status: ${booking.status})` });
+    }
+
+    // Block if the scheduled time has already passed
+    if (booking.scheduledDate && booking.scheduledTime) {
+      try {
+        const dateStr = new Date(booking.scheduledDate).toISOString().split('T')[0];
+        const scheduledAt = new Date(`${dateStr}T${booking.scheduledTime}:00`);
+        if (scheduledAt <= new Date()) {
+          return res.status(400).json({
+            success: false,
+            message: 'This booking cannot be cancelled because its scheduled time has already passed.',
+          });
+        }
+      } catch (e) {
+        console.error('Date parse error in requestCancelBooking:', e);
+      }
+    }
+
+    booking.status = 'cancellation_requested';
+    booking.cancellationReason = req.body.reason || 'Cancellation requested by devotee';
+    await booking.save();
+
+    // Notify the assigned pandit (if any) and admin via socket
+    if (_io && booking.pandit) {
+      const panditSocketId = global.activeUsers?.get(booking.pandit._id.toString());
+      if (panditSocketId) {
+        _io.to(panditSocketId).emit('bookingCancellationRequested', {
+          bookingId: booking._id,
+          pujaType: booking.pujaType,
+          devotee: `${booking.devotee.firstName} ${booking.devotee.lastName}`,
+        });
+      }
+    }
+
+    // Emit to admin rooms or global if needed
+    if (_io) {
+      _io.emit('adminBookingCancellationRequested', {
+        bookingId: booking._id,
+        devotee: `${booking.devotee.firstName} ${booking.devotee.lastName}`,
+        pujaType: booking.pujaType,
+      });
+    }
+
+    res.status(200).json({ success: true, message: 'Cancellation and refund request submitted successfully', data: booking });
+  } catch (err) {
+    next(err);
+  }
+};
+
 // @desc    Delete booking
 // @route   DELETE /api/bookings/:id
 // @access  Private

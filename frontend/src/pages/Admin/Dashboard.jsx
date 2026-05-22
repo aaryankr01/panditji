@@ -134,6 +134,40 @@ const AdminDashboard = () => {
     } catch (err) { alert('Failed to reject'); }
   };
 
+  const handleApproveCancellation = async (bookingId, reason) => {
+    if (!window.confirm('Are you sure you want to approve this cancellation and refund the devotee (with 10% deduction)?')) return;
+    try {
+      const res = await axios.patch(`http://localhost:5000/api/admin/bookings/${bookingId}/cancel-approve`, { reason }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      alert(`Cancellation approved successfully. Refund of ₹${res.data.refundedAmount.toFixed(2)} processed to the devotee.`);
+      const bookingsRes = await axios.get('http://localhost:5000/api/admin/bookings', { headers: { Authorization: `Bearer ${token}` } });
+      setBookingsList(bookingsRes.data.data || []);
+      setSelectedBookingModal(null);
+      const statsRes = await axios.get('http://localhost:5000/api/admin/stats', { headers: { Authorization: `Bearer ${token}` } });
+      setStats(statsRes.data.data);
+      const paymentsRes = await axios.get('http://localhost:5000/api/admin/payments', { headers: { Authorization: `Bearer ${token}` } });
+      setPaymentsList(paymentsRes.data.data);
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to approve cancellation');
+    }
+  };
+
+  const handleRejectCancellation = async (bookingId) => {
+    if (!window.confirm('Are you sure you want to reject this cancellation request and keep the booking active?')) return;
+    try {
+      await axios.patch(`http://localhost:5000/api/admin/bookings/${bookingId}/cancel-reject`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      alert('Cancellation request declined. Booking status restored to confirmed.');
+      const bookingsRes = await axios.get('http://localhost:5000/api/admin/bookings', { headers: { Authorization: `Bearer ${token}` } });
+      setBookingsList(bookingsRes.data.data || []);
+      setSelectedBookingModal(null);
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to decline cancellation request');
+    }
+  };
+
   const filteredUsers = usersList.filter(u => {
     const matchesSearch = `${u.firstName} ${u.lastName} ${u.email}`.toLowerCase().includes(filters.search.toLowerCase());
     const matchesRole = !filters.role || u.role === filters.role;

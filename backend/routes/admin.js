@@ -1,5 +1,5 @@
 const express = require('express');
-const { getUsers, getConversation, getStats, getAllBookings, getAllPayments, approvePandit, rejectPandit } = require('../controllers/adminController');
+const { getUsers, getConversation, getStats, getAllBookings, getAllPayments, approvePandit, rejectPandit, approveCancellation, rejectCancellation } = require('../controllers/adminController');
 const { getAllTickets, updateTicket, deleteTicket } = require('../controllers/supportController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
@@ -22,5 +22,9 @@ router.delete('/support/:id', deleteTicket);
 // Pandit Verification
 router.patch('/users/:id/approve-pandit', approvePandit);
 router.patch('/users/:id/reject-pandit', rejectPandit);
+
+// Booking Cancellation Requests
+router.patch('/bookings/:id/cancel-approve', approveCancellation);
+router.patch('/bookings/:id/cancel-reject', rejectCancellation);
 
 module.exports = router;

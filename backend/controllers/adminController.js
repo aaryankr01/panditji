@@ -143,3 +143,122 @@ exports.rejectPandit = async (req, res, next) => {
     next(err);
   }
 };
+
+// @desc    Approve cancellation request and refund money (90% to devotee, 10% kept by company)
+// @route   PATCH /api/admin/bookings/:id/cancel-approve
+// @access  Private/Admin
+exports.approveCancellation = async (req, res, next) => {
+  try {
+    const booking = await Booking.findById(req.params.id)
+      .populate('devotee', 'firstName lastName email')
+      .populate('pandit', 'firstName lastName email');
+
+    if (!booking) {
+      return res.status(404).json({ success: false, message: 'Booking not found' });
+    }
+
+    if (booking.status === 'cancelled') {
+      return res.status(400).json({ success: false, message: 'Booking is already cancelled' });
+    }
+
+    // Change status to cancelled, paymentStatus to refunded
+    booking.status = 'cancelled';
+    booking.paymentStatus = 'refunded';
+    booking.cancelledBy = 'admin';
+    booking.cancellationReason = req.body.reason || 'Cancellation approved and processed by Admin';
+    await booking.save();
+
+    // Find and update the associated Payment record
+    const payment = await Payment.findOne({ booking: booking._id });
+    let refundAmount = 0;
+    let retainedAmount = 0;
+    if (payment) {
+      // 10% deduction
+      retainedAmount = Math.round(payment.amount * 0.1);
+      refundAmount = payment.amount - retainedAmount;
+
+      payment.status = 'refunded';
+      payment.panditEarnings = 0; // Pandit gets nothing for cancelled puja
+      payment.companyEarnings = retainedAmount; // Company retains 10%
+      payment.description = `Refunded to devotee: ₹${(refundAmount / 100).toFixed(2)}. Company retained 10% cancellation charge: ₹${(retainedAmount / 100).toFixed(2)}.`;
+      await payment.save();
+    } else {
+      // Fallback if payment record not found but booking fee exists
+      retainedAmount = Math.round((booking.fee * 100) * 0.1);
+      refundAmount = (booking.fee * 100) - retainedAmount;
+    }
+
+    // Notify Devotee and Pandit via socket
+    if (global.io) {
+      const devoteeSocketId = global.activeUsers?.get(booking.devotee._id.toString());
+      if (devoteeSocketId) {
+        global.io.to(devoteeSocketId).emit('bookingStatusUpdated', {
+          bookingId: booking._id,
+          status: 'cancelled',
+          paymentStatus: 'refunded',
+          message: `Your booking for ${booking.pujaType} has been cancelled by Admin. A refund of ₹${(refundAmount / 100).toFixed(2)} (after 10% cancellation fee) has been initiated.`
+        });
+      }
+
+      if (booking.pandit) {
+        const panditSocketId = global.activeUsers?.get(booking.pandit._id.toString());
+        if (panditSocketId) {
+          global.io.to(panditSocketId).emit('bookingCancelledByAdmin', {
+            bookingId: booking._id,
+            pujaType: booking.pujaType,
+            devotee: `${booking.devotee.firstName} ${booking.devotee.lastName}`
+          });
+        }
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Cancellation and refund approved successfully',
+      refundedAmount: refundAmount / 100,
+      retainedAmount: retainedAmount / 100,
+      data: booking
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Reject cancellation request (restore booking status to confirmed)
+// @route   PATCH /api/admin/bookings/:id/cancel-reject
+// @access  Private/Admin
+exports.rejectCancellation = async (req, res, next) => {
+  try {
+    const booking = await Booking.findById(req.params.id)
+      .populate('devotee', 'firstName lastName email')
+      .populate('pandit', 'firstName lastName email');
+
+    if (!booking) {
+      return res.status(404).json({ success: false, message: 'Booking not found' });
+    }
+
+    if (booking.status !== 'cancellation_requested') {
+      return res.status(400).json({ success: false, message: 'Booking is not under cancellation request' });
+    }
+
+    // Restore to confirmed
+    booking.status = 'confirmed';
+    await booking.save();
+
+    // Notify Devotee via socket
+    if (global.io) {
+      const devoteeSocketId = global.activeUsers?.get(booking.devotee._id.toString());
+      if (devoteeSocketId) {
+        global.io.to(devoteeSocketId).emit('bookingStatusUpdated', {
+          bookingId: booking._id,
+          status: 'confirmed',
+          message: `Your cancellation request for ${booking.pujaType} has been declined by the administrator.`
+        });
+      }
+    }
+
+    res.status(200).json({ success: true, message: 'Cancellation request declined. Booking status restored to confirmed.', data: booking });
+  } catch (err) {
+    next(err);
+  }
+};
