@@ -34,6 +34,32 @@ const AllBookings = () => {
     api.get('/admin/bookings').then(res => setBookings(res.data.data || [])).catch(console.error);
   }, [token]);
 
+  const handleApproveCancellation = async (bookingId, reason) => {
+    if (!window.confirm('Are you sure you want to approve this cancellation and refund the devotee (with 10% deduction)?')) return;
+    try {
+      const res = await api.patch(`/admin/bookings/${bookingId}/cancel-approve`, { reason });
+      alert(`Cancellation approved successfully. Refund of ₹${res.data.refundedAmount.toFixed(2)} processed to the devotee.`);
+      const bookingsRes = await api.get('/admin/bookings');
+      setBookings(bookingsRes.data.data || []);
+      setSelectedBooking(null);
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to approve cancellation');
+    }
+  };
+
+  const handleRejectCancellation = async (bookingId) => {
+    if (!window.confirm('Are you sure you want to reject this cancellation request and keep the booking active?')) return;
+    try {
+      await api.patch(`/admin/bookings/${bookingId}/cancel-reject`, {});
+      alert('Cancellation request declined. Booking status restored to confirmed.');
+      const bookingsRes = await api.get('/admin/bookings');
+      setBookings(bookingsRes.data.data || []);
+      setSelectedBooking(null);
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to decline cancellation request');
+    }
+  };
+
   const filtered = bookings.filter(b => {
     const q = search.toLowerCase();
     const matchesSearch = `${b.devotee?.firstName} ${b.devotee?.lastName} ${b.pandit?.firstName} ${b.pandit?.lastName} ${b.pujaType} ${b.city}`.toLowerCase().includes(q);
@@ -252,6 +278,22 @@ const AllBookings = () => {
                       <p className="text-xs text-red-400 font-bold mb-1 uppercase tracking-wider">Cancellation Reason</p>
                       <p className="text-sm text-gray-700">{selectedBooking.cancellationReason}</p>
                       {selectedBooking.cancelledBy && <p className="text-xs text-red-500 mt-1">Cancelled by: <span className="font-bold capitalize">{selectedBooking.cancelledBy}</span></p>}
+                    </div>
+                  )}
+                  {selectedBooking.status === 'cancellation_requested' && (
+                    <div className="col-span-2 flex gap-3 mt-2">
+                      <button
+                        onClick={() => handleApproveCancellation(selectedBooking._id)}
+                        className="flex-1 py-2 px-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl transition-colors text-xs text-center cursor-pointer font-sans"
+                      >
+                        Approve Cancellation
+                      </button>
+                      <button
+                        onClick={() => handleRejectCancellation(selectedBooking._id)}
+                        className="flex-1 py-2 px-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-colors text-xs text-center cursor-pointer font-sans"
+                      >
+                        Decline Cancellation
+                      </button>
                     </div>
                   )}
                   {selectedBooking.completedAt && (

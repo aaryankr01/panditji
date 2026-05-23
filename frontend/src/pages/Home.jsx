@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/common/Navbar';
+import useT from '../hooks/useT';
 import Footer from '../components/common/Footer';
 import { 
   ArrowRight, CheckCircle, Users, Star, Shield, 
@@ -90,6 +91,7 @@ const getPanchang = (date) => {
 const GREG_MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
 const HinduCalendar = () => {
+  const t = useT();
   const today = new Date();
   const [viewDate, setViewDate] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
   const [selected, setSelected] = useState(today);
@@ -118,12 +120,12 @@ const HinduCalendar = () => {
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="text-center mb-14">
-          <span className="text-saffron font-black text-sm uppercase tracking-widest mb-3 block">📿 Vedic Panchang</span>
+          <span className="text-saffron font-black text-sm uppercase tracking-widest mb-3 block">{t('panchang_label')}</span>
           <h2 className="text-4xl lg:text-5xl font-black text-maroon font-serif mb-4">
-            Hindu <span className="text-saffron italic">Calendar</span>
+            {t('panchang_h2_line1')} <span className="text-saffron italic">{t('panchang_h2_ital')}</span>
           </h2>
           <p className="text-textMid max-w-xl mx-auto">
-            Explore auspicious tithis, nakshatras, and yogas to plan your puja on the most sacred days.
+            {t('panchang_desc')}
           </p>
         </div>
 
@@ -195,9 +197,9 @@ const HinduCalendar = () => {
 
             {/* Legend */}
             <div className="px-5 pb-5 flex flex-wrap gap-4 text-xs font-bold text-textMid">
-              <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-saffron inline-block" /> Today</span>
-              <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-maroon inline-block" /> Selected</span>
-              <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-gold inline-block" /> Auspicious (Ekadashi / Purnima)</span>
+              <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-saffron inline-block" /> {t('panchang_today')}</span>
+              <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-maroon inline-block" /> {t('panchang_selected')}</span>
+              <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-gold inline-block" /> {t('panchang_auspicious')} (Ekadashi / Purnima)</span>
               <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-purpleTheme inline-block" /> Amavasya</span>
             </div>
           </div>
@@ -223,11 +225,11 @@ const HinduCalendar = () => {
 
             {/* Panchang rows */}
             {[
-              { label: 'Tithi', value: todayPanchang.tithi, icon: '🌙', color: 'bg-gold-light text-gold', special: todayPanchang.isAuspicious || todayPanchang.isSpecial },
-              { label: 'Hindu Month', value: `${todayPanchang.hindMonth} (${todayPanchang.hindMonthHindi})`, icon: '📅', color: 'bg-saffron-light text-saffron' },
-              { label: 'Nakshatra', value: todayPanchang.nakshatra, icon: '⭐', color: 'bg-purpleTheme-light text-purpleTheme' },
-              { label: 'Yoga', value: todayPanchang.yoga, icon: '🕉️', color: 'bg-maroon-light text-maroon' },
-              { label: 'Vara (Day)', value: `${todayPanchang.vara} (${todayPanchang.varaEn})`, icon: '☀️', color: 'bg-gold-light text-gold' },
+              { label: t('panchang_tithi'), value: todayPanchang.tithi, icon: '🌙', color: 'bg-gold-light text-gold', special: todayPanchang.isAuspicious || todayPanchang.isSpecial },
+              { label: t('panchang_month'), value: `${todayPanchang.hindMonth} (${todayPanchang.hindMonthHindi})`, icon: '📅', color: 'bg-saffron-light text-saffron' },
+              { label: t('panchang_nakshatra'), value: todayPanchang.nakshatra, icon: '⭐', color: 'bg-purpleTheme-light text-purpleTheme' },
+              { label: t('panchang_yoga'), value: todayPanchang.yoga, icon: '🕉️', color: 'bg-maroon-light text-maroon' },
+              { label: t('panchang_vara'), value: `${todayPanchang.vara} (${todayPanchang.varaEn})`, icon: '☀️', color: 'bg-gold-light text-gold' },
             ].map(({ label, value, icon, color, special }) => (
               <div key={label} className={`bg-white rounded-[20px] border ${special ? 'border-gold shadow-lg shadow-gold/10' : 'border-brandborder'} p-4 flex items-center gap-4 shadow-sm`}>
                 <div className={`w-10 h-10 rounded-2xl ${color} flex items-center justify-center text-lg flex-shrink-0`}>{icon}</div>
@@ -235,13 +237,13 @@ const HinduCalendar = () => {
                   <p className="text-xs font-black uppercase tracking-wider text-textMuted">{label}</p>
                   <p className="font-bold text-maroon text-sm mt-0.5">{value}</p>
                 </div>
-                {special && <span className="ml-auto text-xs font-black text-gold bg-gold-light px-2 py-1 rounded-full">Auspicious</span>}
+                {special && <span className="ml-auto text-xs font-black text-gold bg-gold-light px-2 py-1 rounded-full">{t('panchang_auspicious')}</span>}
               </div>
             ))}
 
             {/* CTA */}
             <Link to="/pujas" className="flex items-center justify-center gap-2 bg-maroon text-white font-black py-4 px-6 rounded-2xl hover:bg-saffron transition-all duration-300 shadow-lg shadow-maroon/20">
-              <Calendar size={18} /> Book Puja on this Date <ArrowRight size={16} />
+              <Calendar size={18} /> {t('panchang_book_date')} <ArrowRight size={16} />
             </Link>
           </div>
         </div>
@@ -252,15 +254,12 @@ const HinduCalendar = () => {
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-const PUJA_TYPES = [
-  { name: 'Griha Pravesh', icon: HomeIcon, color: 'saffron', desc: 'Start your journey in your new home with divine blessings.' },
-  { name: 'Satyanarayan Katha', icon: BookOpen, color: 'purpleTheme', desc: 'A ritual of thanksgiving and prayer for prosperity.' },
-  { name: 'Vivah Sanskar', icon: Heart, color: 'maroon', desc: 'Sacred wedding ceremonies performed with Vedic precision.' },
-  { name: 'Mundan Ceremony', icon: Scissors, color: 'gold', desc: 'Traditional first hair-cut ritual for your child\'s health.' },
-  { name: 'Havan & Yagya', icon: Flame, color: 'maroon', desc: 'Powerful fire rituals to purify the environment and mind.' },
-  { name: 'Rudrabhishek', icon: Droplets, color: 'purpleTheme', desc: 'A blissful abhisheka of Lord Shiva for inner peace.' },
-  { name: 'Ganesh Puja', icon: Sparkles, color: 'gold', desc: 'Invoking the remover of obstacles for any new beginning.' },
-  { name: 'Lakshmi Puja', icon: Zap, color: 'saffron', desc: 'Prayer for wealth, light, and abundance in your life.' },
+
+const STATS = [
+  { label: 'Verified Pandits', value: '500+' },
+  { label: 'Pujas Completed', value: '12,000+' },
+  { label: 'Cities Covered', value: '80+' },
+  { label: 'Happy Devotees', value: '10,000+' },
 ];
 
 const colorClasses = {
@@ -270,32 +269,26 @@ const colorClasses = {
   gold: 'bg-gold-light text-gold border-brandborder hover:bg-[#FFF0CC]',
 };
 
-const STATS = [
-  { label: 'Verified Pandits', value: '500+' },
-  { label: 'Pujas Completed', value: '12,000+' },
-  { label: 'Cities Covered', value: '80+' },
-  { label: 'Happy Devotees', value: '10,000+' },
-];
-
-const FEATURES = [
-  {
-    icon: Shield,
-    title: 'Verified & Trusted',
-    desc: 'Every Pandit undergoes a thorough background and credential verification process before listing.',
-  },
-  {
-    icon: Star,
-    title: 'Rated by Devotees',
-    desc: 'Real reviews from real devotees help you choose the right Pandit with complete confidence.',
-  },
-  {
-    icon: Users,
-    title: 'All Ceremonies',
-    desc: 'From Griha Pravesh to Vivah Sanskar — find experts for every sacred occasion.',
-  },
-];
-
 const Home = () => {
+  const t = useT();
+
+  const PUJA_TYPES = [
+    { name: t('puja_griha'),   icon: HomeIcon,  color: 'saffron',      desc: t('puja_griha_desc') },
+    { name: t('puja_satya'),   icon: BookOpen,  color: 'purpleTheme',  desc: t('puja_satya_desc') },
+    { name: t('puja_vivah'),   icon: Heart,     color: 'maroon',       desc: t('puja_vivah_desc') },
+    { name: t('puja_mundan'),  icon: Scissors,  color: 'gold',         desc: t('puja_mundan_desc') },
+    { name: t('puja_havan'),   icon: Flame,     color: 'maroon',       desc: t('puja_havan_desc') },
+    { name: t('puja_rudra'),   icon: Droplets,  color: 'purpleTheme',  desc: t('puja_rudra_desc') },
+    { name: t('puja_ganesh'),  icon: Sparkles,  color: 'gold',         desc: t('puja_ganesh_desc') },
+    { name: t('puja_lakshmi'), icon: Zap,       color: 'saffron',      desc: t('puja_lakshmi_desc') },
+  ];
+
+  const FEATURES = [
+    { icon: Shield, title: t('feat1_title'), desc: t('feat1_desc') },
+    { icon: Star,   title: t('feat2_title'), desc: t('feat2_desc') },
+    { icon: Users,  title: t('feat3_title'), desc: t('feat3_desc') },
+  ];
+
   return (
     <div className="flex flex-col min-h-screen bg-surface font-sans">
       <Navbar />
@@ -309,44 +302,44 @@ const Home = () => {
         <div className="max-w-5xl mx-auto text-center relative">
           <div className="inline-flex items-center gap-2 bg-saffron-light text-saffron-dark text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] px-4 py-2 rounded-full mb-8 border border-brandborder shadow-sm">
             <Sparkles size={14} className="animate-pulse" />
-            India's Premium Puja Booking Platform
+            {t('home_badge')}
           </div>
           <h1 className="text-5xl lg:text-[84px] font-black text-maroon leading-[0.95] tracking-[-0.04em] mb-8 font-serif">
-            Sacred Pujas,<br />
+            {t('home_h1_line1')}<br />
             <span className="text-saffron relative inline-block">
-              Verified Pandits.
+              {t('home_h1_line2')}
               <svg className="absolute -bottom-2 left-0 w-full" viewBox="0 0 358 12" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M3 9C118.957 4.46351 239.428 3.24351 355 9" stroke="#E8710A" strokeWidth="6" strokeLinecap="round" />
               </svg>
             </span>
           </h1>
           <p className="text-lg sm:text-xl text-textMid mb-12 max-w-2xl mx-auto leading-relaxed font-medium">
-            Experience the divine through our network of hand-picked, certified Pandits. Book authentic Vedic rituals with transparency and tradition.
+            {t('home_hero_desc')}
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-5">
             <Link
               to="/pujas"
               className="group relative flex items-center gap-2 bg-saffron hover:bg-saffron-dark text-white text-base font-black py-5 px-10 rounded-2xl transition-all shadow-lg hover:-translate-y-1 active:translate-y-0"
             >
-              Book a Puja <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+              {t('home_cta_book')} <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
             </Link>
             <Link
               to="/register?role=pandit"
               className="flex items-center gap-2 bg-white text-maroon text-base font-bold py-5 px-10 rounded-2xl border border-brandborder hover:border-saffron hover:text-saffron transition-all shadow-sm"
             >
-              Join as a Pandit
+              {t('home_cta_join')}
             </Link>
           </div>
 
           <div className="mt-16 flex flex-wrap justify-center items-center gap-8 text-textMuted">
             <div className="flex items-center gap-2 text-sm font-bold">
-              <CheckCircle size={16} className="text-[#1E7D3C]" /> 100% Verified
+              <CheckCircle size={16} className="text-[#1E7D3C]" /> {t('home_trust_verified')}
             </div>
             <div className="flex items-center gap-2 text-sm font-bold">
-              <CheckCircle size={16} className="text-[#1E7D3C]" /> Secure Payments
+              <CheckCircle size={16} className="text-[#1E7D3C]" /> {t('home_trust_payments')}
             </div>
             <div className="flex items-center gap-2 text-sm font-bold">
-              <CheckCircle size={16} className="text-[#1E7D3C]" /> Vedic Rituals
+              <CheckCircle size={16} className="text-[#1E7D3C]" /> {t('home_trust_vedic')}
             </div>
           </div>
         </div>
@@ -357,19 +350,19 @@ const Home = () => {
         <div className="max-w-6xl mx-auto bg-white/80 backdrop-blur-xl p-8 rounded-[32px] border border-brandborder shadow-xl shadow-saffron-light/50 grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-4 text-center">
           <div>
             <p className="text-4xl font-black text-maroon mb-1 font-serif">500+</p>
-            <p className="text-xs font-black text-textMuted uppercase tracking-widest">Expert Pandits</p>
+            <p className="text-xs font-black text-textMuted uppercase tracking-widest">{t('stat_pandits')}</p>
           </div>
           <div>
             <p className="text-4xl font-black text-maroon mb-1 font-serif">12k+</p>
-            <p className="text-xs font-black text-textMuted uppercase tracking-widest">Pujas Done</p>
+            <p className="text-xs font-black text-textMuted uppercase tracking-widest">{t('stat_pujas')}</p>
           </div>
           <div>
             <p className="text-4xl font-black text-maroon mb-1 font-serif">80+</p>
-            <p className="text-xs font-black text-textMuted uppercase tracking-widest">Cities Live</p>
+            <p className="text-xs font-black text-textMuted uppercase tracking-widest">{t('stat_cities')}</p>
           </div>
           <div>
             <p className="text-4xl font-black text-maroon mb-1 font-serif">10k+</p>
-            <p className="text-xs font-black text-textMuted uppercase tracking-widest">Happy Clients</p>
+            <p className="text-xs font-black text-textMuted uppercase tracking-widest">{t('stat_clients')}</p>
           </div>
         </div>
       </section>
@@ -379,15 +372,11 @@ const Home = () => {
         <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
           <div className="relative">
             <div className="absolute -top-10 -left-10 w-40 h-40 bg-saffron-light rounded-full blur-3xl" />
-            <span className="text-saffron font-black text-sm uppercase tracking-widest mb-4 block">Our Story</span>
-            <h2 className="text-4xl lg:text-5xl font-black text-maroon mb-8 leading-tight font-serif">Bringing Tradition to the <span className="text-saffron italic">Modern World.</span></h2>
+            <span className="text-saffron font-black text-sm uppercase tracking-widest mb-4 block">{t('about_label')}</span>
+            <h2 className="text-4xl lg:text-5xl font-black text-maroon mb-8 leading-tight font-serif">{t('about_h2')}</h2>
             <div className="space-y-6 text-textMid text-lg leading-relaxed">
-              <p>
-                PanditJi was born from a simple mission: to ensure that every spiritual seeker has access to authentic, high-quality Vedic ceremonies without the stress of searching.
-              </p>
-              <p>
-                We have curated a network of thousands of Pandits who are not just experts in their craft, but also deeply committed to the sanctity of the rituals they perform.
-              </p>
+              <p>{t('about_p1')}</p>
+              <p>{t('about_p2')}</p>
             </div>
             
             <div className="mt-10 p-6 bg-surface rounded-[28px] border border-brandborder flex items-center gap-5">
@@ -395,8 +384,8 @@ const Home = () => {
                 <MapPin size={28} />
               </div>
               <div>
-                <p className="font-black text-maroon leading-none mb-1">Pan India Service</p>
-                <p className="text-sm text-textMid">Currently serving in 80+ major cities</p>
+                <p className="font-black text-maroon leading-none mb-1">{t('about_pan_india')}</p>
+                <p className="text-sm text-textMid">{t('about_cities')}</p>
               </div>
             </div>
           </div>
@@ -436,11 +425,11 @@ const Home = () => {
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
             <div>
-              <span className="text-saffron font-black text-sm uppercase tracking-widest mb-3 block">Service Portfolio</span>
-              <h2 className="text-4xl lg:text-5xl font-black text-maroon leading-tight font-serif">Sacred Pujas for<br />Every <span className="text-saffron">Milestone.</span></h2>
+              <span className="text-saffron font-black text-sm uppercase tracking-widest mb-3 block">{t('puja_section_label')}</span>
+              <h2 className="text-4xl lg:text-5xl font-black text-maroon leading-tight font-serif">{t('puja_section_h2_line1')}<br />{t('puja_section_h2_line2')}</h2>
             </div>
             <Link to="/pujas" className="flex items-center gap-2 text-saffron font-black hover:gap-3 transition-all underline decoration-2 underline-offset-8">
-              Explore All 13+ Pujas <ArrowRight size={20} />
+              {t('puja_explore')} <ArrowRight size={20} />
             </Link>
           </div>
 
@@ -453,7 +442,7 @@ const Home = () => {
                 <h3 className="text-xl font-black text-maroon mb-3 font-serif">{name}</h3>
                 <p className="text-textMid text-sm leading-relaxed mb-6 font-medium">{desc}</p>
                 <Link to="/pujas" className="inline-flex items-center gap-1 text-xs font-black text-maroon group-hover:text-saffron transition-colors uppercase tracking-widest">
-                  Learn More <ArrowRight size={14} />
+                  {t('puja_learn_more')} <ArrowRight size={14} />
                 </Link>
               </div>
             ))}
@@ -465,8 +454,8 @@ const Home = () => {
       <section className="py-24 px-4 bg-white">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
-            <h2 className="text-3xl font-black text-maroon font-serif">Why Choose PanditJi?</h2>
-            <p className="text-textMid mt-3 max-w-xl mx-auto">We take the guesswork out of finding the right Pandit for your most important moments.</p>
+            <h2 className="text-3xl font-black text-maroon font-serif">{t('feat_h2')}</h2>
+            <p className="text-textMid mt-3 max-w-xl mx-auto">{t('feat_desc')}</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {FEATURES.map(({ icon: Icon, title, desc }) => (
@@ -484,10 +473,10 @@ const Home = () => {
 
       {/* CTA Banner */}
       <section className="bg-maroon text-white py-16 px-4 text-center border-b-[8px] border-saffron">
-        <h2 className="text-3xl font-black mb-4 font-serif">Ready to Book Your Puja?</h2>
-        <p className="text-maroon-light mb-8 max-w-xl mx-auto">Join thousands of devotees who trust PanditJi for their most sacred celebrations.</p>
+        <h2 className="text-3xl font-black mb-4 font-serif">{t('cta_h2')}</h2>
+        <p className="text-maroon-light mb-8 max-w-xl mx-auto">{t('cta_desc')}</p>
         <Link to="/pujas" className="inline-flex items-center gap-2 bg-saffron text-white font-bold py-3.5 px-8 rounded-xl hover:bg-saffron-dark transition-colors shadow-lg shadow-saffron/20">
-          Browse Pandits <ArrowRight size={18} />
+          {t('cta_btn')} <ArrowRight size={18} />
         </Link>
       </section>
 

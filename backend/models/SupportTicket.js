@@ -31,6 +31,11 @@ const supportTicketSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
+  booking: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Booking',
+    default: null
+  },
   status: {
     type: String,
     enum: ['open', 'in_progress', 'resolved', 'closed'],

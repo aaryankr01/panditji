@@ -3,7 +3,7 @@ const SupportTicket = require('../models/SupportTicket');
 // POST /api/support — user submits a ticket
 exports.createTicket = async (req, res) => {
   try {
-    const { subject, category, message } = req.body;
+    const { subject, category, message, booking } = req.body;
     if (!subject || !message) {
       return res.status(400).json({ success: false, message: 'Subject and message are required' });
     }
@@ -14,7 +14,8 @@ exports.createTicket = async (req, res) => {
       userRole: req.user.role,
       subject,
       category: category || 'Other',
-      message
+      message,
+      booking: booking || null
     });
 
     res.status(201).json({ success: true, data: ticket });
@@ -28,6 +29,7 @@ exports.createTicket = async (req, res) => {
 exports.getMyTickets = async (req, res) => {
   try {
     const tickets = await SupportTicket.find({ user: req.user._id })
+      .populate('booking')
       .sort({ createdAt: -1 });
     res.json({ success: true, data: tickets });
   } catch (err) {
@@ -45,6 +47,13 @@ exports.getAllTickets = async (req, res) => {
 
     const tickets = await SupportTicket.find(filter)
       .populate('user', 'firstName lastName email role city')
+      .populate({
+        path: 'booking',
+        populate: [
+          { path: 'devotee', select: 'firstName lastName email phone' },
+          { path: 'pandit', select: 'firstName lastName email phone' }
+        ]
+      })
       .sort({ createdAt: -1 });
     res.json({ success: true, data: tickets });
   } catch (err) {
@@ -67,7 +76,14 @@ exports.updateTicket = async (req, res) => {
       req.params.id,
       update,
       { new: true }
-    ).populate('user', 'firstName lastName email role city');
+    ).populate('user', 'firstName lastName email role city')
+     .populate({
+        path: 'booking',
+        populate: [
+          { path: 'devotee', select: 'firstName lastName email phone' },
+          { path: 'pandit', select: 'firstName lastName email phone' }
+        ]
+      });
 
     if (!ticket) return res.status(404).json({ success: false, message: 'Ticket not found' });
 

@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../store/useAuthStore';
+import useT from '../hooks/useT';
 import axios from 'axios';
 import { io } from 'socket.io-client';
 import {
@@ -72,6 +73,7 @@ const SectionTitle = ({ children }) => (
 
 const PanditDashboard = () => {
   const { user, token, logout, updateUser } = useAuthStore();
+  const t = useT();
   const navigate = useNavigate();
   const [bookings, setBookings] = useState([]);
   const [activeTab, setActiveTab] = useState('bookings');
@@ -315,7 +317,10 @@ const PanditDashboard = () => {
     try {
       await axios.delete(`${API}/bookings/${bookingId}`, { headers: { Authorization: `Bearer ${token}` } });
       setBookings(bookings.filter(b => b._id !== bookingId));
-    } catch { alert('Failed to delete booking'); }
+    } catch (err) {
+      console.error('[deleteBooking]', err.response?.data || err.message);
+      alert(err.response?.data?.message || 'Failed to delete booking');
+    }
   };
 
   const handleSaveProfile = async () => {
@@ -495,17 +500,17 @@ const PanditDashboard = () => {
             </div>
           )}
           <div style={{ marginTop: 24, paddingTop: 24, borderTop: `1px dashed ${C.border}` }}>
-            <p className="dd-stat-lbl">Total Earnings</p>
+            <p className="dd-stat-lbl">{t('pd_total_earnings')}</p>
             <p className="dd-stat" style={{ color: C.success }}>₹{totalEarnings.toLocaleString()}</p>
           </div>
         </div>
 
         <nav style={{ flex: 1, padding: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
           {[
-            { id: 'bookings', label: 'Booking Requests', icon: Calendar },
-            { id: 'chat', label: 'Messages', icon: MessageSquare },
-            { id: 'profile', label: 'My Profile', icon: User },
-            { id: 'support', label: 'Support Care', icon: Headphones },
+            { id: 'bookings', label: t('pd_booking_requests'), icon: Calendar },
+            { id: 'chat',     label: t('dd_messages'),         icon: MessageSquare },
+            { id: 'profile',  label: t('dd_my_profile'),       icon: User },
+            { id: 'support',  label: t('dd_support'),          icon: Headphones },
           ].map(tab => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
               style={{
@@ -525,7 +530,7 @@ const PanditDashboard = () => {
 
         <div style={{ padding: 24, borderTop: `1px solid ${C.border}` }}>
           <button onClick={handleLogout} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: 14, background: C.redLt, color: C.red, border: 'none', borderRadius: 12, cursor: 'pointer', fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: 14, transition: 'all 0.2s' }}>
-            <LogOut size={20} /> Logout
+            <LogOut size={20} /> {t('dd_logout')}
           </button>
         </div>
       </div>
@@ -534,13 +539,13 @@ const PanditDashboard = () => {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <header style={{ height: 80, background: '#fff', borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', padding: '0 32px', justifyContent: 'space-between' }}>
           <h1 style={{ fontFamily: "'Playfair Display',serif", fontSize: 24, fontWeight: 900, color: C.maroon }}>
-            {activeTab === 'bookings' ? 'Booking Requests' : activeTab === 'chat' ? 'Messages' : 'Help & Support'}
+            {activeTab === 'bookings' ? t('pd_booking_requests') : activeTab === 'chat' ? t('dd_messages') : t('dd_support')}
           </h1>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 700 }}>
             {subscriptionStatus === 'inactive' ? (
-              <span style={{ color: C.red, display: 'flex', alignItems: 'center', gap: 6 }}><XCircle size={16}/> Offline — Subscription Expired</span>
+              <span style={{ color: C.red, display: 'flex', alignItems: 'center', gap: 6 }}><XCircle size={16}/> {t('pd_offline_expired')}</span>
             ) : (
-              <span style={{ color: C.success, display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ width: 8, height: 8, background: C.success, borderRadius: '50%', animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }} /> Online — Receiving Requests</span>
+              <span style={{ color: C.success, display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ width: 8, height: 8, background: C.success, borderRadius: '50%', animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }} /> {t('pd_online_receiving')}</span>
             )}
           </div>
         </header>

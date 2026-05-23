@@ -135,7 +135,7 @@ const AdminDashboard = () => {
   };
 
   const handleApproveCancellation = async (bookingId, reason) => {
-    if (!window.confirm('Are you sure you want to approve this cancellation and refund the devotee (with 10% deduction)?')) return;
+    if (!window.confirm('Are you sure you want to approve this cancellation and refund the devotee (with 10% deduction)?')) return false;
     try {
       const res = await axios.patch(`http://localhost:5000/api/admin/bookings/${bookingId}/cancel-approve`, { reason }, {
         headers: { Authorization: `Bearer ${token}` }
@@ -148,13 +148,16 @@ const AdminDashboard = () => {
       setStats(statsRes.data.data);
       const paymentsRes = await axios.get('http://localhost:5000/api/admin/payments', { headers: { Authorization: `Bearer ${token}` } });
       setPaymentsList(paymentsRes.data.data);
+      if (window._adminFetchTickets) window._adminFetchTickets();
+      return true;
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to approve cancellation');
+      return false;
     }
   };
 
   const handleRejectCancellation = async (bookingId) => {
-    if (!window.confirm('Are you sure you want to reject this cancellation request and keep the booking active?')) return;
+    if (!window.confirm('Are you sure you want to reject this cancellation request and keep the booking active?')) return false;
     try {
       await axios.patch(`http://localhost:5000/api/admin/bookings/${bookingId}/cancel-reject`, {}, {
         headers: { Authorization: `Bearer ${token}` }
@@ -163,8 +166,11 @@ const AdminDashboard = () => {
       const bookingsRes = await axios.get('http://localhost:5000/api/admin/bookings', { headers: { Authorization: `Bearer ${token}` } });
       setBookingsList(bookingsRes.data.data || []);
       setSelectedBookingModal(null);
+      if (window._adminFetchTickets) window._adminFetchTickets();
+      return true;
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to decline cancellation request');
+      return false;
     }
   };
 
@@ -603,6 +609,105 @@ const AdminDashboard = () => {
                       <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{selectedTicket.message}</p>
                     </div>
 
+                    {/* Associated Booking Details */}
+                    {selectedTicket.booking && (
+                      <div className="bg-amber-50/50 rounded-2xl p-4 border border-amber-200 space-y-3">
+                        <p className="text-xs font-bold text-amber-800 flex items-center gap-1">📿 ASSOCIATED BOOKING</p>
+                        <div className="grid grid-cols-2 gap-3 text-sm">
+                          <div>
+                            <p className="text-xs text-gray-400">Puja & Mode</p>
+                            <p className="font-semibold text-gray-800 capitalize">{selectedTicket.booking.pujaType} ({selectedTicket.booking.pujaMode})</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-400">Booking Fee & Status</p>
+                            <p className="font-semibold text-gray-800">
+                              ₹{(selectedTicket.booking.fee || 0).toLocaleString()} · <span className="text-green-700 capitalize font-bold">{selectedTicket.booking.paymentStatus}</span>
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-400">Scheduled Time</p>
+                            <p className="font-semibold text-gray-800">
+                              {selectedTicket.booking.scheduledDate ? new Date(selectedTicket.booking.scheduledDate).toLocaleDateString('en-IN') : ''} · {selectedTicket.booking.scheduledTime || '—'}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-400">Booking Status</p>
+                            <p className="font-semibold text-gray-800 capitalize">{selectedTicket.booking.status.replace('_', ' ')}</p>
+                          </div>
+                          {selectedTicket.booking.devotee && (
+                            <div>
+                              <p className="text-xs text-gray-400">Devotee</p>
+                              <p className="font-semibold text-gray-800">
+                                {selectedTicket.booking.devotee.firstName} {selectedTicket.booking.devotee.lastName}
+                              </p>
+                            </div>
+                          )}
+                          {selectedTicket.booking.pandit && (
+                            <div>
+                              <p className="text-xs text-gray-400">Pandit</p>
+                              <p className="font-semibold text-gray-800">
+                                Pt. {selectedTicket.booking.pandit.firstName} {selectedTicket.booking.pandit.lastName}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Cancellation Action Buttons */}
+                        {selectedTicket.booking.status === 'cancellation_requested' && selectedTicket.booking.paymentStatus === 'paid' && (
+                          <div className="flex gap-3 pt-2 border-t border-amber-200">
+                            <button
+                              onClick={async () => {
+                                const reason = prompt('Enter approval notes / reply (optional):', 'Cancellation approved and processed by Admin');
+                                if (reason === null) return;
+                                const success = await handleApproveCancellation(selectedTicket.booking._id, reason);
+                                if (success) {
+                                  try {
+                                    const ticketRes = await axios.patch(`http://localhost:5000/api/admin/support/${selectedTicket._id}`,
+                                      { adminReply: `Cancellation approved. 90% refund has been processed. Notes: ${reason}`, status: 'resolved' },
+                                      { headers: { Authorization: `Bearer ${token}` } }
+                                    );
+                                    setTickets(prev => prev.map(t => t._id === selectedTicket._id ? ticketRes.data.data : t));
+                                    setSelectedTicket(ticketRes.data.data);
+                                  } catch (e) {
+                                    console.error(e);
+                                  }
+                                }
+                              }}
+                              className="flex-1 py-2 px-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl transition-colors text-xs text-center cursor-pointer"
+                            >
+                              Approve Cancellation & Refund 90%
+                            </button>
+                            <button
+                              onClick={async () => {
+                                const success = await handleRejectCancellation(selectedTicket.booking._id);
+                                if (success) {
+                                  try {
+                                    const ticketRes = await axios.patch(`http://localhost:5000/api/admin/support/${selectedTicket._id}`,
+                                      { adminReply: `Cancellation request declined. The booking remains active. Please contact support for further queries.`, status: 'resolved' },
+                                      { headers: { Authorization: `Bearer ${token}` } }
+                                    );
+                                    setTickets(prev => prev.map(t => t._id === selectedTicket._id ? ticketRes.data.data : t));
+                                    setSelectedTicket(ticketRes.data.data);
+                                  } catch (e) {
+                                    console.error(e);
+                                  }
+                                }
+                              }}
+                              className="flex-1 py-2 px-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-colors text-xs text-center cursor-pointer"
+                            >
+                              Decline Cancellation
+                            </button>
+                          </div>
+                        )}
+
+                        {selectedTicket.booking.status === 'cancelled' && (
+                          <div className="bg-gray-100 text-gray-700 p-2.5 rounded-xl text-xs font-semibold text-center">
+                            ✓ This booking is cancelled and refunded (90% refunded, 10% retained).
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     {/* Existing admin reply */}
                     {selectedTicket.adminReply && (
                       <div className="bg-orange-50 rounded-2xl p-4 border border-orange-200">
@@ -833,6 +938,22 @@ const AdminDashboard = () => {
                     <p className="text-xs text-red-400 font-bold mb-1 uppercase">Cancellation Reason</p>
                     <p className="text-sm text-gray-700">{selectedBookingModal.cancellationReason}</p>
                     {selectedBookingModal.cancelledBy && <p className="text-xs text-red-500 mt-1">Cancelled by: <span className="font-bold capitalize">{selectedBookingModal.cancelledBy}</span></p>}
+                  </div>
+                )}
+                {selectedBookingModal.status === 'cancellation_requested' && (
+                  <div className="col-span-2 flex gap-3 mt-2">
+                    <button
+                      onClick={() => handleApproveCancellation(selectedBookingModal._id)}
+                      className="flex-1 py-2 px-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl transition-colors text-xs text-center cursor-pointer"
+                    >
+                      Approve Cancellation
+                    </button>
+                    <button
+                      onClick={() => handleRejectCancellation(selectedBookingModal._id)}
+                      className="flex-1 py-2 px-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-colors text-xs text-center cursor-pointer"
+                    >
+                      Decline Cancellation
+                    </button>
                   </div>
                 )}
               </div>

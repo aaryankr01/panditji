@@ -358,18 +358,31 @@ exports.deleteBooking = async (req, res, next) => {
 
     if (!booking) return res.status(404).json({ success: false, message: 'Booking not found' });
 
-    // Verify ownership (only the assigned pandit or the devotee can delete)
-    if (booking.pandit?.toString() !== req.user.id && booking.devotee?.toString() !== req.user.id) {
-      return res.status(401).json({ success: false, message: 'Not authorized' });
+    // req.user is a Mongoose doc — use _id (ObjectId) then toString() for safe string compare
+    const userId = (req.user._id || req.user.id)?.toString();
+    const bookingPandit = booking.pandit?.toString();
+    const bookingDevotee = booking.devotee?.toString();
+    const isAdmin = req.user.role === 'admin';
+
+    console.log(`[deleteBooking] userId=${userId} | pandit=${bookingPandit} | devotee=${bookingDevotee} | isAdmin=${isAdmin}`);
+
+    // Allow: the devotee who made it, the pandit assigned to it, or an admin
+    if (!isAdmin && bookingPandit !== userId && bookingDevotee !== userId) {
+      console.log(`[deleteBooking] DENIED — no ownership match`);
+      return res.status(401).json({ success: false, message: 'Not authorized to delete this booking' });
     }
 
     await booking.deleteOne();
+    console.log(`[deleteBooking] Deleted booking ${req.params.id}`);
 
     res.status(200).json({ success: true, data: {} });
   } catch (err) {
+    console.error('[deleteBooking] Error:', err);
     next(err);
   }
 };
+
+
 
 // @desc    Update booking video link
 // @route   PATCH /api/bookings/:id/link

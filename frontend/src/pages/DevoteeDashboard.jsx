@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import useAuthStore from '../store/useAuthStore';
+import useT from '../hooks/useT';
 import axios from 'axios';
 import { io } from 'socket.io-client';
 import { LogOut, MessageSquare, Search, Star, MapPin, AlertCircle, CheckCircle, BadgeCheck, Clock, Navigation, X, Calendar, Headphones, Video, Briefcase, Languages, Users, User } from 'lucide-react';
@@ -148,7 +149,51 @@ const StatusBadge = ({ status }) => (
   <span className={`dd-badge dd-badge-${status}`}>{status}</span>
 );
 
-// Modal shown when devotee tries to cancel a PAID booking
+// ── Confirmation modal before cancelling an UNPAID booking ──
+const ConfirmCancelModal = ({ booking, onConfirm, onClose }) => {
+  if (!booking) return null;
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(44,26,14,0.72)', zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+      <div style={{ background: '#fff', borderRadius: 18, maxWidth: 380, width: '100%', overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
+        {/* Header */}
+        <div style={{ background: 'linear-gradient(135deg, #7B1D0E 0%, #C0392B 100%)', padding: '20px 24px', display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>✕</div>
+          <div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', marginBottom: 2, textTransform: 'uppercase', letterSpacing: '0.6px' }}>Confirm Cancellation</div>
+            <h2 style={{ fontFamily: "'Playfair Display',serif", color: '#fff', fontWeight: 900, fontSize: 17, margin: 0 }}>🕉 {booking.pujaType}</h2>
+          </div>
+        </div>
+        {/* Body */}
+        <div style={{ padding: '22px 24px' }}>
+          <div style={{ background: '#FFF9E0', border: '1px solid #E6C87A', borderRadius: 10, padding: '12px 14px', fontSize: 13, color: '#856404', fontWeight: 600, marginBottom: 20, lineHeight: 1.6 }}>
+            ⚠️ Are you sure you want to cancel this booking? This action cannot be undone.
+          </div>
+          <div style={{ background: '#fcfaf7', border: `1px solid ${C.border}`, borderRadius: 10, padding: '12px 14px', fontSize: 13, color: C.textMid, marginBottom: 22, lineHeight: 1.7 }}>
+            <div><span style={{ fontWeight: 700, color: C.maroon }}>Puja:</span> {booking.pujaType}</div>
+            <div><span style={{ fontWeight: 700, color: C.maroon }}>Date:</span> {booking.scheduledDate ? new Date(booking.scheduledDate).toLocaleDateString('en-IN') : '-'}</div>
+            {booking.pandit && <div><span style={{ fontWeight: 700, color: C.maroon }}>Pandit:</span> Pt. {booking.pandit.firstName} {booking.pandit.lastName}</div>}
+            <div style={{ marginTop: 6, fontSize: 12, color: '#16a34a', fontWeight: 700 }}>✅ No payment was made — cancellation is free.</div>
+          </div>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button
+              onClick={onClose}
+              style={{ flex: 1, padding: '11px', borderRadius: 10, border: `1.5px solid ${C.border}`, background: '#f5f0eb', color: C.textMid, fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 13, cursor: 'pointer' }}
+            >
+              No, Keep It
+            </button>
+            <button
+              onClick={onConfirm}
+              style={{ flex: 1, padding: '11px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #7B1D0E, #C0392B)', color: '#fff', fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 13, cursor: 'pointer' }}
+            >
+              Yes, Cancel It
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Modal shown when devotee tries to cancel a PAID booking
 const CancelContactModal = ({ booking, onClose, onGoToChat, onRequestCancel }) => {
   if (!booking) return null;
@@ -301,6 +346,7 @@ const CancelContactModal = ({ booking, onClose, onGoToChat, onRequestCancel }) =
 
 const DevoteeDashboard = () => {
   const { user, token, logout, updateUser } = useAuthStore();
+  const t = useT();
   const navigate = useNavigate();
   const [pandits, setPandits] = useState([]);
   const [isLocal, setIsLocal] = useState(true);
@@ -315,6 +361,7 @@ const DevoteeDashboard = () => {
   const [acceptedBooking, setAcceptedBooking] = useState(null);
   const [bookingModal, setBookingModal] = useState({ isOpen: false, pandit: null });
   const [cancelContactModal, setCancelContactModal] = useState(null);
+  const [cancelConfirmModal, setCancelConfirmModal] = useState(null); // unpaid cancel confirm
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const intentCity = searchParams.get('city');
@@ -470,7 +517,7 @@ const DevoteeDashboard = () => {
   };
 
   const cancelBooking = async (bookingId) => {
-    if (!window.confirm('Are you sure you want to cancel this booking?')) return;
+    // confirmation is now handled by ConfirmCancelModal — this runs after user clicks "Yes"
     try {
       await axios.patch(
         `http://localhost:5000/api/bookings/${bookingId}/cancel`,
@@ -478,8 +525,10 @@ const DevoteeDashboard = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setBookings(prev => prev.map(b => b._id === bookingId ? { ...b, status: 'cancelled' } : b));
+      setCancelConfirmModal(null);
     } catch (err) {
       const data = err.response?.data;
+      setCancelConfirmModal(null);
       if (data?.requiresAdminContact) {
         // Payment was made — show the contact modal instead of a plain error
         const booking = bookings.find(b => b._id === bookingId);
@@ -491,13 +540,28 @@ const DevoteeDashboard = () => {
 
   const requestCancelBooking = async (bookingId, reason) => {
     try {
+      const booking = bookings.find(b => b._id === bookingId);
+      if (!booking) return;
+
       await axios.patch(
         `http://localhost:5000/api/bookings/${bookingId}/request-cancel`,
         { reason },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+
+      await axios.post(
+        'http://localhost:5000/api/support',
+        {
+          subject: `Cancellation Request: Booking #${bookingId}`,
+          category: 'Booking',
+          message: `Dear Admin,\n\nI want to cancel my booking for ${booking.pujaType} scheduled on ${new Date(booking.scheduledDate).toLocaleDateString('en-IN')}.\n\nReason: ${reason}\n\nPlease cancel this booking and initiate a 90% refund.`,
+          booking: bookingId
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
       setBookings(prev => prev.map(b => b._id === bookingId ? { ...b, status: 'cancellation_requested', cancellationReason: reason } : b));
-      alert('Cancellation & refund request submitted successfully! Admin will review and process your refund shortly.');
+      alert('Cancellation & refund support ticket submitted successfully! Admin will review the ticket and process your refund shortly.');
       setCancelContactModal(null);
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to submit cancellation request. Please try again.');
@@ -580,7 +644,16 @@ const DevoteeDashboard = () => {
       <style>{G}</style>
       <div className="dd-root">
 
-        {/* Cancel contact modal for paid bookings */}
+        {/* Confirm cancel modal for UNPAID bookings */}
+        {cancelConfirmModal && (
+          <ConfirmCancelModal
+            booking={cancelConfirmModal}
+            onClose={() => setCancelConfirmModal(null)}
+            onConfirm={() => cancelBooking(cancelConfirmModal._id)}
+          />
+        )}
+
+        {/* Cancel contact modal for PAID bookings */}
         {cancelContactModal && (
           <CancelContactModal
             booking={cancelContactModal}
@@ -753,19 +826,19 @@ const DevoteeDashboard = () => {
             </div>
           </div>
           <nav className="dd-nav">
-            <NavItem icon={<User size={16} />} label="My Profile" tab="profile" activeTab={activeTab} setActiveTab={setActiveTab} />
-            <NavItem icon={<Calendar size={16} />} label="My Bookings" tab="bookings" activeTab={activeTab} setActiveTab={setActiveTab} />
-            <NavItem icon={<MessageSquare size={16} />} label="Messages" tab="chat" activeTab={activeTab} setActiveTab={setActiveTab} />
-            <NavItem icon={<CheckCircle size={16} />} label="Bookings & Payments" tab="payments" activeTab={activeTab} setActiveTab={setActiveTab} />
-            <NavItem icon={<Headphones size={16} />} label="Support" tab="support" activeTab={activeTab} setActiveTab={setActiveTab} />
+            <NavItem icon={<User size={16} />} label={t('dd_my_profile')} tab="profile" activeTab={activeTab} setActiveTab={setActiveTab} />
+            <NavItem icon={<Calendar size={16} />} label={t('dd_my_bookings')} tab="bookings" activeTab={activeTab} setActiveTab={setActiveTab} />
+            <NavItem icon={<MessageSquare size={16} />} label={t('dd_messages')} tab="chat" activeTab={activeTab} setActiveTab={setActiveTab} />
+            <NavItem icon={<CheckCircle size={16} />} label={t('dd_bookings_payments')} tab="payments" activeTab={activeTab} setActiveTab={setActiveTab} />
+            <NavItem icon={<Headphones size={16} />} label={t('dd_support')} tab="support" activeTab={activeTab} setActiveTab={setActiveTab} />
           </nav>
           <div className="dd-logout" style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             <button className="dd-nav-item" onClick={() => navigate('/')} style={{ padding: '11px 14px' }}>
               <span className="dd-nav-icon" style={{ background: 'transparent', color: C.textMid }}><Navigation size={16} /></span>
-              Back to Home
+              {t('dd_back_home')}
             </button>
             <button className="dd-logout-btn" onClick={handleLogout} style={{ borderTop: `1px solid ${C.border}`, borderRadius: 0, marginTop: 4, paddingTop: 16 }}>
-              <LogOut size={16} /> Logout
+              <LogOut size={16} /> {t('dd_logout')}
             </button>
           </div>
         </div>
@@ -774,11 +847,11 @@ const DevoteeDashboard = () => {
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
           <header className="dd-topbar">
             <div className="dd-topbar-title">
-              {activeTab === 'profile' && 'My Profile'}
-              {activeTab === 'bookings' && 'My Bookings'}
-              {activeTab === 'chat' && 'Messages'}
-              {activeTab === 'payments' && 'Bookings & Payments'}
-              {activeTab === 'support' && 'Help & Support'}
+              {activeTab === 'profile' && t('dd_my_profile')}
+              {activeTab === 'bookings' && t('dd_my_bookings')}
+              {activeTab === 'chat' && t('dd_messages')}
+              {activeTab === 'payments' && t('dd_bookings_payments')}
+              {activeTab === 'support' && t('dd_support')}
             </div>
           </header>
 
@@ -891,16 +964,14 @@ const DevoteeDashboard = () => {
                               onClick={() => handlePayment(booking)} disabled={loading}>
                               💳 Pay Now
                             </button>
-                            {/* Cancel only if the puja hasn't happened yet */}
-                            {isBookingUpcoming(booking) && (
-                              <button
-                                className="dd-btn"
-                                style={{ fontSize: 12, justifyContent: 'center', background: '#FDECEC', color: C.red, border: `1.5px solid ${C.red}` }}
-                                onClick={() => cancelBooking(booking._id)}
-                              >
-                                ✕ Cancel Booking
-                              </button>
-                            )}
+                            {/* Cancel always shown for unpaid bookings — opens confirm modal */}
+                            <button
+                              className="dd-btn"
+                              style={{ fontSize: 12, justifyContent: 'center', background: '#FDECEC', color: C.red, border: `1.5px solid ${C.red}` }}
+                              onClick={() => setCancelConfirmModal(booking)}
+                            >
+                              ✕ Cancel Booking
+                            </button>
                           </>
                         )}
 

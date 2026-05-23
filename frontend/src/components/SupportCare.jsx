@@ -398,6 +398,18 @@ const SupportCare = ({ userRole = 'devotee' }) => {
                         </span>
                       </div>
                       <p style={{ fontSize: 13, color: C.textMid, lineHeight: 1.5 }}>{ticket.message}</p>
+                      {ticket.booking && (
+                        <div style={{ marginTop: 12, padding: '10px 14px', background: C.surface, borderRadius: 10, border: `1px solid ${C.border}`, fontSize: 12.5, display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                          <div>
+                            <span style={{ fontWeight: 700, color: C.maroon }}>Linked Booking: </span>
+                            <span style={{ fontWeight: 600, color: C.text }}>{ticket.booking.pujaType}</span>
+                            <span style={{ color: C.textMuted }}> (₹{ticket.booking.fee?.toLocaleString()})</span>
+                          </div>
+                          <span className={`dd-badge dd-badge-${ticket.booking.status}`} style={{ fontSize: 9.5 }}>
+                            {ticket.booking.status}
+                          </span>
+                        </div>
+                      )}
                       {ticket.adminReply && (
                         <div style={{ background: C.saffronLt, border: `1px solid ${C.saffron}`, borderRadius: 10, padding: 16, marginTop: 16 }}>
                           <p style={{ fontSize: 12, fontWeight: 800, color: C.saffronDk, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>

@@ -3,12 +3,10 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
 import useAuthStore from "../store/useAuthStore";
+import useT from '../hooks/useT';
 import Navbar from "../components/common/Navbar";
 import Footer from "../components/common/Footer";
 import { Star, Clock } from 'lucide-react';
-
-const categories = ['All', 'Home', 'Wedding', 'Devotional', 'Festival', 'Ritual', 'Remedial', 'Life Events'];
-
 const initialPujas = [
   { _id: 1, name: 'Rudrabhishek', image: '/pictures/rudrabhisek.png', rating: 4.8, conducted: 875, isPopular: true, desc: 'Lord Shiva abhisheka for peace and prosperity.', longDesc: 'Rudrabhishek is a highly auspicious puja dedicated to Lord Shiva. It involves bathing the Shiva Lingam with sacred items like milk, honey, and gangajal while chanting powerful mantras. This brings peace, prosperity, and removes negative energies.', duration: '2-3 hrs', price: 3100, category: 'Devotional' },
   { _id: 2, name: 'Sunderkand Path', image: '/pictures/sunderkand.png', rating: 4.5, conducted: 187, isPopular: true, desc: 'Recitation of Hanumanji\'s glory.', longDesc: 'Sunderkand Path is the recitation of the fifth chapter of the Ramcharitmanas, which highlights the glory, devotion, and triumphs of Lord Hanuman. It brings courage, confidence, and removes obstacles from one\'s path.', duration: '4-5 hrs', price: 3500, category: 'Devotional' },
@@ -51,6 +49,7 @@ const advantages = [
 ];
 
 function PujaCard({ puja, onBook, clientType, getCalculatedPrice }) {
+  const t = useT();
   const calcPrice = getCalculatedPrice(puja.price);
   return (
     <div className="group bg-white rounded-3xl overflow-hidden border border-brandborder shadow-sm hover:shadow-2xl transition-all duration-500 flex flex-col">
@@ -59,7 +58,7 @@ function PujaCard({ puja, onBook, clientType, getCalculatedPrice }) {
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
         {puja.isPopular && (
           <div className="absolute top-4 left-4 bg-saffron text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-lg">
-            Popular
+            {t('bap_popular')}
           </div>
         )}
       </div>
@@ -85,7 +84,7 @@ function PujaCard({ puja, onBook, clientType, getCalculatedPrice }) {
         </div>
 
         <div style={{ fontSize: 10, color: clientType === "international" ? "#dc2626" : "#16a34a", fontWeight: 700, marginBottom: 12 }}>
-          {clientType === "international" ? "🌐 International Rate (2x)" : "🪔 Domestic Discount (30% Off)"}
+          {clientType === "international" ? t('ep_intl_rate_card') : t('ep_dom_rate_card')}
         </div>
 
         <p className="text-textMid text-xs mb-6 line-clamp-2 flex-1">{puja.desc || 'Perform this auspicious puja with our expert Pandits.'}</p>
@@ -95,7 +94,7 @@ function PujaCard({ puja, onBook, clientType, getCalculatedPrice }) {
             onClick={() => onBook(puja)}
             className="w-full px-3 py-2.5 bg-saffron text-white font-bold rounded-xl hover:bg-saffron-dark transition-all shadow-md shadow-saffron/20 text-xs"
           >
-            Book Now
+            {t('ep_book_now')}
           </button>
         </div>
       </div>
@@ -104,10 +103,14 @@ function PujaCard({ puja, onBook, clientType, getCalculatedPrice }) {
 }
 
 export default function EPujaPage() {
+  const t = useT();
+  
+  const categories = [t('bap_cat_all'), t('bap_cat_home'), t('bap_cat_wedding'), t('bap_cat_devotional'), t('bap_cat_festival'), t('bap_cat_ritual'), t('bap_cat_remedial'), t('bap_cat_life_events')];
+
   const [pujas, setPujas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [activeCategory, setActiveCategory] = useState("All");
+  const [activeCategory, setActiveCategory] = useState(t('bap_cat_all'));
   const [bookedPuja, setBookedPuja] = useState(null);
   const [heroSlide, setHeroSlide] = useState(0);
 
@@ -129,8 +132,8 @@ export default function EPujaPage() {
   const navigate = useNavigate();
 
   const heroSlides = [
-    { title: "Satyanarayan", subtitle: "E-Puja", desc: "Sacred Puja For Peace, Happiness & Prosperity", hindi: "सुख, शांति और समृद्धि के लिए पावन पूजा" },
-    { title: "Kaal Sarp Dosh", subtitle: "E-Puja", desc: "Remove planetary obstacles from your life", hindi: "ग्रह दोषों से मुक्ति के लिए ऑनलाइन पूजा" },
+    { title: t('ep_hero_title1'), subtitle: t('ep_hero_sub'), desc: t('ep_hero_desc1'), hindi: "सुख, शांति और समृद्धि के लिए पावन पूजा" },
+    { title: t('ep_hero_title2'), subtitle: t('ep_hero_sub'), desc: t('ep_hero_desc2'), hindi: "ग्रह दोषों से मुक्ति के लिए ऑनलाइन पूजा" },
   ];
 
   // Pricing engine
@@ -222,7 +225,19 @@ export default function EPujaPage() {
   }, []);
 
   const filtered = pujas.filter(p => {
-    const matchCat = activeCategory === "All" || p.category === activeCategory;
+    // Determine english category for filtering data
+    const catMap = {
+      [t('bap_cat_all')]: 'All',
+      [t('bap_cat_home')]: 'Home',
+      [t('bap_cat_wedding')]: 'Wedding',
+      [t('bap_cat_devotional')]: 'Devotional',
+      [t('bap_cat_festival')]: 'Festival',
+      [t('bap_cat_ritual')]: 'Ritual',
+      [t('bap_cat_remedial')]: 'Remedial',
+      [t('bap_cat_life_events')]: 'Life Events',
+    };
+    const englishCategory = catMap[activeCategory] || 'All';
+    const matchCat = englishCategory === "All" || p.category === englishCategory;
     const matchSearch = p.name.toLowerCase().includes(search.toLowerCase());
     return matchCat && matchSearch;
   });
@@ -335,10 +350,10 @@ export default function EPujaPage() {
           ॐ
         </div>
         <h2 style={{ fontSize: 28, fontWeight: 800, margin: "0 0 12px", fontFamily: "'Playfair Display', serif" }}>
-          Detecting Your Sacred Location
+          {t('ep_detecting')}
         </h2>
         <p style={{ color: "rgba(255, 255, 255, 0.8)", fontSize: 16, maxWidth: 420, margin: 0, lineHeight: 1.6 }}>
-          We are scanning your location coordinates to determine your region. This enables customized Vedic priest matching and accurate pricing structures.
+          {t('ep_detecting_desc')}
         </p>
         <div style={{
           marginTop: 40,
@@ -401,7 +416,7 @@ export default function EPujaPage() {
             📍
           </div>
           <h2 style={{ fontSize: 24, fontWeight: 800, margin: "0 0 16px", fontFamily: "'Playfair Display', serif" }}>
-            Location Access Required
+            {t('ep_loc_req')}
           </h2>
           <p style={{ color: "rgba(255, 255, 255, 0.75)", fontSize: 14, margin: "0 0 32px", lineHeight: 1.6 }}>
             {locationError}
@@ -424,7 +439,7 @@ export default function EPujaPage() {
             onMouseEnter={e => e.currentTarget.style.transform = "scale(1.02)"}
             onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
           >
-            Grant Location Access
+            {t('ep_grant_loc')}
           </button>
         </div>
       </div>
@@ -456,14 +471,14 @@ export default function EPujaPage() {
           <>
             <span>🌐</span>
             <span>
-              <strong>International Client Detected!</strong> Outside India location recognized. International service rate applied (Base Price Doubled).
+              <strong>{t('ep_intl_client')}</strong> {t('ep_intl_desc')}
             </span>
           </>
         ) : (
           <>
             <span>🪔</span>
             <span>
-              <strong>Domestic Client Detected!</strong> India location recognized. Special <strong>30% discount</strong> has been applied to all E-Puja services.
+              <strong>{t('ep_dom_client')}</strong> {t('ep_dom_desc')}
             </span>
           </>
         )}
@@ -485,7 +500,7 @@ export default function EPujaPage() {
           maxWidth: 320,
           animation: "slideIn 0.3s ease",
         }}>
-          <div style={{ fontWeight: 700, marginBottom: 4 }}>🎉 Booking Requested!</div>
+          <div style={{ fontWeight: 700, marginBottom: 4 }}>🎉 {t('ep_booking_req')}</div>
           <div style={{ color: "#d1d5db" }}>
             {bookedPuja.puja.name} {bookedPuja.date ? `on ${bookedPuja.date}` : ""}
           </div>
@@ -546,7 +561,7 @@ export default function EPujaPage() {
                 ✕
               </button>
               <h3 style={{ margin: 0, fontSize: 22, fontWeight: 800, fontFamily: "'Playfair Display', serif" }}>
-                Book E-Puja
+                {t('ep_book_epuja')}
               </h3>
               <p style={{ margin: "4px 0 0", fontSize: 14, color: "rgba(255, 255, 255, 0.8)", fontWeight: 500 }}>
                 {selectedPujaForBooking.name}
@@ -559,7 +574,7 @@ export default function EPujaPage() {
               {/* Date Input */}
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 <label style={{ fontSize: 12, fontWeight: 700, color: "#7b1d0e", textTransform: "uppercase", letterSpacing: 0.5 }}>
-                  Select Date *
+                  {t('ep_sel_date')}
                 </label>
                 <input
                   type="date"
@@ -583,7 +598,7 @@ export default function EPujaPage() {
               {/* Time Input */}
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 <label style={{ fontSize: 12, fontWeight: 700, color: "#7b1d0e", textTransform: "uppercase", letterSpacing: 0.5 }}>
-                  Select Time Slot *
+                  {t('ep_sel_time')}
                 </label>
                 <input
                   type="time"
@@ -606,14 +621,14 @@ export default function EPujaPage() {
               {/* City Input */}
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 <label style={{ fontSize: 12, fontWeight: 700, color: "#7b1d0e", textTransform: "uppercase", letterSpacing: 0.5 }}>
-                  Your City *
+                  {t('ep_your_city')}
                 </label>
                 <input
                   type="text"
                   value={bookingFormCity}
                   onChange={e => setBookingFormCity(e.target.value)}
                   required
-                  placeholder="e.g. Jammu, Delhi, Mumbai"
+                  placeholder={t('ep_city_ph')}
                   style={{
                     padding: "12px 14px",
                     border: "1px solid #e5e7eb",
@@ -630,7 +645,7 @@ export default function EPujaPage() {
               {/* Link Preference (Address field mapped) */}
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 <label style={{ fontSize: 12, fontWeight: 700, color: "#7b1d0e", textTransform: "uppercase", letterSpacing: 0.5 }}>
-                  Meeting Medium *
+                  {t('ep_medium')}
                 </label>
                 <input
                   type="text"
@@ -653,12 +668,12 @@ export default function EPujaPage() {
               {/* Notes / Gotra */}
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 <label style={{ fontSize: 12, fontWeight: 700, color: "#7b1d0e", textTransform: "uppercase", letterSpacing: 0.5 }}>
-                  Gotra & Family Details (Optional)
+                  {t('ep_gotra')}
                 </label>
                 <textarea
                   value={bookingFormNotes}
                   onChange={e => setBookingFormNotes(e.target.value)}
-                  placeholder="Enter your Gotra, names of family members, or specific requests..."
+                  placeholder={t('ep_gotra_ph')}
                   style={{
                     padding: "12px 14px",
                     border: "1px solid #e5e7eb",
@@ -685,7 +700,7 @@ export default function EPujaPage() {
                 alignItems: "center",
                 marginTop: 4,
               }}>
-                <span style={{ fontSize: 14, color: "#6b4c3b", fontWeight: 600 }}>Total Fee:</span>
+                <span style={{ fontSize: 14, color: "#6b4c3b", fontWeight: 600 }}>{t('ep_total_fee')}</span>
                 <div style={{ textAlign: "right" }}>
                   <span style={{ fontSize: 13, color: "#9ca3af", textDecoration: "line-through", marginRight: 8 }}>
                     ₹{selectedPujaForBooking.price.toLocaleString("en-IN")}
@@ -694,7 +709,7 @@ export default function EPujaPage() {
                     ₹{getCalculatedPrice(selectedPujaForBooking.price).toLocaleString("en-IN")}
                   </span>
                   <div style={{ fontSize: 10, color: clientType === "international" ? "#dc2626" : "#16a34a", fontWeight: 700, marginTop: 2 }}>
-                    {clientType === "international" ? "🌐 International Rate (Double)" : "🪔 Domestic Discount (30% Off)"}
+                    {clientType === "international" ? t('ep_intl_rate') : t('ep_dom_rate')}
                   </div>
                 </div>
               </div>
@@ -716,7 +731,7 @@ export default function EPujaPage() {
                     cursor: "pointer",
                   }}
                 >
-                  Cancel
+                  {t('ep_cancel')}
                 </button>
                 <button
                   type="submit"
@@ -747,7 +762,7 @@ export default function EPujaPage() {
                       borderRadius: "50%",
                       animation: "spin 1s linear infinite",
                     }} />
-                  ) : "Confirm Booking"}
+                  ) : t('ep_confirm_booking')}
                 </button>
               </div>
 
@@ -794,7 +809,7 @@ export default function EPujaPage() {
               padding: "4px 12px",
               marginBottom: 12,
             }}>
-              <span style={{ color: "#fed7aa", fontSize: 13, fontWeight: 600, letterSpacing: 1 }}>🪔 ONLINE E-PUJA</span>
+              <span style={{ color: "#fed7aa", fontSize: 13, fontWeight: 600, letterSpacing: 1 }}>{t('ep_online_epuja')}</span>
             </div>
             <h1 style={{ margin: "0 0 8px", color: "#fff", fontSize: "clamp(28px, 5vw, 48px)", fontWeight: 900, lineHeight: 1.1 }}>
               {heroSlides[heroSlide].title}{" "}

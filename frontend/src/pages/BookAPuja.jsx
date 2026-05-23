@@ -4,6 +4,7 @@ import axios from 'axios';
 import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
 import useAuthStore from '../store/useAuthStore';
+import useT from '../hooks/useT';
 import { State, City } from 'country-state-city';
 import {
   Star, MapPin, ChevronRight, CheckCircle, AlertCircle, Search, Video, Info, X, Home, ArrowRight, Clock
@@ -32,15 +33,17 @@ const pujas = [
   { id: 20, name: 'Janmashtami Puja', image: '/pictures/janmashtamipuja.png', rating: 4.9, conducted: 780, isPopular: true, desc: 'Lord Krishna birth celebration.', longDesc: 'Celebrated on the birth anniversary of Lord Krishna, this puja involves midnight prayers, chanting, and offering Makhan Mishri. It fills the home with joy, love, and divine grace.', duration: '2-3 hrs', price: '₹3,100', category: 'Festival' },
 ];
 
-const categories = ['All', 'Home', 'Wedding', 'Devotional', 'Festival', 'Ritual', 'Remedial', 'Life Events'];
-const steps = ['Choose Puja', 'Your Location', 'Book Pandit'];
-
 const BookAPuja = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuthStore();
+  const t = useT();
+  
+  const categories = [t('bap_cat_all'), t('bap_cat_home'), t('bap_cat_wedding'), t('bap_cat_devotional'), t('bap_cat_festival'), t('bap_cat_ritual'), t('bap_cat_remedial'), t('bap_cat_life_events')];
+  const steps = [t('bap_step_choose'), t('bap_step_location'), t('bap_step_book')];
+
   const [step, setStep] = useState(1);
   const [selectedPuja, setSelectedPuja] = useState(null);
-  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedCategory, setSelectedCategory] = useState(t('bap_cat_all'));
 
   // Modals
   const [showDetailsModal, setShowDetailsModal] = useState(false);
@@ -55,7 +58,22 @@ const BookAPuja = () => {
 
   const indianStates = State.getStatesOfCountry('IN');
   const citiesOfState = stateCode ? City.getCitiesOfState('IN', stateCode) : [];
-  const filtered = selectedCategory === 'All' ? pujas : pujas.filter(p => p.category === selectedCategory);
+  
+  // Create a mapping or fallback for category filtering if needed, but since we rely on the English strings for the data, we might need a mapping.
+  // Actually, pujas data has english category names.
+  const catMap = {
+    [t('bap_cat_all')]: 'All',
+    [t('bap_cat_home')]: 'Home',
+    [t('bap_cat_wedding')]: 'Wedding',
+    [t('bap_cat_devotional')]: 'Devotional',
+    [t('bap_cat_festival')]: 'Festival',
+    [t('bap_cat_ritual')]: 'Ritual',
+    [t('bap_cat_remedial')]: 'Remedial',
+    [t('bap_cat_life_events')]: 'Life Events',
+  };
+  
+  const englishCategory = catMap[selectedCategory] || 'All';
+  const filtered = englishCategory === 'All' ? pujas : pujas.filter(p => p.category === englishCategory);
 
   const checkLocation = async () => {
     if (!city) return;
@@ -108,8 +126,8 @@ const BookAPuja = () => {
       <div className="bg-maroon text-white py-12 px-4 border-b-8 border-saffron relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-saffron opacity-10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
         <div className="max-w-4xl mx-auto text-center relative z-10">
-          <h1 className="text-4xl font-bold font-serif mb-3">All Puja Services</h1>
-          <p className="text-maroon-light">Experience sacred rituals with verified Pandits at your doorstep or online.</p>
+          <h1 className="text-4xl font-bold font-serif mb-3">{t('bap_title')}</h1>
+          <p className="text-maroon-light">{t('bap_subtitle')}</p>
         </div>
       </div>
 
@@ -155,7 +173,7 @@ const BookAPuja = () => {
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                     {puja.isPopular && (
                       <div className="absolute top-4 left-4 bg-saffron text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-lg">
-                        Popular
+                        {t('bap_popular')}
                       </div>
                     )}
                   </div>
@@ -184,13 +202,13 @@ const BookAPuja = () => {
                         onClick={() => handleViewDetails(puja)}
                         className="flex-1 px-3 py-2.5 border border-brandborder text-maroon font-bold rounded-xl hover:bg-surface transition-colors text-xs"
                       >
-                        Details
+                        {t('bap_btn_details')}
                       </button>
                       <button
                         onClick={() => handleBookNowClick(puja)}
                         className="flex-1 px-3 py-2.5 bg-saffron text-white font-bold rounded-xl hover:bg-saffron-dark transition-all shadow-md shadow-saffron/20 text-xs"
                       >
-                        Book
+                        {t('bap_btn_book')}
                       </button>
                     </div>
                   </div>
@@ -209,33 +227,33 @@ const BookAPuja = () => {
                   <MapPin size={20} />
                 </div>
                 <div>
-                  <h2 className="font-bold font-serif text-maroon text-xl">Where is the Puja?</h2>
-                  <p className="text-sm text-textMid">{bookingType === 'epuja' ? 'Needed to match you with a Pandit' : 'We will check availability in your city'}</p>
+                  <h2 className="font-bold font-serif text-maroon text-xl">{t('bap_loc_title')}</h2>
+                  <p className="text-sm text-textMid">{bookingType === 'epuja' ? t('bap_loc_subtitle_epuja') : t('bap_loc_subtitle_doorstep')}</p>
                 </div>
               </div>
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-bold text-textMid mb-1.5">State</label>
+                  <label className="block text-sm font-bold text-textMid mb-1.5">{t('bap_lbl_state')}</label>
                   <select
                     value={stateCode}
                     onChange={e => { setStateCode(e.target.value); setCity(''); setLocationStatus(null); }}
                     className="w-full px-4 py-3 rounded-xl border border-brandborder focus:ring-2 focus:ring-saffron outline-none bg-white text-maroon"
                   >
-                    <option value="">Select State</option>
+                    <option value="">{t('bap_select_state')}</option>
                     {indianStates.map(s => <option key={s.isoCode} value={s.isoCode}>{s.name}</option>)}
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-bold text-textMid mb-1.5">City</label>
+                  <label className="block text-sm font-bold text-textMid mb-1.5">{t('bap_lbl_city')}</label>
                   <select
                     value={city}
                     onChange={e => { setCity(e.target.value); setLocationStatus(null); }}
                     disabled={!stateCode}
                     className="w-full px-4 py-3 rounded-xl border border-brandborder focus:ring-2 focus:ring-saffron outline-none bg-white disabled:bg-surface disabled:text-textMuted text-maroon"
                   >
-                    <option value="">Select City</option>
+                    <option value="">{t('bap_select_city')}</option>
                     {citiesOfState.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
                   </select>
                 </div>
@@ -246,7 +264,7 @@ const BookAPuja = () => {
                   className="w-full flex items-center justify-center gap-2 py-3 bg-saffron text-white font-bold rounded-xl hover:bg-saffron-dark transition-all shadow-md shadow-saffron/20"
                 >
                   {checkingLocation ? <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Search size={18} />}
-                  {checkingLocation ? 'Checking...' : 'Check Availability'}
+                  {checkingLocation ? t('bap_btn_checking') : t('bap_btn_check_avail')}
                 </button>
               </div>
 
@@ -254,9 +272,9 @@ const BookAPuja = () => {
                 <div className="mt-5 p-4 bg-[#E8F5EE] border border-[#1E7D3C] rounded-xl flex items-start gap-3">
                   <CheckCircle size={20} className="text-[#1E7D3C] mt-0.5 shrink-0" />
                   <div className="flex-1">
-                    <p className="font-bold text-[#1E7D3C]">Available in {city}!</p>
+                    <p className="font-bold text-[#1E7D3C]">{t('bap_avail_in')} {city}!</p>
                     <button onClick={proceedToDashboard} className="mt-3 w-full py-3 bg-[#1E7D3C] text-white font-bold rounded-xl shadow-md flex items-center justify-center gap-2 hover:bg-[#15612e] transition-colors">
-                      View Available Pandits & Book <ArrowRight size={18} />
+                      {t('bap_btn_view_book')} <ArrowRight size={18} />
                     </button>
                   </div>
                 </div>
@@ -265,11 +283,11 @@ const BookAPuja = () => {
               {locationStatus === 'unavailable' && (
                 <div className="mt-5 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
                   <AlertCircle size={20} className="text-red-500 mt-0.5 shrink-0" />
-                  <p className="text-sm text-red-700 font-medium">Sorry, no pandits available in {city} yet. Please try another city.</p>
+                  <p className="text-sm text-red-700 font-medium">{t('bap_unavail_msg')} {city} {t('bap_unavail_msg_end')}</p>
                 </div>
               )}
 
-              <button onClick={() => setStep(1)} className="mt-4 w-full text-sm text-textMuted hover:text-maroon font-bold transition-colors">← Back to Puja List</button>
+              <button onClick={() => setStep(1)} className="mt-4 w-full text-sm text-textMuted hover:text-maroon font-bold transition-colors">{t('bap_back_list')}</button>
             </div>
           </div>
         )}
@@ -297,7 +315,7 @@ const BookAPuja = () => {
                   </span>
                   {selectedPuja.isPopular && (
                     <span className="bg-white text-maroon text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-lg">
-                      Popular Choice
+                      {t('bap_popular_choice')}
                     </span>
                   )}
                 </div>
@@ -310,28 +328,28 @@ const BookAPuja = () => {
                 <div className="flex items-center gap-2 bg-surface px-4 py-2 rounded-xl">
                   <Clock size={18} className="text-saffron" />
                   <div>
-                    <p className="text-[10px] uppercase font-bold text-textMuted tracking-wider">Duration</p>
+                    <p className="text-[10px] uppercase font-bold text-textMuted tracking-wider">{t('bap_duration')}</p>
                     <p className="text-sm font-bold text-maroon">{selectedPuja.duration}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 bg-surface px-4 py-2 rounded-xl">
                   <Star size={18} className="text-gold" />
                   <div>
-                    <p className="text-[10px] uppercase font-bold text-textMuted tracking-wider">Rating</p>
+                    <p className="text-[10px] uppercase font-bold text-textMuted tracking-wider">{t('bap_rating')}</p>
                     <p className="text-sm font-bold text-maroon">{selectedPuja.rating} ({selectedPuja.conducted}+)</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 bg-surface px-4 py-2 rounded-xl">
                   <Info size={18} className="text-[#1E7D3C]" />
                   <div>
-                    <p className="text-[10px] uppercase font-bold text-textMuted tracking-wider">Price</p>
+                    <p className="text-[10px] uppercase font-bold text-textMuted tracking-wider">{t('bap_price')}</p>
                     <p className="text-sm font-bold text-[#1E7D3C]">{selectedPuja.price}</p>
                   </div>
                 </div>
               </div>
 
               <div className="space-y-4">
-                <h4 className="text-lg font-bold font-serif text-maroon">About this Puja</h4>
+                <h4 className="text-lg font-bold font-serif text-maroon">{t('bap_about_puja')}</h4>
                 <p className="text-textMid text-sm leading-relaxed">{selectedPuja.longDesc}</p>
               </div>
 
@@ -340,7 +358,7 @@ const BookAPuja = () => {
                   onClick={() => handleBookNowClick(selectedPuja)}
                   className="w-full py-4 bg-saffron text-white font-bold rounded-2xl shadow-lg shadow-saffron/20 hover:bg-saffron-dark transition-all flex items-center justify-center gap-2"
                 >
-                  <ArrowRight size={20} /> Book This Puja
+                  <ArrowRight size={20} /> {t('bap_book_this_puja')}
                 </button>
               </div>
             </div>
