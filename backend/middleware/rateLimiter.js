@@ -1,15 +1,28 @@
-const rateLimit = require('express-rate-limit');
+const rateLimit = require("express-rate-limit");
 
-// General API rate limiter
-exports.apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per window
-  message: { success: false, message: 'Too many requests, please try again later.' },
+const isDev = process.env.NODE_ENV === "development";
+
+// Check-phone: max 5 per 10 min per IP (100 in development)
+const checkPhoneLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: isDev ? 100 : 5,
+  message: { success: false, message: "Too many requests. Please wait 10 minutes." },
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 
-// Stricter rate limiter for Authentication routes
-exports.authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 20, // Limit each IP to 20 auth requests per window
-  message: { success: false, message: 'Too many auth attempts, please try again later.' },
+// OTP verify: max 5 per 15 min per IP (100 in development)
+const verifyOtpLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: isDev ? 100 : 5,
+  message: { success: false, message: "Too many verification attempts. Try again later." },
 });
+
+// Reset password: max 10 per hour per IP (100 in development)
+const resetPasswordLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: isDev ? 100 : 10,
+  message: { success: false, message: "Too many password reset attempts." },
+});
+
+module.exports = { checkPhoneLimiter, verifyOtpLimiter, resetPasswordLimiter };

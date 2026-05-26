@@ -12,6 +12,7 @@ import AdminRoute from './components/common/AdminRoute';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
 import PujaList from './pages/PujaList';
 import BookAPuja from './pages/BookAPuja';
 import PanditProfile from './pages/PanditProfile';
@@ -60,6 +61,7 @@ function App() {
       {/* Auth Routes */}
       <Route path="/login" element={isAuthenticated ? <Navigate to="/" /> : <Login />} />
       <Route path="/register" element={isAuthenticated ? <Navigate to="/" /> : <Register />} />
+      <Route path="/forgot-password" element={isAuthenticated ? <Navigate to="/" /> : <ForgotPassword />} />
 
       {/* Protected - Devotee */}
       <Route path="/devotee-dashboard" element={

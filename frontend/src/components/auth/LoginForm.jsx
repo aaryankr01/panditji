@@ -47,7 +47,12 @@ const LoginForm = () => {
         />
       </div>
       <div>
-        <label className="block text-sm font-bold text-textMid mb-1">Password</label>
+        <div className="flex justify-between items-center mb-1">
+          <label className="block text-sm font-bold text-textMid">Password</label>
+          <Link to="/forgot-password" className="text-xs font-bold text-saffron hover:underline">
+            Forgot password?
+          </Link>
+        </div>
         <input 
           type="password" 
           name="password"
