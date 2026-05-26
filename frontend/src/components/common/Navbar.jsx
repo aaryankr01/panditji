@@ -6,78 +6,7 @@ import useT from '../../hooks/useT';
 import { LogOut, User as UserIcon, ChevronDown } from 'lucide-react';
 import { BrandWordmark } from './BrandLogo';
 
-// ── Language Toggle Component ─────────────────────────────────────────────────
-const LANGS = [
-  { code: 'en', label: 'English', flag: '🇬🇧', short: 'EN' },
-  { code: 'hi', label: 'हिन्दी',  flag: '🇮🇳', short: 'HI' },
-];
-
-const LanguageToggle = () => {
-  const { lang, setLang } = useLanguageStore();
-  const [open, setOpen] = useState(false);
-  const ref = useRef(null);
-  const current = LANGS.find(l => l.code === lang) || LANGS[0];
-
-  // Close on outside click
-  useEffect(() => {
-    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
-
-  return (
-    <div ref={ref} style={{ position: 'relative', userSelect: 'none' }}>
-      <button
-        onClick={() => setOpen(o => !o)}
-        style={{
-          display: 'flex', alignItems: 'center', gap: 6,
-          padding: '6px 12px', borderRadius: 10,
-          border: '1.5px solid #EAD9CC',
-          background: open ? '#FFF3E8' : '#fff',
-          cursor: 'pointer', fontFamily: "'Poppins', sans-serif",
-          fontWeight: 700, fontSize: 13, color: '#7B1D0E',
-          transition: 'all 0.15s',
-          whiteSpace: 'nowrap',
-        }}
-      >
-        <span style={{ fontSize: 16 }}>{current.flag}</span>
-        <span>{current.short}</span>
-        <ChevronDown size={13} style={{ color: '#A07060', transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
-      </button>
-
-      {open && (
-        <div style={{
-          position: 'absolute', top: 'calc(100% + 6px)', right: 0,
-          background: '#fff', borderRadius: 12, border: '1.5px solid #EAD9CC',
-          boxShadow: '0 8px 24px rgba(0,0,0,0.12)', overflow: 'hidden',
-          minWidth: 140, zIndex: 999,
-        }}>
-          {LANGS.map(l => (
-            <button
-              key={l.code}
-              onClick={() => { setLang(l.code); setOpen(false); }}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 10,
-                width: '100%', padding: '10px 16px',
-                background: lang === l.code ? '#FFF3E8' : 'transparent',
-                border: 'none', cursor: 'pointer',
-                fontFamily: "'Poppins', sans-serif", fontWeight: lang === l.code ? 800 : 600,
-                fontSize: 13, color: lang === l.code ? '#7B1D0E' : '#6B4C3B',
-                textAlign: 'left', transition: 'background 0.15s',
-              }}
-              onMouseEnter={e => { if (lang !== l.code) e.currentTarget.style.background = '#FAF7F2'; }}
-              onMouseLeave={e => { if (lang !== l.code) e.currentTarget.style.background = 'transparent'; }}
-            >
-              <span style={{ fontSize: 18 }}>{l.flag}</span>
-              <span>{l.label}</span>
-              {lang === l.code && <span style={{ marginLeft: 'auto', color: '#E8710A', fontSize: 16 }}>✓</span>}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
+import LanguageToggle from './LanguageToggle';
 
 // ── Navbar ────────────────────────────────────────────────────────────────────
 const Navbar = () => {

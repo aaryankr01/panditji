@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { io } from 'socket.io-client';
 import useAuthStore from '../store/useAuthStore';
+import useT from '../hooks/useT';
 import {
   Headphones, MessageCircle, ChevronDown, ChevronUp,
   Send, CheckCircle, Phone, Mail, BookOpen, AlertCircle,
@@ -90,10 +91,10 @@ const contactChannels = [
 ];
 
 const statusConfig = {
-  open: { label: 'Open', bg: C.goldLt, text: C.gold, icon: Inbox },
-  in_progress: { label: 'In Progress', bg: C.purpleLt, text: C.purple, icon: RefreshCw },
-  resolved: { label: 'Resolved', bg: C.successLt, text: C.success, icon: CheckCircle },
-  closed: { label: 'Closed', bg: C.maroonLt, text: C.maroon, icon: XCircle },
+  open: { label: 'Open', labelKey: 'sc_status_open', bg: C.goldLt, text: C.gold, icon: Inbox },
+  in_progress: { label: 'In Progress', labelKey: 'sc_status_in_progress', bg: C.purpleLt, text: C.purple, icon: RefreshCw },
+  resolved: { label: 'Resolved', labelKey: 'sc_status_resolved', bg: C.successLt, text: C.success, icon: CheckCircle },
+  closed: { label: 'Closed', labelKey: 'sc_status_closed', bg: C.maroonLt, text: C.maroon, icon: XCircle },
 };
 
 const FAQItem = ({ question, answer }) => {
@@ -115,6 +116,7 @@ const FAQItem = ({ question, answer }) => {
 
 const SupportCare = ({ userRole = 'devotee' }) => {
   const { token, user } = useAuthStore();
+  const t = useT();
   const [view, setView] = useState('faq');
   const [ticketForm, setTicketForm] = useState({ subject: '', category: 'Booking', message: '' });
   const [submitting, setSubmitting] = useState(false);
@@ -124,63 +126,87 @@ const SupportCare = ({ userRole = 'devotee' }) => {
   const [activeCategory, setActiveCategory] = useState('All');
   const [replyNotification, setReplyNotification] = useState(null);
 
+  const faqs = [
+    {
+      category: 'Booking', categoryLabel: t('sc_cat_booking'),
+      icon: Calendar, color: 'orange',
+      questions: [
+        { q: t('sc_faq_book_q1'), a: t('sc_faq_book_a1') },
+        { q: t('sc_faq_book_q2'), a: t('sc_faq_book_a2') },
+        { q: t('sc_faq_book_q3'), a: t('sc_faq_book_a3') },
+      ]
+    },
+    {
+      category: 'Payments', categoryLabel: t('sc_cat_payments'),
+      icon: CreditCard, color: 'green',
+      questions: [
+        { q: t('sc_faq_pay_q1'), a: t('sc_faq_pay_a1') },
+        { q: t('sc_faq_pay_q2'), a: t('sc_faq_pay_a2') },
+        { q: t('sc_faq_pay_q3'), a: t('sc_faq_pay_a3') },
+      ]
+    },
+    {
+      category: 'Account', categoryLabel: t('sc_cat_account'),
+      icon: User, color: 'blue',
+      questions: [
+        { q: t('sc_faq_acc_q1'), a: t('sc_faq_acc_a1') },
+        { q: t('sc_faq_acc_q2'), a: t('sc_faq_acc_a2') },
+      ]
+    },
+    {
+      category: 'Technical', categoryLabel: t('sc_cat_technical'),
+      icon: Zap, color: 'purple',
+      questions: [
+        { q: t('sc_faq_tech_q1'), a: t('sc_faq_tech_a1') },
+        { q: t('sc_faq_tech_q2'), a: t('sc_faq_tech_a2') },
+      ]
+    },
+  ];
+
+  const contactChannels = [
+    { icon: Mail, label: t('sc_email_lbl'), value: 'support@panditji.com', href: 'mailto:support@panditji.com', bg: C.saffronLt, text: C.saffron, border: C.saffron },
+    { icon: Phone, label: t('sc_call_lbl'), value: '+91 98765 43210', href: 'tel:+919876543210', bg: C.successLt, text: C.success, border: C.success },
+    { icon: MessageCircle, label: t('sc_wa_lbl'), value: t('sc_wa_value'), href: 'https://wa.me/919876543210', bg: C.purpleLt, text: C.purple, border: C.purple },
+  ];
+
+  const allCategoryKeys = ['All', 'Booking', 'Payments', 'Account', 'Technical'];
+  const allCategoryLabels = [t('sc_cat_all'), t('sc_cat_booking'), t('sc_cat_payments'), t('sc_cat_account'), t('sc_cat_technical')];
+
   const fetchMyTickets = async () => {
     setLoadingTickets(true);
     try {
-      const res = await axios.get(`${API}/support/my`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.get(`${API}/support/my`, { headers: { Authorization: `Bearer ${token}` } });
       setMyTickets(res.data.data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoadingTickets(false);
-    }
+    } catch (err) { console.error(err); }
+    finally { setLoadingTickets(false); }
   };
 
   useEffect(() => {
     if (!user?._id && !user?.id) return;
     const socket = io('http://localhost:5000', { transports: ['websocket'] });
-    socket.on('connect', () => {
-      socket.emit('join', { userId: user._id || user.id, role: userRole });
-    });
+    socket.on('connect', () => { socket.emit('join', { userId: user._id || user.id, role: userRole }); });
     socket.on('supportTicketReplied', (data) => {
       setReplyNotification(data);
-      setMyTickets(prev => prev.map(t =>
-        t._id === data.ticketId
-          ? { ...t, adminReply: data.adminReply, status: data.status, repliedAt: data.repliedAt }
-          : t
-      ));
+      setMyTickets(prev => prev.map(t => t._id === data.ticketId ? { ...t, adminReply: data.adminReply, status: data.status, repliedAt: data.repliedAt } : t));
       setTimeout(() => setReplyNotification(null), 6000);
     });
     return () => socket.disconnect();
   }, [user]);
 
-  useEffect(() => {
-    if (view === 'mytickets') fetchMyTickets();
-  }, [view]);
+  useEffect(() => { if (view === 'mytickets') fetchMyTickets(); }, [view]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      await axios.post(`${API}/support`, ticketForm, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.post(`${API}/support`, ticketForm, { headers: { Authorization: `Bearer ${token}` } });
       setSubmitted(true);
       setTicketForm({ subject: '', category: 'Booking', message: '' });
-      setTimeout(() => {
-        setSubmitted(false);
-        setView('mytickets');
-      }, 2500);
-    } catch (err) {
-      alert('Failed to submit ticket. Please try again.');
-    } finally {
-      setSubmitting(false);
-    }
+      setTimeout(() => { setSubmitted(false); setView('mytickets'); }, 2500);
+    } catch (err) { alert(t('sc_submit_fail') || 'Failed to submit ticket. Please try again.'); }
+    finally { setSubmitting(false); }
   };
 
-  const allCategories = ['All', ...faqs.map(f => f.category)];
   const visibleFaqs = activeCategory === 'All' ? faqs : faqs.filter(f => f.category === activeCategory);
 
   return (
@@ -191,7 +217,7 @@ const SupportCare = ({ userRole = 'devotee' }) => {
           <div style={{ background: C.saffron, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <Headphones size={20} color="#fff" />
-              <span style={{ color: '#fff', fontWeight: 800, fontSize: 14 }}>Support Team Replied!</span>
+              <span style={{ color: '#fff', fontWeight: 800, fontSize: 14 }}>{t('sc_team_replied')}</span>
             </div>
             <button onClick={() => setReplyNotification(null)} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', fontSize: 18 }}>×</button>
           </div>
@@ -200,7 +226,7 @@ const SupportCare = ({ userRole = 'devotee' }) => {
             <p style={{ fontSize: 13, color: C.textMid, marginTop: 4, marginBottom: 12 }}>{replyNotification.adminReply}</p>
             <button className="dd-btn dd-btn-primary" style={{ width: '100%', justifyContent: 'center', fontSize: 12 }}
               onClick={() => { setView('mytickets'); setReplyNotification(null); }}>
-              View in My Tickets
+              {t('sc_view_tickets')}
             </button>
           </div>
         </div>
@@ -213,21 +239,19 @@ const SupportCare = ({ userRole = 'devotee' }) => {
             <Headphones size={28} color="#fff" />
           </div>
           <div>
-            <h2 style={{ fontFamily: "'Playfair Display',serif", fontSize: 28, fontWeight: 900, marginBottom: 4 }}>Support Center</h2>
-            <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.8)' }}>We're here to help you 24/7</p>
+            <h2 style={{ fontFamily: "'Playfair Display',serif", fontSize: 28, fontWeight: 900, marginBottom: 4 }}>{t('sc_hero_title')}</h2>
+            <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.8)' }}>{t('sc_hero_sub')}</p>
           </div>
         </div>
         <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.7)', maxWidth: 600, lineHeight: 1.5 }}>
-          {userRole === 'devotee'
-            ? 'Find answers about bookings, payments, and connecting with the right Pandit for your puja.'
-            : 'Get help with bookings, subscription, earnings, and serving devotees better.'}
+          {userRole === 'devotee' ? t('sc_hero_devotee_desc') : t('sc_hero_pandit_desc')}
         </p>
       </div>
 
       {/* Quick Contact Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
         {contactChannels.map(({ icon: Icon, label, value, href, bg, text, border }) => (
-          <a key={label} href={href} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', background: '#fff', borderRadius: 16, padding: 16, border: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', gap: 16, transition: 'transform 0.2s, box-shadow 0.2s', ':hover': { transform: 'translateY(-2px)', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' } }}>
+          <a key={label} href={href} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', background: '#fff', borderRadius: 16, padding: 16, border: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', gap: 16 }}>
             <div style={{ width: 44, height: 44, borderRadius: 12, background: bg, color: text, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Icon size={20} />
             </div>
@@ -243,17 +267,12 @@ const SupportCare = ({ userRole = 'devotee' }) => {
       {/* Tab Navigation */}
       <div style={{ display: 'flex', gap: 8, background: C.saffronLt, padding: 6, borderRadius: 16, border: `1px solid ${C.border}` }}>
         {[
-          { key: 'faq', label: 'FAQs', icon: BookOpen },
-          { key: 'submit', label: 'Submit Ticket', icon: Send },
-          { key: 'mytickets', label: 'My Tickets', icon: Ticket },
+          { key: 'faq', label: t('sc_tab_faq'), icon: BookOpen },
+          { key: 'submit', label: t('sc_tab_submit'), icon: Send },
+          { key: 'mytickets', label: t('sc_tab_mytickets'), icon: Ticket },
         ].map(({ key, label, icon: Icon }) => (
           <button key={key} onClick={() => setView(key)}
-            style={{
-              flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '12px', borderRadius: 12, border: 'none', cursor: 'pointer', fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 13, transition: 'all 0.2s',
-              background: view === key ? '#fff' : 'transparent',
-              color: view === key ? C.saffron : C.textMid,
-              boxShadow: view === key ? '0 2px 8px rgba(232,113,10,0.1)' : 'none'
-            }}>
+            style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '12px', borderRadius: 12, border: 'none', cursor: 'pointer', fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 13, transition: 'all 0.2s', background: view === key ? '#fff' : 'transparent', color: view === key ? C.saffron : C.textMid, boxShadow: view === key ? '0 2px 8px rgba(232,113,10,0.1)' : 'none' }}>
             <Icon size={16} /> {label}
           </button>
         ))}
@@ -263,23 +282,19 @@ const SupportCare = ({ userRole = 'devotee' }) => {
       {view === 'faq' && (
         <div style={{ background: '#fff', borderRadius: 16, border: `1px solid ${C.border}`, overflow: 'hidden' }}>
           <div style={{ padding: '20px 24px', borderBottom: `1px solid ${C.border}`, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-            {allCategories.map(cat => (
+            {allCategoryKeys.map((cat, i) => (
               <button key={cat} onClick={() => setActiveCategory(cat)}
-                style={{
-                  padding: '6px 16px', borderRadius: 20, border: `1px solid ${activeCategory === cat ? C.saffron : C.border}`, cursor: 'pointer', fontSize: 12, fontWeight: 700, transition: 'all 0.2s',
-                  background: activeCategory === cat ? C.saffron : C.surface,
-                  color: activeCategory === cat ? '#fff' : C.textMid
-                }}>
-                {cat}
+                style={{ padding: '6px 16px', borderRadius: 20, border: `1px solid ${activeCategory === cat ? C.saffron : C.border}`, cursor: 'pointer', fontSize: 12, fontWeight: 700, transition: 'all 0.2s', background: activeCategory === cat ? C.saffron : C.surface, color: activeCategory === cat ? '#fff' : C.textMid }}>
+                {allCategoryLabels[i]}
               </button>
             ))}
           </div>
           <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 24 }}>
-            {visibleFaqs.map(({ category, icon: Icon, color, questions }) => (
+            {visibleFaqs.map(({ category, categoryLabel, icon: Icon, questions }) => (
               <div key={category}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                   <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px', background: C.saffronLt, color: C.saffron, padding: '4px 12px', borderRadius: 20 }}>
-                    <Icon size={12} /> {category}
+                    <Icon size={12} /> {categoryLabel}
                   </span>
                 </div>
                 <div>
@@ -297,8 +312,8 @@ const SupportCare = ({ userRole = 'devotee' }) => {
           <div style={{ padding: '20px 24px', borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', gap: 12 }}>
             <AlertCircle size={24} color={C.saffron} />
             <div>
-              <h3 style={{ fontFamily: "'Playfair Display',serif", fontSize: 20, fontWeight: 700, color: C.maroon }}>Submit a Support Ticket</h3>
-              <p style={{ fontSize: 12, color: C.textMuted }}>Our team will respond within 24 hours.</p>
+              <h3 style={{ fontFamily: "'Playfair Display',serif", fontSize: 20, fontWeight: 700, color: C.maroon }}>{t('sc_submit_title')}</h3>
+              <p style={{ fontSize: 12, color: C.textMuted }}>{t('sc_submit_subtitle')}</p>
             </div>
           </div>
           <div style={{ padding: 24 }}>
@@ -307,44 +322,44 @@ const SupportCare = ({ userRole = 'devotee' }) => {
                 <div style={{ width: 64, height: 64, borderRadius: '50%', background: C.successLt, color: C.success, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
                   <CheckCircle size={32} />
                 </div>
-                <h4 style={{ fontSize: 18, fontWeight: 800, color: C.maroon, marginBottom: 8 }}>Ticket Submitted!</h4>
-                <p style={{ fontSize: 14, color: C.textMid }}>Your ticket has been saved. We'll respond within 24 hours. Redirecting...</p>
+                <h4 style={{ fontSize: 18, fontWeight: 800, color: C.maroon, marginBottom: 8 }}>{t('sc_submitted_title')}</h4>
+                <p style={{ fontSize: 14, color: C.textMid }}>{t('sc_submitted_desc')}</p>
               </div>
             ) : (
               <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                   <div>
-                    <label style={lbl}>Subject</label>
+                    <label style={lbl}>{t('sc_lbl_subject')}</label>
                     <input type="text" required value={ticketForm.subject}
                       onChange={e => setTicketForm({ ...ticketForm, subject: e.target.value })}
-                      placeholder="Brief description" style={inp} />
+                      placeholder={t('sc_ph_subject')} style={inp} />
                   </div>
                   <div>
-                    <label style={lbl}>Category</label>
+                    <label style={lbl}>{t('sc_lbl_category')}</label>
                     <select value={ticketForm.category}
                       onChange={e => setTicketForm({ ...ticketForm, category: e.target.value })} style={sel}>
-                      <option>Booking</option>
-                      <option>Payments</option>
-                      <option>Account</option>
-                      <option>Technical</option>
-                      {userRole === 'pandit' && <option>Subscription</option>}
-                      <option>Other</option>
+                      <option value="Booking">{t('sc_cat_booking')}</option>
+                      <option value="Payments">{t('sc_cat_payments')}</option>
+                      <option value="Account">{t('sc_cat_account')}</option>
+                      <option value="Technical">{t('sc_cat_technical')}</option>
+                      {userRole === 'pandit' && <option value="Subscription">{t('sc_cat_subscription')}</option>}
+                      <option value="Other">{t('sc_cat_other')}</option>
                     </select>
                   </div>
                 </div>
                 <div>
-                  <label style={lbl}>Describe Your Issue</label>
+                  <label style={lbl}>{t('sc_lbl_message')}</label>
                   <textarea required rows={5} value={ticketForm.message}
                     onChange={e => setTicketForm({ ...ticketForm, message: e.target.value })}
-                    placeholder="Include any booking IDs or error messages..." style={{ ...inp, resize: 'none' }} />
+                    placeholder={t('sc_ph_message')} style={{ ...inp, resize: 'none' }} />
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: C.textMuted }}>
-                    <Shield size={14} /> Your information is private and secure.
+                    <Shield size={14} /> {t('sc_privacy_note')}
                   </div>
                   <button type="submit" disabled={submitting} className="dd-btn dd-btn-maroon" style={{ padding: '12px 24px', fontSize: 14 }}>
                     {submitting ? <span className="spin" style={{ width: 14, height: 14, border: '2px solid rgba(255,255,255,0.4)', borderTopColor: '#fff', borderRadius: '50%', display: 'inline-block' }} /> : <Send size={16} />}
-                    {submitting ? 'Sending...' : 'Send Ticket'}
+                    {submitting ? t('sc_sending') : t('sc_send_ticket')}
                   </button>
                 </div>
               </form>
@@ -359,10 +374,10 @@ const SupportCare = ({ userRole = 'devotee' }) => {
           <div style={{ padding: '20px 24px', borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <Ticket size={24} color={C.saffron} />
-              <h3 style={{ fontFamily: "'Playfair Display',serif", fontSize: 20, fontWeight: 700, color: C.maroon }}>My Tickets</h3>
+              <h3 style={{ fontFamily: "'Playfair Display',serif", fontSize: 20, fontWeight: 700, color: C.maroon }}>{t('sc_my_tickets')}</h3>
             </div>
             <button onClick={fetchMyTickets} style={{ background: 'transparent', border: 'none', color: C.saffron, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontWeight: 700, fontSize: 13 }}>
-              <RefreshCw size={14} /> Refresh
+              <RefreshCw size={14} /> {t('sc_refresh')}
             </button>
           </div>
           <div style={{ padding: 24 }}>
@@ -375,8 +390,8 @@ const SupportCare = ({ userRole = 'devotee' }) => {
                 <div style={{ width: 64, height: 64, borderRadius: '50%', background: C.saffronLt, color: C.saffron, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
                   <Inbox size={32} />
                 </div>
-                <p style={{ fontSize: 14, color: C.textMid, fontWeight: 600, marginBottom: 16 }}>No tickets submitted yet.</p>
-                <button className="dd-btn dd-btn-primary" onClick={() => setView('submit')}>Submit Your First Ticket</button>
+                <p style={{ fontSize: 14, color: C.textMid, fontWeight: 600, marginBottom: 16 }}>{t('sc_no_tickets')}</p>
+                <button className="dd-btn dd-btn-primary" onClick={() => setView('submit')}>{t('sc_first_ticket')}</button>
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -394,26 +409,24 @@ const SupportCare = ({ userRole = 'devotee' }) => {
                           </div>
                         </div>
                         <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 800, background: s.bg, color: s.text, padding: '4px 10px', borderRadius: 20, flexShrink: 0 }}>
-                          <StatusIcon size={12} /> {s.label}
+                          <StatusIcon size={12} /> {t(s.labelKey) || s.label}
                         </span>
                       </div>
                       <p style={{ fontSize: 13, color: C.textMid, lineHeight: 1.5 }}>{ticket.message}</p>
                       {ticket.booking && (
                         <div style={{ marginTop: 12, padding: '10px 14px', background: C.surface, borderRadius: 10, border: `1px solid ${C.border}`, fontSize: 12.5, display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                           <div>
-                            <span style={{ fontWeight: 700, color: C.maroon }}>Linked Booking: </span>
+                            <span style={{ fontWeight: 700, color: C.maroon }}>{t('sc_linked_booking')} </span>
                             <span style={{ fontWeight: 600, color: C.text }}>{ticket.booking.pujaType}</span>
                             <span style={{ color: C.textMuted }}> (₹{ticket.booking.fee?.toLocaleString()})</span>
                           </div>
-                          <span className={`dd-badge dd-badge-${ticket.booking.status}`} style={{ fontSize: 9.5 }}>
-                            {ticket.booking.status}
-                          </span>
+                          <span className={`dd-badge dd-badge-${ticket.booking.status}`} style={{ fontSize: 9.5 }}>{ticket.booking.status}</span>
                         </div>
                       )}
                       {ticket.adminReply && (
                         <div style={{ background: C.saffronLt, border: `1px solid ${C.saffron}`, borderRadius: 10, padding: 16, marginTop: 16 }}>
                           <p style={{ fontSize: 12, fontWeight: 800, color: C.saffronDk, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <Headphones size={14} /> Support Team Reply
+                            <Headphones size={14} /> {t('sc_support_reply')}
                           </p>
                           <p style={{ fontSize: 13, color: C.textMid }}>{ticket.adminReply}</p>
                           {ticket.repliedAt && (

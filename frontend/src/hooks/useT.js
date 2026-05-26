@@ -1,5 +1,4 @@
-import useLanguageStore from '../store/useLanguageStore';
-import translations from '../utils/translations';
+import { useTranslation } from 'react-i18next';
 
 /**
  * useT() — returns a translation function t(key)
@@ -8,8 +7,8 @@ import translations from '../utils/translations';
  *   <h1>{t('home_h1_line1')}</h1>
  */
 const useT = () => {
-  const { lang } = useLanguageStore();
-  return (key) => translations[lang]?.[key] ?? translations['en'][key] ?? key;
+  const { t } = useTranslation();
+  return t;
 };
 
 export default useT;

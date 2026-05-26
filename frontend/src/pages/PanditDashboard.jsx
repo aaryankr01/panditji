@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import ChatInterface from '../components/ChatInterface';
 import SupportCare from '../components/SupportCare';
+import LanguageToggle from '../components/common/LanguageToggle';
 
 const SOCKET_URL = 'http://localhost:5000';
 const API = 'http://localhost:5000/api';
@@ -539,14 +540,15 @@ const PanditDashboard = () => {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <header style={{ height: 80, background: '#fff', borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', padding: '0 32px', justifyContent: 'space-between' }}>
           <h1 style={{ fontFamily: "'Playfair Display',serif", fontSize: 24, fontWeight: 900, color: C.maroon }}>
-            {activeTab === 'bookings' ? t('pd_booking_requests') : activeTab === 'chat' ? t('dd_messages') : t('dd_support')}
+            {activeTab === 'bookings' ? t('pd_booking_requests') : activeTab === 'chat' ? t('dd_messages') : activeTab === 'profile' ? t('dd_my_profile') : t('dd_support')}
           </h1>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 700 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: 13, fontWeight: 700 }}>
             {subscriptionStatus === 'inactive' ? (
               <span style={{ color: C.red, display: 'flex', alignItems: 'center', gap: 6 }}><XCircle size={16}/> {t('pd_offline_expired')}</span>
             ) : (
               <span style={{ color: C.success, display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ width: 8, height: 8, background: C.success, borderRadius: '50%', animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }} /> {t('pd_online_receiving')}</span>
             )}
+            <LanguageToggle />
           </div>
         </header>
 
@@ -560,12 +562,12 @@ const PanditDashboard = () => {
                   <AlertCircle size={24} />
                 </div>
                 <div>
-                  <h3 style={{ fontFamily: "'Playfair Display',serif", fontSize: 20, fontWeight: 700, color: C.red, marginBottom: 4 }}>Subscription Inactive</h3>
-                  <p style={{ fontSize: 14, color: 'rgba(192,57,43,0.8)' }}>Your profile is hidden from Devotees. You cannot receive or accept new bookings.</p>
+                  <h3 style={{ fontFamily: "'Playfair Display',serif", fontSize: 20, fontWeight: 700, color: C.red, marginBottom: 4 }}>{t('pd_sub_inactive_title') || 'Subscription Inactive'}</h3>
+                  <p style={{ fontSize: 14, color: 'rgba(192,57,43,0.8)' }}>{t('pd_sub_inactive_desc') || 'Your profile is hidden from Devotees. You cannot receive or accept new bookings.'}</p>
                 </div>
               </div>
               <button className="dd-btn" style={{ background: C.red, color: '#fff' }} onClick={handleSubscriptionPayment}>
-                Pay ₹500 to Activate
+                {t('pd_sub_activate_btn') || 'Pay ₹500 to Activate'}
               </button>
             </div>
           )}
@@ -577,12 +579,12 @@ const PanditDashboard = () => {
                   <AlertCircle size={24} />
                 </div>
                 <div>
-                  <h3 style={{ fontFamily: "'Playfair Display',serif", fontSize: 20, fontWeight: 700, color: '#A67C00', marginBottom: 4 }}>Subscription Expiring Soon</h3>
-                  <p style={{ fontSize: 14, color: '#8A6600' }}>Your subscription expires in {daysToExpiry} days. Renew now to stay visible to Devotees.</p>
+                  <h3 style={{ fontFamily: "'Playfair Display',serif", fontSize: 20, fontWeight: 700, color: '#A67C00', marginBottom: 4 }}>{t('pd_sub_warning_title') || 'Subscription Expiring Soon'}</h3>
+                  <p style={{ fontSize: 14, color: '#8A6600' }}>{t('pd_sub_warning_desc') || `Your subscription expires in ${daysToExpiry} days. Renew now to stay visible to Devotees.`}</p>
                 </div>
               </div>
               <button className="dd-btn" style={{ background: '#A67C00', color: '#fff' }} onClick={handleSubscriptionPayment}>
-                Renew for ₹500
+                {t('pd_sub_renew_btn') || 'Renew for ₹500'}
               </button>
             </div>
           )}
@@ -592,8 +594,8 @@ const PanditDashboard = () => {
               {bookings.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '60px 20px', background: '#fff', borderRadius: 24, border: `1px solid ${C.border}` }}>
                   <Bell size={48} color={C.saffronLt} style={{ margin: '0 auto 16px' }} />
-                  <p style={{ fontSize: 16, fontWeight: 700, color: C.maroon }}>No booking requests yet.</p>
-                  <p style={{ fontSize: 14, color: C.textMuted, marginTop: 4 }}>Requests from your city will appear here instantly.</p>
+                  <p style={{ fontSize: 16, fontWeight: 700, color: C.maroon }}>{t('pd_no_bookings_title') || 'No booking requests yet.'}</p>
+                  <p style={{ fontSize: 14, color: C.textMuted, marginTop: 4 }}>{t('pd_no_bookings_desc') || 'Requests from your city will appear here instantly.'}</p>
                 </div>
               ) : (
                 bookings.map(booking => (
@@ -613,17 +615,17 @@ const PanditDashboard = () => {
                       <div style={{ display: 'flex', gap: 8 }}>
                         {booking.paymentStatus === 'paid' && (
                           <button className="dd-btn dd-btn-ghost" onClick={() => { setSelectedChatUser(booking.devotee); setActiveTab('chat'); }}>
-                            <MessageSquare size={16} /> Chat
+                            <MessageSquare size={16} /> {t('dd_chat')}
                           </button>
                         )}
 
                         {booking.status === 'pending' && (
                           <>
                             <button className="dd-btn dd-btn-red" onClick={() => handleReject(booking._id)}>
-                              <XCircle size={16} /> Reject
+                              <XCircle size={16} /> {t('pd_reject') || 'Reject'}
                             </button>
                             <button className="dd-btn dd-btn-green" onClick={() => handleAccept(booking._id)} disabled={accepting}>
-                              {accepting ? <span className="spin" style={{ width: 16, height: 16, border: '2px solid rgba(255,255,255,0.4)', borderTopColor: C.success, borderRadius: '50%', display: 'inline-block' }} /> : <><CheckCircle size={16} /> Accept</>}
+                              {accepting ? <span className="spin" style={{ width: 16, height: 16, border: '2px solid rgba(255,255,255,0.4)', borderTopColor: C.success, borderRadius: '50%', display: 'inline-block' }} /> : <><CheckCircle size={16} /> {t('pd_accept') || 'Accept'}</>}
                             </button>
                           </>
                         )}
@@ -632,18 +634,18 @@ const PanditDashboard = () => {
                           <>
                             {booking.pujaMode === 'online' && (
                               <button className="dd-btn" style={{ background: C.purpleLt, color: C.purple }} onClick={() => handleAddMeetingLink(booking._id)}>
-                                <Video size={16} /> {booking.videoLink ? 'Edit Link' : 'Add Link'}
+                                <Video size={16} /> {booking.videoLink ? (t('pd_edit_link') || 'Edit Link') : (t('pd_add_link') || 'Add Link')}
                               </button>
                             )}
                             <button className="dd-btn dd-btn-green" onClick={() => updateBookingStatus(booking._id, 'completed')}>
-                              <CheckCircle size={16} /> Complete
+                              <CheckCircle size={16} /> {t('pd_complete') || 'Complete'}
                             </button>
                           </>
                         )}
 
                         {(booking.status === 'completed' || booking.status === 'rejected' || booking.status === 'cancelled') && (
                           <button className="dd-btn dd-btn-red" onClick={() => deleteBooking(booking._id)} title="Delete History">
-                            <Trash2 size={16} /> Delete
+                            <Trash2 size={16} /> {t('dd_delete')}
                           </button>
                         )}
                       </div>
@@ -652,7 +654,7 @@ const PanditDashboard = () => {
                     <div style={{ background: C.surface, borderRadius: 16, padding: 20, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                       <div style={{ display: 'flex', gap: 8, fontSize: 14 }}>
                         <Video size={16} color={C.purple} style={{ flexShrink: 0, marginTop: 2 }} />
-                        <div><strong style={{ color: C.maroon }}>Mode:</strong> <span style={{ color: booking.pujaMode === 'online' ? C.purple : C.saffron, fontWeight: 700, textTransform: 'capitalize' }}>{booking.pujaMode || 'in-person'}</span></div>
+                        <div><strong style={{ color: C.maroon }}>{t('pd_mode') || 'Mode:'}</strong> <span style={{ color: booking.pujaMode === 'online' ? C.purple : C.saffron, fontWeight: 700, textTransform: 'capitalize' }}>{booking.pujaMode || 'in-person'}</span></div>
                       </div>
                       <div style={{ display: 'flex', gap: 8, fontSize: 14 }}>
                         <User size={16} color={C.saffron} style={{ flexShrink: 0, marginTop: 2 }} />
@@ -660,19 +662,19 @@ const PanditDashboard = () => {
                       </div>
                       <div style={{ display: 'flex', gap: 8, fontSize: 14 }}>
                         <Clock size={16} color={C.saffron} style={{ flexShrink: 0, marginTop: 2 }} />
-                        <div><strong style={{ color: C.maroon }}>Date:</strong> <span style={{ color: C.textMid }}>{booking.scheduledDate ? new Date(booking.scheduledDate).toLocaleDateString() : '-'} {booking.scheduledTime && `at ${booking.scheduledTime}`}</span></div>
+                        <div><strong style={{ color: C.maroon }}>{t('dd_date')}:</strong> <span style={{ color: C.textMid }}>{booking.scheduledDate ? new Date(booking.scheduledDate).toLocaleDateString() : '-'} {booking.scheduledTime && `at ${booking.scheduledTime}`}</span></div>
                       </div>
                       <div style={{ display: 'flex', gap: 8, fontSize: 14 }}>
                         <span style={{ fontSize: 16, fontWeight: 800, color: C.success, flexShrink: 0 }}>₹</span>
-                        <div><strong style={{ color: C.maroon }}>Fee:</strong> <span style={{ color: C.success, fontWeight: 800 }}>₹{booking.fee}</span></div>
+                        <div><strong style={{ color: C.maroon }}>{t('dd_booking_fee')}:</strong> <span style={{ color: C.success, fontWeight: 800 }}>₹{booking.fee}</span></div>
                       </div>
                       <div style={{ display: 'flex', gap: 8, fontSize: 14, gridColumn: '1 / -1' }}>
                         <MapPin size={16} color={C.saffron} style={{ flexShrink: 0, marginTop: 2 }} />
-                        <div><strong style={{ color: C.maroon }}>Address:</strong> <span style={{ color: C.textMid }}>{booking.address}</span></div>
+                        <div><strong style={{ color: C.maroon }}>{t('pd_address') || 'Address:'}</strong> <span style={{ color: C.textMid }}>{booking.address}</span></div>
                       </div>
                       {booking.videoLink && (
                         <div style={{ gridColumn: '1 / -1', background: C.purpleLt, padding: 12, borderRadius: 12, color: C.purple, display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, wordBreak: 'break-all' }}>
-                          <Video size={16} style={{ flexShrink: 0 }} /> <strong>Meeting Link:</strong> <a href={booking.videoLink} target="_blank" rel="noopener noreferrer" style={{ color: C.purple, textDecoration: 'underline' }}>{booking.videoLink}</a>
+                          <Video size={16} style={{ flexShrink: 0 }} /> <strong>{t('pd_meeting_link') || 'Meeting Link:'}</strong> <a href={booking.videoLink} target="_blank" rel="noopener noreferrer" style={{ color: C.purple, textDecoration: 'underline' }}>{booking.videoLink}</a>
                         </div>
                       )}
                     </div>
@@ -686,11 +688,11 @@ const PanditDashboard = () => {
             <div style={{ display: 'flex', height: '100%', gap: 24, maxWidth: 1200, margin: '0 auto' }}>
               <div style={{ width: 340, background: '#fff', borderRadius: 24, border: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                 <div style={{ padding: '20px 24px', borderBottom: `1px solid ${C.border}`, fontFamily: "'Playfair Display',serif", fontSize: 18, fontWeight: 800, color: C.maroon }}>
-                  Conversations
+                  {t('pd_conversations') || 'Conversations'}
                 </div>
                 <div style={{ flex: 1, overflowY: 'auto' }}>
                   {conversations.length === 0 ? (
-                    <div style={{ padding: 32, textAlign: 'center', fontSize: 14, color: C.textMuted }}>No conversations yet. Accept a booking to start chatting!</div>
+                    <div style={{ padding: 32, textAlign: 'center', fontSize: 14, color: C.textMuted }}>{t('pd_no_conversations') || 'No conversations yet. Accept a booking to start chatting!'}</div>
                   ) : (
                     conversations.map(c => (
                       <div key={c._id} onClick={() => setSelectedChatUser(c)}
@@ -719,25 +721,25 @@ const PanditDashboard = () => {
               
               {/* Aadhar Verification Status */}
               <div style={{ background: '#fff', padding: 24, borderRadius: 24, border: `1px solid ${C.border}`, boxShadow: '0 4px 12px rgba(0,0,0,0.02)' }}>
-                <h2 style={{ fontFamily: "'Playfair Display',serif", fontSize: 20, fontWeight: 700, color: C.maroon, marginBottom: 16 }}>Aadhar eKYC Verification</h2>
+                <h2 style={{ fontFamily: "'Playfair Display',serif", fontSize: 20, fontWeight: 700, color: C.maroon, marginBottom: 16 }}>{t('pd_aadhar_title') || 'Aadhar eKYC Verification'}</h2>
                 
                 {profileData?.panditProfile?.isAadharVerified ? (
                   <div style={{ background: C.successLt, color: C.success, padding: 16, borderRadius: 12, display: 'flex', alignItems: 'center', gap: 12, fontWeight: 700 }}>
                     <ShieldCheck size={24} />
-                    Aadhar Verified & Profile Approved
+                    {t('pd_aadhar_verified') || 'Aadhar Verified & Profile Approved'}
                   </div>
                 ) : profileData?.panditProfile?.documents?.length > 0 ? (
                   <div style={{ background: C.goldLt, color: C.gold, padding: 16, borderRadius: 12, display: 'flex', alignItems: 'center', gap: 12, fontWeight: 700 }}>
                     <AlertCircle size={24} />
-                    Verification Pending (Please allow up to 24 hours for Admin approval)
+                    {t('pd_aadhar_pending') || 'Verification Pending (Please allow up to 24 hours for Admin approval)'}
                   </div>
                 ) : (
                   <div style={{ background: C.surface, padding: 20, borderRadius: 16 }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                      <p style={{ fontSize: 14, color: C.textMid }}>Upload your Aadhar Card for manual verification by our Admin team.</p>
+                      <p style={{ fontSize: 14, color: C.textMid }}>{t('pd_aadhar_upload_desc') || 'Upload your Aadhar Card for manual verification by our Admin team.'}</p>
                       <input 
                         type="text" 
-                        placeholder="Enter 12-digit Aadhar Number" 
+                        placeholder={t('pd_aadhar_placeholder') || 'Enter 12-digit Aadhar Number'}
                         value={aadharNumber}
                         onChange={e => setAadharNumber(e.target.value.replace(/\D/g, '').slice(0, 12))}
                         style={{ padding: 12, borderRadius: 8, border: `1px solid ${C.border}`, outline: 'none' }}
@@ -749,7 +751,7 @@ const PanditDashboard = () => {
                         style={{ padding: 12, borderRadius: 8, border: `1px solid ${C.border}`, outline: 'none', background: '#fff' }}
                       />
                       <button onClick={handleUploadAadhar} disabled={verifyingAadhar} className="dd-btn dd-btn-primary" style={{ width: 'fit-content' }}>
-                        {verifyingAadhar ? 'Uploading...' : 'Upload Document'}
+                        {verifyingAadhar ? (t('pd_uploading') || 'Uploading...') : (t('pd_upload_document') || 'Upload Document')}
                       </button>
                     </div>
                   </div>
@@ -758,42 +760,42 @@ const PanditDashboard = () => {
 
               {/* Edit Profile Form */}
               <div style={{ background: '#fff', padding: 24, borderRadius: 24, border: `1px solid ${C.border}`, boxShadow: '0 4px 12px rgba(0,0,0,0.02)' }}>
-                <h2 style={{ fontFamily: "'Playfair Display',serif", fontSize: 20, fontWeight: 700, color: C.maroon, marginBottom: 20 }}>Personal & Professional Details</h2>
+                <h2 style={{ fontFamily: "'Playfair Display',serif", fontSize: 20, fontWeight: 700, color: C.maroon, marginBottom: 20 }}>{t('pd_profile_details_title') || 'Personal & Professional Details'}</h2>
                 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <label style={{ fontSize: 13, fontWeight: 700, color: C.textMid }}>First Name</label>
+                    <label style={{ fontSize: 13, fontWeight: 700, color: C.textMid }}>{t('dd_first_name')}</label>
                     <input type="text" value={editForm.firstName} onChange={e => setEditForm({...editForm, firstName: e.target.value})} style={{ padding: 12, borderRadius: 8, border: `1px solid ${C.border}`, outline: 'none' }} />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <label style={{ fontSize: 13, fontWeight: 700, color: C.textMid }}>Last Name</label>
+                    <label style={{ fontSize: 13, fontWeight: 700, color: C.textMid }}>{t('dd_last_name')}</label>
                     <input type="text" value={editForm.lastName} onChange={e => setEditForm({...editForm, lastName: e.target.value})} style={{ padding: 12, borderRadius: 8, border: `1px solid ${C.border}`, outline: 'none' }} />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <label style={{ fontSize: 13, fontWeight: 700, color: C.textMid }}>Phone Number</label>
+                    <label style={{ fontSize: 13, fontWeight: 700, color: C.textMid }}>{t('dd_primary_phone')}</label>
                     <input type="text" value={editForm.phone} onChange={e => setEditForm({...editForm, phone: e.target.value})} style={{ padding: 12, borderRadius: 8, border: `1px solid ${C.border}`, outline: 'none' }} />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <label style={{ fontSize: 13, fontWeight: 700, color: C.textMid }}>City</label>
+                    <label style={{ fontSize: 13, fontWeight: 700, color: C.textMid }}>{t('dd_city')}</label>
                     <input type="text" value={editForm.city} onChange={e => setEditForm({...editForm, city: e.target.value})} style={{ padding: 12, borderRadius: 8, border: `1px solid ${C.border}`, outline: 'none' }} />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <label style={{ fontSize: 13, fontWeight: 700, color: C.textMid }}>Experience (Years)</label>
+                    <label style={{ fontSize: 13, fontWeight: 700, color: C.textMid }}>{t('pd_experience') || 'Experience (Years)'}</label>
                     <input type="number" value={editForm.experience} onChange={e => setEditForm({...editForm, experience: parseInt(e.target.value) || 0})} style={{ padding: 12, borderRadius: 8, border: `1px solid ${C.border}`, outline: 'none' }} />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <label style={{ fontSize: 13, fontWeight: 700, color: C.textMid }}>Fee Per Puja (₹)</label>
+                    <label style={{ fontSize: 13, fontWeight: 700, color: C.textMid }}>{t('pd_fee_per_puja') || 'Fee Per Puja (₹)'}</label>
                     <input type="number" value={editForm.feePerPuja} onChange={e => setEditForm({...editForm, feePerPuja: parseInt(e.target.value) || 0})} style={{ padding: 12, borderRadius: 8, border: `1px solid ${C.border}`, outline: 'none' }} />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6, gridColumn: '1 / -1' }}>
-                    <label style={{ fontSize: 13, fontWeight: 700, color: C.textMid }}>Bio / About</label>
+                    <label style={{ fontSize: 13, fontWeight: 700, color: C.textMid }}>{t('pd_bio') || 'Bio / About'}</label>
                     <textarea rows="4" value={editForm.bio} onChange={e => setEditForm({...editForm, bio: e.target.value})} style={{ padding: 12, borderRadius: 8, border: `1px solid ${C.border}`, outline: 'none', resize: 'vertical' }} />
                   </div>
                 </div>
 
                 <div style={{ marginTop: 24, paddingTop: 24, borderTop: `1px solid ${C.border}`, display: 'flex', justifyContent: 'flex-end' }}>
                   <button onClick={handleSaveProfile} disabled={savingProfile} className="dd-btn dd-btn-primary">
-                    <Save size={18} /> {savingProfile ? 'Saving...' : 'Save Profile'}
+                    <Save size={18} /> {savingProfile ? (t('pd_saving') || 'Saving...') : (t('pd_save_profile') || 'Save Profile')}
                   </button>
                 </div>
               </div>

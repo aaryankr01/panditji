@@ -7,6 +7,7 @@ import { io } from 'socket.io-client';
 import { LogOut, MessageSquare, Search, Star, MapPin, AlertCircle, CheckCircle, BadgeCheck, Clock, Navigation, X, Calendar, Headphones, Video, Briefcase, Languages, Users, User } from 'lucide-react';
 import ChatInterface from '../components/ChatInterface';
 import SupportCare from '../components/SupportCare';
+import LanguageToggle from '../components/common/LanguageToggle';
 
 const loadRazorpayScript = () =>
   new Promise((resolve) => {
@@ -64,9 +65,14 @@ const C = {
   redLt: '#FDECEC',
 };
 
-const SectionTitle = ({ children }) => (
-  <h2 style={{ fontFamily: "'Playfair Display',serif", fontSize: 20, fontWeight: 700, color: C.maroon, marginBottom: 16, borderBottom: `2px solid ${C.border}`, paddingBottom: 8 }}>{children}</h2>
-);
+const SectionTitle = ({ children }) => {
+  const t = useT();
+  return (
+    <h2 style={{ fontFamily: "'Playfair Display',serif", fontSize: 20, fontWeight: 700, color: C.maroon, marginBottom: 16, borderBottom: `2px solid ${C.border}`, paddingBottom: 8 }}>
+      {children}
+    </h2>
+  );
+};
 const lbl = { display: 'block', fontSize: 13, fontWeight: 700, color: C.textMid, marginBottom: 6 };
 const inp = { width: '100%', border: `1px solid ${C.border}`, borderRadius: 10, padding: '10px 14px', fontSize: 14, outline: 'none', background: C.surface, fontFamily: "'Poppins',sans-serif", color: C.text };
 const sel = { ...inp, cursor: 'pointer' };
@@ -151,6 +157,7 @@ const StatusBadge = ({ status }) => (
 
 // ── Confirmation modal before cancelling an UNPAID booking ──
 const ConfirmCancelModal = ({ booking, onConfirm, onClose }) => {
+  const t = useT();
   if (!booking) return null;
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(44,26,14,0.72)', zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
@@ -159,33 +166,33 @@ const ConfirmCancelModal = ({ booking, onConfirm, onClose }) => {
         <div style={{ background: 'linear-gradient(135deg, #7B1D0E 0%, #C0392B 100%)', padding: '20px 24px', display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>✕</div>
           <div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', marginBottom: 2, textTransform: 'uppercase', letterSpacing: '0.6px' }}>Confirm Cancellation</div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', marginBottom: 2, textTransform: 'uppercase', letterSpacing: '0.6px' }}>{t('dd_cancel_confirm_title')}</div>
             <h2 style={{ fontFamily: "'Playfair Display',serif", color: '#fff', fontWeight: 900, fontSize: 17, margin: 0 }}>🕉 {booking.pujaType}</h2>
           </div>
         </div>
         {/* Body */}
         <div style={{ padding: '22px 24px' }}>
           <div style={{ background: '#FFF9E0', border: '1px solid #E6C87A', borderRadius: 10, padding: '12px 14px', fontSize: 13, color: '#856404', fontWeight: 600, marginBottom: 20, lineHeight: 1.6 }}>
-            ⚠️ Are you sure you want to cancel this booking? This action cannot be undone.
+            {t('dd_cancel_confirm_msg')}
           </div>
           <div style={{ background: '#fcfaf7', border: `1px solid ${C.border}`, borderRadius: 10, padding: '12px 14px', fontSize: 13, color: C.textMid, marginBottom: 22, lineHeight: 1.7 }}>
-            <div><span style={{ fontWeight: 700, color: C.maroon }}>Puja:</span> {booking.pujaType}</div>
-            <div><span style={{ fontWeight: 700, color: C.maroon }}>Date:</span> {booking.scheduledDate ? new Date(booking.scheduledDate).toLocaleDateString('en-IN') : '-'}</div>
+            <div><span style={{ fontWeight: 700, color: C.maroon }}>{t('bap_step_choose')}:</span> {booking.pujaType}</div>
+            <div><span style={{ fontWeight: 700, color: C.maroon }}>{t('dd_date')}:</span> {booking.scheduledDate ? new Date(booking.scheduledDate).toLocaleDateString('en-IN') : '-'}</div>
             {booking.pandit && <div><span style={{ fontWeight: 700, color: C.maroon }}>Pandit:</span> Pt. {booking.pandit.firstName} {booking.pandit.lastName}</div>}
-            <div style={{ marginTop: 6, fontSize: 12, color: '#16a34a', fontWeight: 700 }}>✅ No payment was made — cancellation is free.</div>
+            <div style={{ marginTop: 6, fontSize: 12, color: '#16a34a', fontWeight: 700 }}>{t('dd_cancel_free_msg')}</div>
           </div>
           <div style={{ display: 'flex', gap: 10 }}>
             <button
               onClick={onClose}
               style={{ flex: 1, padding: '11px', borderRadius: 10, border: `1.5px solid ${C.border}`, background: '#f5f0eb', color: C.textMid, fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 13, cursor: 'pointer' }}
             >
-              No, Keep It
+              {t('dd_cancel_keep')}
             </button>
             <button
               onClick={onConfirm}
               style={{ flex: 1, padding: '11px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #7B1D0E, #C0392B)', color: '#fff', fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 13, cursor: 'pointer' }}
             >
-              Yes, Cancel It
+              {t('dd_cancel_yes')}
             </button>
           </div>
         </div>
@@ -196,6 +203,7 @@ const ConfirmCancelModal = ({ booking, onConfirm, onClose }) => {
 
 // Modal shown when devotee tries to cancel a PAID booking
 const CancelContactModal = ({ booking, onClose, onGoToChat, onRequestCancel }) => {
+  const t = useT();
   if (!booking) return null;
   const [reason, setReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -227,7 +235,7 @@ const CancelContactModal = ({ booking, onClose, onGoToChat, onRequestCancel }) =
         {/* Header */}
         <div style={{ background: 'linear-gradient(135deg, #7B1D0E 0%, #5B2D8E 100%)', padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', marginBottom: 2 }}>Cancel Paid Booking</div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', marginBottom: 2 }}>{t('dd_cancel_paid_title')}</div>
             <h2 style={{ fontFamily: "'Playfair Display',serif", color: '#fff', fontWeight: 900, fontSize: 18 }}>
               🕉 {booking.pujaType}
             </h2>
@@ -241,12 +249,12 @@ const CancelContactModal = ({ booking, onClose, onGoToChat, onRequestCancel }) =
         <div style={{ padding: '22px 24px', maxHeight: 'calc(90vh - 80px)', overflowY: 'auto' }}>
           {/* Warning notice */}
           <div style={{ background: '#FFF9E0', border: '1px solid #E6C87A', borderRadius: 10, padding: '12px 14px', fontSize: 13, color: '#856404', fontWeight: 600, marginBottom: 20, lineHeight: 1.6 }}>
-            ⚠️ This booking is <strong>paid</strong>. You can request cancellation and refund below (10% platform fee will be deducted), or contact admin / Pandit Ji.
+            {t('dd_cancel_paid_msg')}
           </div>
 
           {/* Refund/Cancel Form */}
           <form onSubmit={handleRequestSubmit} style={{ marginBottom: 20, background: '#fcfaf7', border: `1px solid ${C.border}`, borderRadius: 12, padding: 16 }}>
-            <label style={{ fontSize: 12, fontWeight: 700, color: C.maroon, display: 'block', marginBottom: 6 }}>Reason for Cancellation</label>
+            <label style={{ fontSize: 12, fontWeight: 700, color: C.maroon, display: 'block', marginBottom: 6 }}>{t('dd_cancel_reason_lbl')}</label>
             <textarea
               value={reason}
               onChange={e => setReason(e.target.value)}
@@ -261,11 +269,11 @@ const CancelContactModal = ({ booking, onClose, onGoToChat, onRequestCancel }) =
               className="dd-btn"
               style={{ width: '100%', justifyContent: 'center', background: C.red, color: '#fff', fontSize: 12, border: 'none', cursor: 'pointer' }}
             >
-              {submitting ? 'Submitting Request...' : 'Submit Cancellation & Refund Request'}
+              {submitting ? 'Submitting Request...' : t('dd_cancel_submit')}
             </button>
           </form>
 
-          <p style={{ fontSize: 13, color: C.textMid, marginBottom: 14, fontWeight: 600 }}>Or contact us directly:</p>
+          <p style={{ fontSize: 13, color: C.textMid, marginBottom: 14, fontWeight: 600 }}>{t('dd_contact_direct')}</p>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
 
@@ -280,7 +288,7 @@ const CancelContactModal = ({ booking, onClose, onGoToChat, onRequestCancel }) =
                 📲
               </div>
               <div>
-                <div style={{ fontWeight: 800, color: '#1A6632', fontSize: 14 }}>WhatsApp Admin</div>
+                <div style={{ fontWeight: 800, color: '#1A6632', fontSize: 14 }}>{t('dd_wa_admin')}</div>
                 <div style={{ fontSize: 12, color: '#4CAF76', marginTop: 2 }}>Opens WhatsApp with pre-filled cancellation message</div>
               </div>
             </a>
@@ -294,7 +302,7 @@ const CancelContactModal = ({ booking, onClose, onGoToChat, onRequestCancel }) =
                 📞
               </div>
               <div>
-                <div style={{ fontWeight: 800, color: '#5B2D8E', fontSize: 14 }}>Call Admin</div>
+                <div style={{ fontWeight: 800, color: '#5B2D8E', fontSize: 14 }}>{t('dd_call_admin')}</div>
                 <div style={{ fontSize: 12, color: '#7B5BB5', marginTop: 2 }}>Available 9 AM – 8 PM daily</div>
               </div>
             </a>
@@ -311,7 +319,7 @@ const CancelContactModal = ({ booking, onClose, onGoToChat, onRequestCancel }) =
                   🧘
                 </div>
                 <div>
-                  <div style={{ fontWeight: 800, color: '#7B1D0E', fontSize: 14 }}>WhatsApp Pandit Ji</div>
+                  <div style={{ fontWeight: 800, color: '#7B1D0E', fontSize: 14 }}>{t('dd_wa_pandit')}</div>
                   <div style={{ fontSize: 12, color: '#A07060', marginTop: 2 }}>
                     Pt. {booking.pandit.firstName} {booking.pandit.lastName}
                   </div>
@@ -329,14 +337,13 @@ const CancelContactModal = ({ booking, onClose, onGoToChat, onRequestCancel }) =
                   💬
                 </div>
                 <div>
-                  <div style={{ fontWeight: 800, color: '#7B1D0E', fontSize: 14 }}>Chat with Pandit Ji</div>
+                  <div style={{ fontWeight: 800, color: '#7B1D0E', fontSize: 14 }}>{t('dd_chat_pandit')}</div>
                   <div style={{ fontSize: 12, color: '#A07060', marginTop: 2 }}>
                     Pt. {booking.pandit.firstName} {booking.pandit.lastName} — opens in Messages tab
                   </div>
                 </div>
               </div>
             )}
-
           </div>
         </div>
       </div>
@@ -853,6 +860,7 @@ const DevoteeDashboard = () => {
               {activeTab === 'payments' && t('dd_bookings_payments')}
               {activeTab === 'support' && t('dd_support')}
             </div>
+            <LanguageToggle />
           </header>
 
           <main style={{ flex: 1, overflowY: 'auto', padding: 24 }}>
@@ -860,7 +868,7 @@ const DevoteeDashboard = () => {
             {/* PROFILE */}
             {activeTab === 'profile' && (
               <div style={{ maxWidth: 600, margin: '0 auto', background: '#fff', borderRadius: 14, border: `1px solid ${C.border}`, padding: 24 }}>
-                <SectionTitle>Profile Details</SectionTitle>
+                <SectionTitle>{t('dd_profile_details')}</SectionTitle>
                 <form onSubmit={async (e) => {
                   e.preventDefault();
                   const formData = new FormData(e.target);
@@ -872,22 +880,22 @@ const DevoteeDashboard = () => {
                   } catch { alert('Failed to update profile'); }
                 }} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                    <div><label style={lbl}>First Name</label><input name="firstName" defaultValue={user?.firstName} required style={inp} /></div>
-                    <div><label style={lbl}>Last Name</label><input name="lastName" defaultValue={user?.lastName} required style={inp} /></div>
+                    <div><label style={lbl}>{t('dd_first_name')}</label><input name="firstName" defaultValue={user?.firstName} required style={inp} /></div>
+                    <div><label style={lbl}>{t('dd_last_name')}</label><input name="lastName" defaultValue={user?.lastName} required style={inp} /></div>
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                    <div><label style={lbl}>Primary Phone</label><input name="phone" defaultValue={user?.phone} required style={inp} /></div>
-                    <div><label style={lbl}>Alternate Phone</label><input name="alternatePhone" defaultValue={user?.alternatePhone} placeholder="Optional" style={inp} /></div>
+                    <div><label style={lbl}>{t('dd_primary_phone')}</label><input name="phone" defaultValue={user?.phone} required style={inp} /></div>
+                    <div><label style={lbl}>{t('dd_alt_phone')}</label><input name="alternatePhone" defaultValue={user?.alternatePhone} placeholder="Optional" style={inp} /></div>
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                    <div><label style={lbl}>City</label><input name="city" defaultValue={user?.city} required style={inp} /></div>
-                    <div><label style={lbl}>State</label><input name="state" defaultValue={user?.state} style={inp} /></div>
+                    <div><label style={lbl}>{t('dd_city')}</label><input name="city" defaultValue={user?.city} required style={inp} /></div>
+                    <div><label style={lbl}>{t('dd_state')}</label><input name="state" defaultValue={user?.state} style={inp} /></div>
                   </div>
                   <div>
-                    <label style={lbl}>Pinned Location (Address)</label>
+                    <label style={lbl}>{t('dd_pinned_location')}</label>
                     <input name="pinnedLocation" defaultValue={user?.pinnedLocation} placeholder="e.g., Block A, Phase 1..." style={inp} />
                   </div>
-                  <button type="submit" className="dd-btn dd-btn-primary" style={{ marginTop: 8, justifyContent: 'center' }}>Save Changes</button>
+                  <button type="submit" className="dd-btn dd-btn-primary" style={{ marginTop: 8, justifyContent: 'center' }}>{t('dd_save_changes')}</button>
                 </form>
               </div>
             )}
@@ -898,8 +906,8 @@ const DevoteeDashboard = () => {
                 {bookings.length === 0 ? (
                   <div style={{ textAlign: 'center', padding: '60px 20px', background: '#fff', borderRadius: 14, border: `1px solid ${C.border}` }}>
                     <div style={{ fontSize: 56, marginBottom: 16 }}>📿</div>
-                    <p style={{ fontWeight: 700, color: C.maroon, fontSize: 16 }}>No bookings yet</p>
-                    <p style={{ color: C.textMuted, fontSize: 13, marginTop: 6 }}>Find a Pandit from the Discover tab to make your first booking.</p>
+                    <p style={{ fontWeight: 700, color: C.maroon, fontSize: 16 }}>{t('dd_no_bookings')}</p>
+                    <p style={{ color: C.textMuted, fontSize: 13, marginTop: 6 }}>{t('dd_no_bookings_sub')}</p>
                   </div>
                 ) : bookings.map(booking => (
                   <div key={booking._id} className="dd-booking-card">
@@ -912,7 +920,7 @@ const DevoteeDashboard = () => {
                           </h3>
                           <StatusBadge status={booking.status} />
                           {booking.pujaMode === 'online' && (
-                            <span className="dd-badge" style={{ background: C.purpleLt, color: C.purple }}>Online</span>
+                            <span className="dd-badge" style={{ background: C.purpleLt, color: C.purple }}>{t('dd_online')}</span>
                           )}
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 24px', fontSize: 13, color: C.textMid }}>
@@ -923,12 +931,12 @@ const DevoteeDashboard = () => {
                           </span>
                           <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                             <MapPin size={13} color={C.saffron} />
-                            {booking.pujaMode === 'online' ? 'Online / Virtual Puja' : booking.address}
+                            {booking.pujaMode === 'online' ? (t('dd_online_virtual') || 'Online / Virtual Puja') : booking.address}
                           </span>
                           <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                             <Video size={13} color={booking.pujaMode === 'online' ? C.purple : C.border} />
                             <span style={{ color: booking.pujaMode === 'online' ? C.purple : C.textMuted, fontWeight: 600 }}>
-                              {booking.pujaMode === 'online' ? 'Distance Puja' : 'In-Person'}
+                              {booking.pujaMode === 'online' ? (t('dd_distance_puja') || 'Distance Puja') : t('dd_in_person')}
                             </span>
                           </span>
                           {booking.pandit && (
@@ -943,11 +951,11 @@ const DevoteeDashboard = () => {
                         {booking.videoLink && (
                           <div style={{ marginTop: 10, background: C.purpleLt, border: `1px solid ${C.purple}`, borderRadius: 8, padding: '8px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 12 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: C.purple, fontWeight: 700 }}>
-                              <Video size={13} /> Meeting Link Ready
+                              <Video size={13} /> {t('dd_meeting_ready')}
                             </div>
                             <a href={booking.videoLink} target="_blank" rel="noopener noreferrer"
                               style={{ background: C.purple, color: '#fff', padding: '4px 12px', borderRadius: 6, fontSize: 11, fontWeight: 800, textDecoration: 'none' }}>
-                              Join Now →
+                              {t('dd_join_now')}
                             </a>
                           </div>
                         )}
@@ -962,7 +970,7 @@ const DevoteeDashboard = () => {
                             {/* Pay Now always shown — even for past (so they can settle) */}
                             <button className="dd-btn dd-btn-primary" style={{ fontSize: 12, justifyContent: 'center' }}
                               onClick={() => handlePayment(booking)} disabled={loading}>
-                              💳 Pay Now
+                              {t('dd_pay_now')}
                             </button>
                             {/* Cancel always shown for unpaid bookings — opens confirm modal */}
                             <button
@@ -970,7 +978,7 @@ const DevoteeDashboard = () => {
                               style={{ fontSize: 12, justifyContent: 'center', background: '#FDECEC', color: C.red, border: `1.5px solid ${C.red}` }}
                               onClick={() => setCancelConfirmModal(booking)}
                             >
-                              ✕ Cancel Booking
+                              {t('dd_cancel_booking')}
                             </button>
                           </>
                         )}
@@ -981,7 +989,7 @@ const DevoteeDashboard = () => {
                             {booking.pandit && (
                               <button className="dd-btn dd-btn-ghost" style={{ fontSize: 12, justifyContent: 'center' }}
                                 onClick={() => startChat(booking.pandit)}>
-                                <MessageSquare size={14} /> Chat
+                                <MessageSquare size={14} /> {t('dd_chat')}
                               </button>
                             )}
                             {/* Cancel only if the puja hasn't happened yet */}
@@ -991,7 +999,7 @@ const DevoteeDashboard = () => {
                                 style={{ fontSize: 11, justifyContent: 'center', background: '#FDECEC', color: C.red, border: `1.5px solid ${C.red}` }}
                                 onClick={() => setCancelContactModal(booking)}
                               >
-                                ✕ Cancel Booking
+                                {t('dd_cancel_booking')}
                               </button>
                             )}
                           </>
@@ -1001,7 +1009,7 @@ const DevoteeDashboard = () => {
                         {booking.status === 'completed' && booking.pandit && (
                           <button className="dd-btn dd-btn-ghost" style={{ fontSize: 12, justifyContent: 'center' }}
                             onClick={() => startChat(booking.pandit)}>
-                            <MessageSquare size={14} /> Chat
+                            <MessageSquare size={14} /> {t('dd_chat')}
                           </button>
                         )}
 
@@ -1012,7 +1020,7 @@ const DevoteeDashboard = () => {
                             style={{ fontSize: 12, justifyContent: 'center', background: '#FDECEC', color: C.red, border: `1.5px solid ${C.red}` }}
                             onClick={() => cancelBooking(booking._id)}
                           >
-                            ✕ Cancel Booking
+                            {t('dd_cancel_booking')}
                           </button>
                         )}
 
@@ -1020,14 +1028,14 @@ const DevoteeDashboard = () => {
                         {(booking.status === 'rejected' || booking.status === 'cancelled') && (
                           <button className="dd-btn" onClick={() => deleteBooking(booking._id)}
                             style={{ background: '#f5f0eb', color: C.textMid, fontSize: 12, justifyContent: 'center' }}>
-                            🗑 Delete
+                            {t('dd_delete')}
                           </button>
                         )}
 
                         {/* CASE 6: cancellation_requested */}
                         {booking.status === 'cancellation_requested' && (
                           <div style={{ fontSize: 11, color: C.textMid, fontWeight: 600, textAlign: 'center', background: '#F8FAFC', border: '1px dashed #CBD5E1', borderRadius: 8, padding: '8px 6px' }}>
-                            ⏳ Cancellation Request Pending Review
+                            {t('dd_cancellation_pending') || '⏳ Cancellation Request Pending Review'}
                           </div>
                         )}
 
@@ -1043,12 +1051,12 @@ const DevoteeDashboard = () => {
               <div style={{ display: 'flex', height: 'calc(100vh - 106px)', gap: 16 }}>
                 <div style={{ width: 240, background: '#fff', borderRadius: 14, border: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                   <div style={{ padding: '14px 16px', fontWeight: 700, fontSize: 14, color: C.maroon, borderBottom: `1px solid ${C.border}`, background: C.saffronLt, display: 'flex', alignItems: 'center', gap: 6 }}>
-                    🕉 Recent Chats
+                    🕉 {t('dd_recent_chats') || 'Recent Chats'}
                   </div>
                   <div style={{ flex: 1, overflowY: 'auto' }}>
                     {conversations.length === 0 ? (
                       <div style={{ padding: 20, textAlign: 'center', color: C.textMuted, fontSize: 13, marginTop: 16 }}>
-                        No conversations yet. Find a Pandit to start!
+                        {t('dd_no_conversations') || 'No conversations yet. Find a Pandit to start!'}
                       </div>
                     ) : conversations.map(c => (
                       <div key={c._id} onClick={() => setSelectedChatUser(c)}
@@ -1083,9 +1091,9 @@ const DevoteeDashboard = () => {
             {activeTab === 'payments' && (
               <div style={{ maxWidth: 860, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 28 }}>
                 <div>
-                  <SectionTitle>Active & Unpaid Bookings</SectionTitle>
+                  <SectionTitle>{t('dd_active_unpaid') || 'Active & Unpaid Bookings'}</SectionTitle>
                   {bookings.filter(b => b.status === 'confirmed' && b.paymentStatus === 'pending').length === 0 ? (
-                    <p style={{ color: C.textMuted, fontSize: 14 }}>No pending payments for active bookings.</p>
+                    <p style={{ color: C.textMuted, fontSize: 14 }}>{t('dd_no_pending_payments') || 'No pending payments for active bookings.'}</p>
                   ) : bookings.filter(b => b.status === 'confirmed' && b.paymentStatus === 'pending').map(booking => (
                     <div key={booking._id} style={{ background: C.saffronLt, border: `1.5px solid ${C.saffron}`, borderRadius: 14, padding: '20px 22px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
                       <div>
@@ -1096,25 +1104,25 @@ const DevoteeDashboard = () => {
                         <div style={{ fontSize: 13, color: C.textMid }}>
                           <strong>{booking.pujaType}</strong> · {new Date(booking.scheduledDate || booking.createdAt).toLocaleDateString('en-IN')}
                         </div>
-                        <div style={{ fontSize: 12, color: C.saffron, marginTop: 4, fontWeight: 600 }}>🔒 Payment required to unlock chat</div>
+                        <div style={{ fontSize: 12, color: C.saffron, marginTop: 4, fontWeight: 600 }}>{t('dd_payment_required_chat') || '🔒 Payment required to unlock chat'}</div>
                       </div>
                       <div style={{ textAlign: 'right' }}>
                         <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 24, fontWeight: 900, color: C.maroon, marginBottom: 8 }}>
                           ₹{booking.fee?.toLocaleString() || '1,500'}
                         </div>
                         <button className="dd-btn dd-btn-primary" onClick={() => handlePayment(booking)} disabled={loading}>
-                          {loading ? 'Processing...' : 'Pay Now'}
+                          {loading ? (t('dd_processing') || 'Processing...') : (t('dd_pay_now') || 'Pay Now')}
                         </button>
                       </div>
                     </div>
                   ))}
                 </div>
                 <div>
-                  <SectionTitle>Past Transactions</SectionTitle>
+                  <SectionTitle>{t('dd_past_transactions') || 'Past Transactions'}</SectionTitle>
                   {payments.length === 0 ? (
                     <div style={{ textAlign: 'center', padding: '40px 20px', background: '#fff', borderRadius: 14, border: `1px solid ${C.border}` }}>
                       <div style={{ fontSize: 48, marginBottom: 12 }}>💳</div>
-                      <p style={{ color: C.textMuted, fontSize: 14 }}>No payment history found.</p>
+                      <p style={{ color: C.textMuted, fontSize: 14 }}>{t('dd_no_payment_history') || 'No payment history found.'}</p>
                     </div>
                   ) : payments.map(payment => (
                     <div key={payment._id} style={{ background: '#fff', borderRadius: 12, border: `1px solid ${C.border}`, padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, boxShadow: '0 1px 4px rgba(123,29,14,0.05)' }}>
@@ -1132,7 +1140,7 @@ const DevoteeDashboard = () => {
                           ₹{(payment.amount / 100).toLocaleString()}
                         </div>
                         <div style={{ background: C.successLt, color: C.success, fontSize: 10, fontWeight: 800, padding: '3px 10px', borderRadius: 4, display: 'inline-block', marginTop: 4, letterSpacing: '0.6px' }}>
-                          ✓ SUCCESS
+                          ✓ {t('dd_payment_success') || 'SUCCESS'}
                         </div>
                       </div>
                     </div>

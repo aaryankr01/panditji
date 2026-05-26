@@ -30,31 +30,17 @@ const initialPujas = [
   { _id: 20, name: 'Janmashtami Puja', image: '/pictures/janmashtamipuja.png', rating: 4.9, conducted: 780, isPopular: true, desc: 'Lord Krishna birth celebration.', longDesc: 'Celebrated on the birth anniversary of Lord Krishna, this puja involves midnight prayers, chanting, and offering Makhan Mishri. It fills the home with joy, love, and divine grace.', duration: '2-3 hrs', price: 3100, category: 'Festival' },
 ];
 
-const steps = [
-  { icon: "🌐", title: "Visit PanditJi", desc: "Go to our website to explore puja services and details." },
-  { icon: "📿", title: "Select Your Puja", desc: "Choose the puja you want to perform from our wide list." },
-  { icon: "💳", title: "Advance Booking Payment", desc: "Securely pay in advance to confirm your booking." },
-  { icon: "🖥️", title: "Perform Online Puja", desc: "Join the online puja session from the comfort of your home." },
-];
-
-const advantages = [
-  "Book only verified Pandits for every ritual.",
-  "Experience 100% trust with PanditJi secure booking.",
-  "Get quality services at an affordable price.",
-  "No Hidden Charges – pay only what you see.",
-  "Perform online rituals easily with E-Puja.",
-  "Expert guidance through Astrology services.",
-  "Choose from 180+ Vedic Pujas as you need.",
-  "Follow every custom with complete Hindu Rituals.",
-];
-
 function PujaCard({ puja, onBook, clientType, getCalculatedPrice }) {
   const t = useT();
   const calcPrice = getCalculatedPrice(puja.price);
+  const pujaId = puja._id || puja.id;
+  const displayName = t(`puja_${pujaId}_name`) || puja.name;
+  const displayDesc = t(`puja_${pujaId}_desc`) || puja.desc;
+  
   return (
     <div className="group bg-white rounded-3xl overflow-hidden border border-brandborder shadow-sm hover:shadow-2xl transition-all duration-500 flex flex-col">
       <div className="relative h-48 overflow-hidden shrink-0">
-        <img src={puja.image || '/pictures/rudrabhisek.png'} alt={puja.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+        <img src={puja.image || '/pictures/rudrabhisek.png'} alt={displayName} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
         {puja.isPopular && (
           <div className="absolute top-4 left-4 bg-saffron text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-lg">
@@ -64,7 +50,7 @@ function PujaCard({ puja, onBook, clientType, getCalculatedPrice }) {
       </div>
       <div className="p-6 flex flex-col flex-1">
         <h3 className="text-xl font-bold font-serif text-maroon mb-1 group-hover:text-saffron transition-colors">
-          {puja.name}
+          {displayName}
         </h3>
 
         <div className="flex items-center justify-between mb-3">
@@ -87,7 +73,7 @@ function PujaCard({ puja, onBook, clientType, getCalculatedPrice }) {
           {clientType === "international" ? t('ep_intl_rate_card') : t('ep_dom_rate_card')}
         </div>
 
-        <p className="text-textMid text-xs mb-6 line-clamp-2 flex-1">{puja.desc || 'Perform this auspicious puja with our expert Pandits.'}</p>
+        <p className="text-textMid text-xs mb-6 line-clamp-2 flex-1">{displayDesc || 'Perform this auspicious puja with our expert Pandits.'}</p>
 
         <div className="flex gap-3 mt-auto">
           <button
@@ -110,7 +96,7 @@ export default function EPujaPage() {
   const [pujas, setPujas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [activeCategory, setActiveCategory] = useState(t('bap_cat_all'));
+  const [activeCategoryIndex, setActiveCategoryIndex] = useState(0);
   const [bookedPuja, setBookedPuja] = useState(null);
   const [heroSlide, setHeroSlide] = useState(0);
 
@@ -132,8 +118,26 @@ export default function EPujaPage() {
   const navigate = useNavigate();
 
   const heroSlides = [
-    { title: t('ep_hero_title1'), subtitle: t('ep_hero_sub'), desc: t('ep_hero_desc1'), hindi: "सुख, शांति और समृद्धि के लिए पावन पूजा" },
-    { title: t('ep_hero_title2'), subtitle: t('ep_hero_sub'), desc: t('ep_hero_desc2'), hindi: "ग्रह दोषों से मुक्ति के लिए ऑनलाइन पूजा" },
+    { title: t('ep_hero_title1'), subtitle: t('ep_hero_sub'), desc: t('ep_hero_desc1'), hindi: t('ep_hero_hindi1') || "सुख, शांति और समृद्धि के लिए पावन पूजा" },
+    { title: t('ep_hero_title2'), subtitle: t('ep_hero_sub'), desc: t('ep_hero_desc2'), hindi: t('ep_hero_hindi2') || "ग्रह दोषों से मुक्ति के लिए ऑनलाइन पूजा" },
+  ];
+
+  const steps = [
+    { icon: "🌐", title: t('ep_step1_title') || "Visit PanditJi", desc: t('ep_step1_desc') || "Go to our website to explore puja services and details." },
+    { icon: "📿", title: t('ep_step2_title') || "Select Your Puja", desc: t('ep_step2_desc') || "Choose the puja you want to perform from our wide list." },
+    { icon: "💳", title: t('ep_step3_title') || "Advance Booking Payment", desc: t('ep_step3_desc') || "Securely pay in advance to confirm your booking." },
+    { icon: "🖥️", title: t('ep_step4_title') || "Perform Online Puja", desc: t('ep_step4_desc') || "Join the online puja session from the comfort of your home." },
+  ];
+
+  const advantages = [
+    t('ep_adv1') || "Book only verified Pandits for every ritual.",
+    t('ep_adv2') || "Experience 100% trust with PanditJi secure booking.",
+    t('ep_adv3') || "Get quality services at an affordable price.",
+    t('ep_adv4') || "No Hidden Charges – pay only what you see.",
+    t('ep_adv5') || "Perform online rituals easily with E-Puja.",
+    t('ep_adv6') || "Expert guidance through Astrology services.",
+    t('ep_adv7') || "Choose from 180+ Vedic Pujas as you need.",
+    t('ep_adv8') || "Follow every custom with complete Hindu Rituals.",
   ];
 
   // Pricing engine
@@ -225,20 +229,10 @@ export default function EPujaPage() {
   }, []);
 
   const filtered = pujas.filter(p => {
-    // Determine english category for filtering data
-    const catMap = {
-      [t('bap_cat_all')]: 'All',
-      [t('bap_cat_home')]: 'Home',
-      [t('bap_cat_wedding')]: 'Wedding',
-      [t('bap_cat_devotional')]: 'Devotional',
-      [t('bap_cat_festival')]: 'Festival',
-      [t('bap_cat_ritual')]: 'Ritual',
-      [t('bap_cat_remedial')]: 'Remedial',
-      [t('bap_cat_life_events')]: 'Life Events',
-    };
-    const englishCategory = catMap[activeCategory] || 'All';
+    const englishCategory = ['All', 'Home', 'Wedding', 'Devotional', 'Festival', 'Ritual', 'Remedial', 'Life Events'][activeCategoryIndex] || 'All';
     const matchCat = englishCategory === "All" || p.category === englishCategory;
-    const matchSearch = p.name.toLowerCase().includes(search.toLowerCase());
+    const localizedName = t(`puja_${p._id || p.id}_name`) || p.name;
+    const matchSearch = localizedName.toLowerCase().includes(search.toLowerCase()) || p.name.toLowerCase().includes(search.toLowerCase());
     return matchCat && matchSearch;
   });
 
@@ -502,7 +496,7 @@ export default function EPujaPage() {
         }}>
           <div style={{ fontWeight: 700, marginBottom: 4 }}>🎉 {t('ep_booking_req')}</div>
           <div style={{ color: "#d1d5db" }}>
-            {bookedPuja.puja.name} {bookedPuja.date ? `on ${bookedPuja.date}` : ""}
+            {t(`puja_${bookedPuja.puja._id || bookedPuja.puja.id}_name`) || bookedPuja.puja.name} {bookedPuja.date ? `${t('ep_on') || 'on'} ${bookedPuja.date}` : ""}
           </div>
         </div>
       )}
@@ -564,7 +558,7 @@ export default function EPujaPage() {
                 {t('ep_book_epuja')}
               </h3>
               <p style={{ margin: "4px 0 0", fontSize: 14, color: "rgba(255, 255, 255, 0.8)", fontWeight: 500 }}>
-                {selectedPujaForBooking.name}
+                {t(`puja_${selectedPujaForBooking._id || selectedPujaForBooking.id}_name`) || selectedPujaForBooking.name}
               </p>
             </div>
 
@@ -823,9 +817,9 @@ export default function EPujaPage() {
             <p style={{ color: "#fed7aa", fontSize: 18, margin: "8px 0 6px" }}>{heroSlides[heroSlide].desc}</p>
             <p style={{ color: "#fca5a5", fontSize: 16, margin: "0 0 24px" }}>{heroSlides[heroSlide].hindi}</p>
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
-              <div style={{ color: "#fef3c7", fontSize: 14 }}>🤲 Online Puja</div>
+              <div style={{ color: "#fef3c7", fontSize: 14 }}>🤲 {t('ep_badge_online') || 'Online Puja'}</div>
               <div style={{ color: "#fef3c7", opacity: 0.5 }}>|</div>
-              <div style={{ color: "#fef3c7", fontSize: 14 }}>✅ Trusted Pandits</div>
+              <div style={{ color: "#fef3c7", fontSize: 14 }}>✅ {t('ep_badge_trusted') || 'Trusted Pandits'}</div>
             </div>
             <button
               onClick={() => document.getElementById("puja-listings").scrollIntoView({ behavior: "smooth" })}
@@ -847,7 +841,7 @@ export default function EPujaPage() {
               onMouseEnter={e => e.currentTarget.style.opacity = "0.9"}
               onMouseLeave={e => e.currentTarget.style.opacity = "1"}
             >
-              Book E-Puja »
+              {t('ep_book_now') || 'Book Now'} »
             </button>
           </div>
         </div>
@@ -879,10 +873,10 @@ export default function EPujaPage() {
         {/* Section header */}
         <div style={{ textAlign: "center", marginBottom: 32 }}>
           <h2 style={{ fontSize: 32, fontWeight: 900, color: "#111827", margin: "0 0 8px" }}>
-            Online E-Puja Services
+            {t('ep_online_services') || 'Online E-Puja Services'}
           </h2>
           <p style={{ color: "#6b7280", fontSize: 16, margin: 0 }}>
-            Perform authentic Vedic rituals from the comfort of your home
+            {t('ep_online_services_desc') || 'Perform authentic Vedic rituals from the comfort of your home'}
           </p>
         </div>
 
@@ -893,7 +887,7 @@ export default function EPujaPage() {
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="Search by Puja name or category..."
+              placeholder={t('ep_search_placeholder') || 'Search by Puja name or category...'}
               style={{
                 width: "100%",
                 padding: "12px 16px 12px 42px",
@@ -910,11 +904,11 @@ export default function EPujaPage() {
 
         {/* Category pills */}
         <div style={{ display: "flex", gap: 8, marginBottom: 32, flexWrap: "wrap", justifyContent: "center" }}>
-          {categories.map(cat => (
+          {categories.map((cat, idx) => (
             <button
               key={cat}
-              onClick={() => setActiveCategory(cat)}
-              className={`px-5 py-2.5 rounded-full text-sm font-bold transition-all ${activeCategory === cat ? 'bg-saffron text-white shadow-lg' : 'bg-white border border-brandborder text-textMid hover:border-saffron hover:text-saffron'}`}
+              onClick={() => setActiveCategoryIndex(idx)}
+              className={`px-5 py-2.5 rounded-full text-sm font-bold transition-all ${activeCategoryIndex === idx ? 'bg-saffron text-white shadow-lg' : 'bg-white border border-brandborder text-textMid hover:border-saffron hover:text-saffron'}`}
             >
               {cat}
             </button>
@@ -923,13 +917,13 @@ export default function EPujaPage() {
 
         {/* Results count */}
         <div style={{ marginBottom: 20, color: "#6b7280", fontSize: 14 }}>
-          Showing <strong style={{ color: "#111827" }}>{filtered.length}</strong> puja services
+          {t('ep_showing') || 'Showing'} <strong style={{ color: "#111827" }}>{filtered.length}</strong> {t('ep_showing_end') || 'puja services'}
         </div>
 
         {/* Loading state / skeletons */}
         {loading ? (
           <div style={{ display: "flex", justifyContent: "center", padding: 60 }}>
-            <div style={{ fontSize: 16, fontWeight: 700, color: "#ea580c" }}>Loading divine E-Puja services...</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: "#ea580c" }}>{t('ep_loading_pujas') || 'Loading divine E-Puja services...'}</div>
           </div>
         ) : (
           <div style={{
@@ -947,17 +941,16 @@ export default function EPujaPage() {
         {!loading && filtered.length === 0 && (
           <div style={{ textAlign: "center", padding: "60px 0", color: "#9ca3af" }}>
             <div style={{ fontSize: 48, marginBottom: 12 }}>🔍</div>
-            <div style={{ fontSize: 18, fontWeight: 600 }}>No pujas found</div>
-            <div>Try a different search term or category</div>
+            <div style={{ fontSize: 18, fontWeight: 600 }}>{t('ep_no_pujas_found') || 'No pujas found'}</div>
+            <div>{t('ep_no_pujas_found_sub') || 'Try a different search term or category'}</div>
           </div>
         )}
 
         {/* How it works */}
         <div style={{ textAlign: "center", marginBottom: 48 }}>
-          <h2 style={{ fontSize: 28, fontWeight: 900, color: "#111827", margin: "0 0 8px" }}>Why E-Puja?</h2>
+          <h2 style={{ fontSize: 28, fontWeight: 900, color: "#111827", margin: "0 0 8px" }}>{t('ep_why_title') || 'Why E-Puja?'}</h2>
           <p style={{ color: "#6b7280", maxWidth: 700, margin: "0 auto 40px", lineHeight: 1.6 }}>
-            Are you out of the country or not present physically? Our e-puja service makes it possible
-            to perform your puja virtually anywhere through WhatsApp, Google Meet, or Zoom.
+            {t('ep_why_desc') || 'Are you out of the country or not present physically? Our e-puja service makes it possible to perform your puja virtually anywhere through WhatsApp, Google Meet, or Zoom.'}
           </p>
 
           <div style={{
@@ -1018,7 +1011,7 @@ export default function EPujaPage() {
           marginBottom: 60,
         }}>
           <h2 style={{ textAlign: "center", fontSize: 28, fontWeight: 900, color: "#111827", margin: "0 0 32px" }}>
-            PanditJi Advantages
+            {t('ep_advantages_title') || 'PanditJi Advantages'}
           </h2>
           <div style={{
             display: "grid",
