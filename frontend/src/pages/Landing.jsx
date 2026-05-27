@@ -54,7 +54,7 @@ const Landing = () => {
         <div className="panel-content">
           <div className="brand-badge">
             <span>🪔</span>
-            <span>PanditJi</span>
+            <span>पंडितजी</span>
           </div>
 
           <h1 className="panel-title">
@@ -97,8 +97,8 @@ const Landing = () => {
       {/* RIGHT PANEL */}
       <div className="right-panel">
         <div className="form-header">
-          <h2>{currentTab === 'login' ? 'Welcome Back 🙏' : 'Join PanditJi 🕉️'}</h2>
-          <p>{currentTab === 'login' ? 'Sign in to your PanditJi account' : 'Create your free account today'}</p>
+          <h2>{currentTab === 'login' ? 'Welcome Back 🙏' : 'Join पंडितजी 🕉️'}</h2>
+          <p>{currentTab === 'login' ? 'Sign in to your पंडितजी account' : 'Create your free account today'}</p>
         </div>
 
         {/* Tab Switcher */}
@@ -138,7 +138,7 @@ const Landing = () => {
 
             {error && <div style={{ color: 'red', fontSize: '12px' }}>{error}</div>}
 
-            <button className="btn-primary" type="submit">Login to PanditJi 🪔</button>
+            <button className="btn-primary" type="submit">Login to पंडितजी 🪔</button>
             <div className="divider">or continue with</div>
             <button type="button" className="btn-google">
               <svg width="18" height="18" viewBox="0 0 48 48">

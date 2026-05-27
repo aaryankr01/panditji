@@ -27,7 +27,7 @@ const sendOtpEmail = async (email, otp, purpose) => {
   }
 
   const senderEmail = process.env.BREVO_SENDER_EMAIL;
-  const senderName = process.env.BREVO_SENDER_NAME || "PanditJi Services";
+  const senderName = process.env.BREVO_SENDER_NAME || "पंडितजी Services";
 
   if (!senderEmail) {
     throw new Error("BREVO_SENDER_EMAIL is not set in .env");
@@ -43,7 +43,7 @@ const sendOtpEmail = async (email, otp, purpose) => {
     htmlContent: `
       <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px; border: 1px solid #EAD9CC; border-radius: 12px; background-color: #FAF7F2; color: #7B1D0E;">
         <div style="text-align: center; margin-bottom: 24px;">
-          <h1 style="color: #7B1D0E; font-size: 24px; margin: 0; font-family: Georgia, serif;">PanditJi</h1>
+          <h1 style="color: #7B1D0E; font-size: 24px; margin: 0; font-family: Georgia, serif;">पंडितजी</h1>
           <p style="color: #E8710A; font-size: 14px; margin: 4px 0 0; font-weight: bold; letter-spacing: 0.05em;">SACRED RITUALS & SERVICES</p>
         </div>
         <div style="background-color: #FFFFFF; padding: 24px; border-radius: 8px; border: 1px solid #EAD9CC; box-shadow: 0 4px 12px rgba(123, 29, 14, 0.02);">
@@ -61,7 +61,7 @@ const sendOtpEmail = async (email, otp, purpose) => {
           </p>
         </div>
         <div style="text-align: center; margin-top: 20px; font-size: 11px; color: #A0A0A0;">
-          OTP powered by Brevo · Secure verification for PanditJi Accounts
+          OTP powered by Brevo · Secure verification for पंडितजी Accounts
         </div>
       </div>
     `

@@ -6,8 +6,10 @@ import Loader from '../components/common/Loader';
 import PanditCard from '../components/pandit/PanditCard';
 import PanditFilter from '../components/pandit/PanditFilter';
 import { Search } from 'lucide-react';
+import useT from '../hooks/useT';
 
 const PujaList = () => {
+  const t = useT();
   const [pandits, setPandits] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -60,8 +62,8 @@ const PujaList = () => {
       <div className="bg-maroon text-white py-12 px-4 sm:px-6 lg:px-8 border-b-8 border-saffron relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-saffron opacity-10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
         <div className="max-w-7xl mx-auto text-center relative z-10">
-          <h1 className="text-4xl font-bold font-serif mb-4">Find the Perfect Pandit</h1>
-          <p className="text-maroon-light max-w-2xl mx-auto">Browse our curated list of highly experienced, verified Pandits available for all your spiritual needs.</p>
+          <h1 className="text-4xl font-bold font-serif mb-4">{t('pandit_list_title')}</h1>
+          <p className="text-maroon-light max-w-2xl mx-auto">{t('pandit_list_subtitle')}</p>
         </div>
       </div>
 
@@ -84,8 +86,8 @@ const PujaList = () => {
           )}
 
           <div className="mb-6 flex justify-between items-end border-b border-brandborder pb-4">
-            <h2 className="text-2xl font-bold font-serif text-maroon">Available Pandits</h2>
-            <span className="text-textMid text-sm font-bold">{filteredPandits.length} results</span>
+            <h2 className="text-2xl font-bold font-serif text-maroon">{t('pandit_list_available')}</h2>
+            <span className="text-textMid text-sm font-bold">{filteredPandits.length} {t('pandit_list_results')}</span>
           </div>
 
           {loading ? (
@@ -93,8 +95,8 @@ const PujaList = () => {
           ) : filteredPandits.length === 0 ? (
             <div className="bg-white rounded-3xl p-12 text-center border border-brandborder shadow-sm">
               <Search size={48} className="text-textMuted mx-auto mb-4 opacity-50" />
-              <h3 className="text-xl font-bold text-maroon mb-2">No Pandits Found</h3>
-              <p className="text-textMid">Try adjusting your filters or search query.</p>
+              <h3 className="text-xl font-bold text-maroon mb-2">{t('pandit_list_no_found')}</h3>
+              <p className="text-textMid">{t('pandit_list_try_adjusting')}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

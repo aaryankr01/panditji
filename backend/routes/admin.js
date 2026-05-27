@@ -1,5 +1,5 @@
 const express = require('express');
-const { getUsers, getConversation, getStats, getAllBookings, getAllPayments, approvePandit, rejectPandit, approveCancellation, rejectCancellation } = require('../controllers/adminController');
+const { getUsers, getConversation, getStats, getAllBookings, getAllPayments, approvePandit, rejectPandit, approveCancellation, rejectCancellation, broadcastNotification } = require('../controllers/adminController');
 const { getAllTickets, updateTicket, deleteTicket } = require('../controllers/supportController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
@@ -7,6 +7,8 @@ const router = express.Router();
 
 router.use(protect);
 router.use(authorize('admin'));
+
+router.post('/broadcast', broadcastNotification);
 
 router.get('/users', getUsers);
 router.get('/stats', getStats);

@@ -22,7 +22,7 @@ export const BrandWordmark = ({ logoSize = 32, textClass = 'text-xl' }) => (
   <div className="flex items-center gap-2.5">
     <BrandLogo size={logoSize} />
     <div className="leading-tight">
-      <span className={`font-serif font-black text-maroon tracking-tight ${textClass}`}>Pandit<span className="text-saffron">Ji</span></span>
+      <span className={`font-serif font-black text-maroon tracking-tight ${textClass}`}>पंडित<span className="text-saffron">जी</span></span>
     </div>
   </div>
 );

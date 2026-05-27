@@ -30,6 +30,12 @@ const initSocket = (io) => {
         }
       }
 
+      // All devotees join a shared room for targeted broadcast
+      if (role === 'devotee') {
+        socket.join('all_devotees');
+        console.log(`📡 Socket: Devotee ${uId} joined all_devotees room`);
+      }
+
       io.emit('activeUsers', Array.from(activeUsers.keys()));
     });
 

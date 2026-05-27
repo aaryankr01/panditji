@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../../store/useAuthStore';
 import axios from 'axios';
-import { Users, MessageSquare, LayoutDashboard, LogOut, Headphones, RefreshCw, Inbox, CheckCircle, Clock, XCircle, Send, Trash2, Eye } from 'lucide-react';
+import { Users, MessageSquare, LayoutDashboard, LogOut, Headphones, RefreshCw, Inbox, CheckCircle, Clock, XCircle, Send, Trash2, Eye, Megaphone } from 'lucide-react';
 
 const AdminDashboard = () => {
   const { user, token, logout } = useAuthStore();
@@ -20,6 +20,11 @@ const AdminDashboard = () => {
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [replyText, setReplyText] = useState('');
   const [replyLoading, setReplyLoading] = useState(false);
+  const [broadcastTitle, setBroadcastTitle] = useState('');
+  const [broadcastMessage, setBroadcastMessage] = useState('');
+  const [broadcastLoading, setBroadcastLoading] = useState(false);
+  const [broadcastTarget, setBroadcastTarget] = useState('all');
+  const [broadcastHistory, setBroadcastHistory] = useState([]);
 
   useEffect(() => {
     if (!token || user?.role !== 'admin') {
@@ -73,6 +78,31 @@ const AdminDashboard = () => {
   const handleLogout = () => {
     logout();
     navigate('/admin/login');
+  };
+
+  const handleSendBroadcast = async () => {
+    if (!broadcastTitle.trim() || !broadcastMessage.trim()) return;
+    setBroadcastLoading(true);
+    try {
+      await axios.post('http://localhost:5000/api/admin/broadcast', {
+        title: broadcastTitle,
+        message: broadcastMessage,
+        target: broadcastTarget
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setBroadcastHistory(prev => [
+        { title: broadcastTitle, message: broadcastMessage, target: broadcastTarget, date: new Date().toISOString() },
+        ...prev
+      ]);
+      setBroadcastTitle('');
+      setBroadcastMessage('');
+      setBroadcastTarget('all');
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to send broadcast');
+    } finally {
+      setBroadcastLoading(false);
+    }
   };
 
   const handleReply = async (ticketId) => {
@@ -235,6 +265,13 @@ const AdminDashboard = () => {
               </span>
             )}
           </button>
+          <button
+            onClick={() => setActiveTab('broadcast')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'broadcast' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
+          >
+            <Megaphone size={20} />
+            Broadcast
+          </button>
         </nav>
         <div className="p-4 border-t border-gray-800">
           <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-xl transition-colors">
@@ -252,6 +289,7 @@ const AdminDashboard = () => {
             {activeTab === 'users' && 'Manage Users'}
             {activeTab === 'financials' && 'Financial Records'}
             {activeTab === 'support' && 'Support Tickets'}
+            {activeTab === 'broadcast' && '📢 Broadcast Notifications'}
           </h2>
           {activeTab === 'users' && (
             <div className="flex gap-3 flex-wrap">
@@ -735,6 +773,129 @@ const AdminDashboard = () => {
                     </div>
                   </div>
                 </>
+              )}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'broadcast' && (
+          <div className="space-y-6">
+            {/* Broadcast Form */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="bg-gradient-to-r from-red-500 to-orange-500 p-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                    <Megaphone size={24} className="text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-white">Send Broadcast Notification</h3>
+                    <p className="text-white/80 text-sm">This will instantly notify all active devotees and pandits</p>
+                  </div>
+                </div>
+              </div>
+              <div className="p-6 space-y-4">
+                {/* Target Audience Selector */}
+                <div>
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 block">Target Audience</label>
+                  <div className="flex gap-2">
+                    {[
+                      { value: 'all', label: '👥 All Users', color: 'bg-gray-900 text-white', inactive: 'bg-gray-100 text-gray-600 hover:bg-gray-200' },
+                      { value: 'pandit', label: '🙏 Pandits Only', color: 'bg-orange-600 text-white', inactive: 'bg-orange-50 text-orange-600 hover:bg-orange-100' },
+                      { value: 'devotee', label: '🙏🏻 Devotees Only', color: 'bg-blue-600 text-white', inactive: 'bg-blue-50 text-blue-600 hover:bg-blue-100' },
+                    ].map(opt => (
+                      <button
+                        key={opt.value}
+                        onClick={() => setBroadcastTarget(opt.value)}
+                        className={`px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${broadcastTarget === opt.value ? opt.color + ' shadow-md scale-105' : opt.inactive}`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Notification Title</label>
+                  <input
+                    type="text"
+                    value={broadcastTitle}
+                    onChange={e => setBroadcastTitle(e.target.value)}
+                    placeholder="e.g. Platform Update, Festival Announcement..."
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-400 outline-none"
+                    maxLength={100}
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Message</label>
+                  <textarea
+                    rows={4}
+                    value={broadcastMessage}
+                    onChange={e => setBroadcastMessage(e.target.value)}
+                    placeholder="Write your announcement message here..."
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-400 outline-none resize-none"
+                    maxLength={500}
+                  />
+                  <p className="text-xs text-gray-400 mt-1 text-right">{broadcastMessage.length}/500</p>
+                </div>
+                <div className="flex items-center justify-between pt-2">
+                  <div className="flex items-center gap-2 text-xs text-gray-400">
+                    <span className="inline-block w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+                    Sends to {broadcastTarget === 'all' ? 'all connected users' : broadcastTarget === 'pandit' ? 'pandits only' : 'devotees only'} in real-time
+                  </div>
+                  <button
+                    onClick={handleSendBroadcast}
+                    disabled={broadcastLoading || !broadcastTitle.trim() || !broadcastMessage.trim()}
+                    className="flex items-center gap-2 px-6 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                  >
+                    {broadcastLoading ? (
+                      <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Megaphone size={16} />
+                    )}
+                    {broadcastLoading ? 'Broadcasting...' : 'Send Broadcast'}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Broadcast History */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+                <h3 className="text-lg font-bold text-gray-800">Broadcast History</h3>
+                <span className="text-sm text-gray-400">{broadcastHistory.length} sent this session</span>
+              </div>
+              {broadcastHistory.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 text-center">
+                  <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                    <Megaphone size={28} className="text-gray-300" />
+                  </div>
+                  <p className="text-gray-400 font-medium">No broadcasts sent yet</p>
+                  <p className="text-gray-300 text-sm mt-1">Your sent announcements will appear here</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-gray-50">
+                  {broadcastHistory.map((b, i) => (
+                    <div key={i} className="p-5 hover:bg-gray-50/50 transition-colors">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-red-500">📢</span>
+                            <h4 className="font-bold text-gray-800 text-sm">{b.title}</h4>
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                              b.target === 'pandit' ? 'bg-orange-100 text-orange-700' : b.target === 'devotee' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'
+                            }`}>
+                              {b.target === 'pandit' ? 'Pandits' : b.target === 'devotee' ? 'Devotees' : 'Everyone'}
+                            </span>
+                          </div>
+                          <p className="text-gray-600 text-sm leading-relaxed">{b.message}</p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p className="text-xs text-gray-400">{new Date(b.date).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</p>
+                          <p className="text-xs text-gray-300">{new Date(b.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
           </div>

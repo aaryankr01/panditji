@@ -4,6 +4,7 @@ import {
   MessageCircle, X, Phone, Mail, ExternalLink,
   Calendar, CreditCard, User, Zap, ChevronDown, ChevronUp
 } from 'lucide-react';
+import useT from '../../hooks/useT';
 
 /* ─── Shared Tokens ─── */
 const C = {
@@ -19,41 +20,6 @@ const C = {
   purple: '#5B2D8E',
   purpleLt: '#F3EEFF',
 };
-
-const faqs = [
-  {
-    category: 'Booking',
-    icon: Calendar,
-    color: 'orange',
-    questions: [
-      { q: 'How do I book a Pandit?', a: 'Go to the "Find Pandit" tab, browse available Pandits, and click "Book Now".' },
-      { q: 'What if no Pandit is available?', a: 'We will show you trusted Pandits from nearby cities.' },
-    ]
-  },
-  {
-    category: 'Payments',
-    icon: CreditCard,
-    color: 'green',
-    questions: [
-      { q: 'When do I pay?', a: 'Payment is made after a Pandit accepts your booking.' },
-      { q: 'What payment methods are supported?', a: 'We support UPI, Credit/Debit Cards, Net Banking, and Wallets.' },
-    ]
-  },
-  {
-    category: 'Technical',
-    icon: Zap,
-    color: 'purple',
-    questions: [
-      { q: 'Chat is not working?', a: 'Ensure payment is completed for the booking — chat is locked until payment.' },
-    ]
-  },
-];
-
-const contactChannels = [
-  { icon: Mail, label: 'Email', value: 'support@panditji.com', href: 'mailto:support@panditji.com', bg: C.saffronLt, text: C.saffron },
-  { icon: Phone, label: 'Call', value: '+91 98765 43210', href: 'tel:+919876543210', bg: C.successLt, text: C.success },
-  { icon: MessageCircle, label: 'WhatsApp', value: 'Chat Now', href: 'https://wa.me/919876543210', bg: C.purpleLt, text: C.purple },
-];
 
 const FAQItem = ({ question, answer }) => {
   const [open, setOpen] = useState(false);
@@ -76,9 +42,45 @@ const FAQItem = ({ question, answer }) => {
 };
 
 const FloatingSupport = () => {
+  const t = useT();
   const [isOpen, setIsOpen] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
   const location = useLocation();
+
+  const contactChannels = [
+    { icon: Mail, label: t('fs_email_label') || 'Email', value: 'support@panditji.com', href: 'mailto:support@panditji.com', bg: C.saffronLt, text: C.saffron },
+    { icon: Phone, label: t('fs_call_label') || 'Call', value: '+91 98765 43210', href: 'tel:+919876543210', bg: C.successLt, text: C.success },
+    { icon: MessageCircle, label: t('fs_whatsapp_label') || 'WhatsApp', value: t('fs_whatsapp_value') || 'Chat Now', href: 'https://wa.me/919876543210', bg: C.purpleLt, text: C.purple },
+  ];
+
+  const faqs = [
+    {
+      category: t('fs_cat_booking') || 'Booking',
+      icon: Calendar,
+      color: 'orange',
+      questions: [
+        { q: t('fs_faq_book_q1') || 'How do I book a Pandit?', a: t('fs_faq_book_a1') || 'Go to the "Find Pandit" tab, browse available Pandits, and click "Book Now".' },
+        { q: t('fs_faq_book_q2') || 'What if no Pandit is available?', a: t('fs_faq_book_a2') || 'We will show you trusted Pandits from nearby cities.' },
+      ]
+    },
+    {
+      category: t('fs_cat_payments') || 'Payments',
+      icon: CreditCard,
+      color: 'green',
+      questions: [
+        { q: t('fs_faq_pay_q1') || 'When do I pay?', a: t('fs_faq_pay_a1') || 'Payment is made after a Pandit accepts your booking.' },
+        { q: t('fs_faq_pay_q2') || 'What payment methods are supported?', a: t('fs_faq_pay_a2') || 'We support UPI, Credit/Debit Cards, Net Banking, and Wallets.' },
+      ]
+    },
+    {
+      category: t('fs_cat_technical') || 'Technical',
+      icon: Zap,
+      color: 'purple',
+      questions: [
+        { q: t('fs_faq_tech_q1') || 'Chat is not working?', a: t('fs_faq_tech_a1') || 'Ensure payment is completed for the booking — chat is locked until payment.' },
+      ]
+    },
+  ];
 
   // Hide on dashboard and admin routes where full support is available
   const hiddenRoutes = ['/devotee-dashboard', '/pandit-dashboard', '/admin'];
@@ -101,7 +103,7 @@ const FloatingSupport = () => {
       {/* Tooltip */}
       {showTooltip && !isOpen && (
         <div className="bg-white text-maroon font-bold text-sm px-4 py-2 rounded-2xl shadow-lg border border-brandborder mb-3 mr-2 animate-bounce flex items-center gap-2">
-          Need Help?
+          {t('fs_need_help') || 'Need Help?'}
           <button onClick={() => setShowTooltip(false)} className="text-textMuted hover:text-maroon ml-1">
             <X size={14} />
           </button>
@@ -117,8 +119,8 @@ const FloatingSupport = () => {
             <div className="absolute top-0 right-0 w-32 h-32 bg-saffron opacity-20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
             <div className="flex justify-between items-start relative z-10">
               <div>
-                <h3 className="text-white font-bold font-serif text-2xl mb-1">Live Support</h3>
-                <p className="text-white/80 text-sm">We typically reply in minutes</p>
+                <h3 className="text-white font-bold font-serif text-2xl mb-1">{t('fs_live_support') || 'Live Support'}</h3>
+                <p className="text-white/80 text-sm">{t('fs_reply_time') || 'We typically reply in minutes'}</p>
               </div>
               <button 
                 onClick={() => setIsOpen(false)}
@@ -134,7 +136,7 @@ const FloatingSupport = () => {
             
             {/* Quick Contact Options */}
             <div className="mb-6">
-              <p className="text-xs font-bold text-textMuted uppercase tracking-wider mb-3">Contact Us Directly</p>
+              <p className="text-xs font-bold text-textMuted uppercase tracking-wider mb-3">{t('fs_contact_directly') || 'Contact Us Directly'}</p>
               <div className="flex flex-col gap-2">
                 {contactChannels.map(({ icon: Icon, label, value, href, bg, text }) => (
                   <a 
@@ -159,7 +161,7 @@ const FloatingSupport = () => {
 
             {/* FAQs */}
             <div>
-              <p className="text-xs font-bold text-textMuted uppercase tracking-wider mb-3">Common Questions</p>
+              <p className="text-xs font-bold text-textMuted uppercase tracking-wider mb-3">{t('fs_common_questions') || 'Common Questions'}</p>
               {faqs.map(({ category, icon: Icon, questions }) => (
                 <div key={category} className="mb-4">
                   <div className="flex items-center gap-2 mb-2">

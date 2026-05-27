@@ -262,3 +262,37 @@ exports.rejectCancellation = async (req, res, next) => {
     next(err);
   }
 };
+
+// @desc    Broadcast a notification to targeted users (all, pandit, devotee)
+// @route   POST /api/admin/broadcast
+// @access  Private/Admin
+exports.broadcastNotification = async (req, res, next) => {
+  try {
+    const { title, message, target } = req.body;
+
+    if (!title || !message) {
+      return res.status(400).json({ success: false, message: 'Title and message are required' });
+    }
+
+    const audience = target || 'all'; // default to all
+    const payload = { title, message, target: audience, createdAt: new Date() };
+
+    if (global.io) {
+      if (audience === 'pandit') {
+        global.io.to('all_pandits').emit('adminBroadcast', payload);
+        console.log(`📢 Broadcasted to PANDITS: "${title}"`);
+      } else if (audience === 'devotee') {
+        global.io.to('all_devotees').emit('adminBroadcast', payload);
+        console.log(`📢 Broadcasted to DEVOTEES: "${title}"`);
+      } else {
+        global.io.emit('adminBroadcast', payload);
+        console.log(`📢 Broadcasted to ALL: "${title}"`);
+      }
+    }
+
+    const targetLabel = audience === 'all' ? 'everyone' : `${audience}s`;
+    res.status(200).json({ success: true, message: `Notification broadcasted to ${targetLabel} successfully` });
+  } catch (err) {
+    next(err);
+  }
+};

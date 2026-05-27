@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { Search, Filter, MapPin, Navigation } from 'lucide-react';
+import useT from '../../hooks/useT';
 
 const PanditFilter = ({ onSearch, onFilterChange, onLocationRequest }) => {
+  const t = useT();
   const [isLocating, setIsLocating] = useState(false);
 
   const handleGeolocation = () => {
@@ -27,16 +29,16 @@ const PanditFilter = ({ onSearch, onFilterChange, onLocationRequest }) => {
   return (
     <div className="bg-white p-6 rounded-[32px] border border-brandborder shadow-sm sticky top-24">
       <div className="flex items-center gap-2 mb-6 text-maroon font-bold text-lg font-serif">
-        <Filter size={20} className="text-saffron" /> Filters
+        <Filter size={20} className="text-saffron" /> {t('filter_title')}
       </div>
       
       <div className="space-y-6">
         <div>
-          <label className="block text-sm font-bold text-textMid mb-2">Search Name</label>
+          <label className="block text-sm font-bold text-textMid mb-2">{t('filter_search_name')}</label>
           <div className="relative">
             <input 
               type="text" 
-              placeholder="Search pandits..." 
+              placeholder={t('filter_search_placeholder')}
               onChange={(e) => onSearch(e.target.value)}
               className="w-full pl-10 pr-4 py-3 rounded-xl border border-brandborder focus:ring-2 focus:ring-saffron outline-none bg-surface text-maroon font-medium"
             />
@@ -45,7 +47,7 @@ const PanditFilter = ({ onSearch, onFilterChange, onLocationRequest }) => {
         </div>
 
         <div>
-          <label className="block text-sm font-bold text-textMid mb-2">Location</label>
+          <label className="block text-sm font-bold text-textMid mb-2">{t('filter_location')}</label>
           
           <button 
             onClick={handleGeolocation}
@@ -57,7 +59,7 @@ const PanditFilter = ({ onSearch, onFilterChange, onLocationRequest }) => {
             ) : (
               <Navigation size={16} />
             )}
-            {isLocating ? 'Locating...' : 'Use My Location'}
+            {isLocating ? t('filter_locating') : t('filter_use_my_location')}
           </button>
 
           <div className="relative">
@@ -65,7 +67,7 @@ const PanditFilter = ({ onSearch, onFilterChange, onLocationRequest }) => {
               onChange={(e) => onFilterChange('location', e.target.value)}
               className="w-full pl-10 pr-4 py-3 rounded-xl border border-brandborder focus:ring-2 focus:ring-saffron outline-none appearance-none bg-surface text-maroon font-medium"
             >
-              <option value="">All Locations</option>
+              <option value="">{t('filter_all_locations')}</option>
               <option value="Varanasi">Varanasi</option>
               <option value="Delhi">Delhi</option>
               <option value="Mumbai">Mumbai</option>

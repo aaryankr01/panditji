@@ -13,6 +13,31 @@ const translations = {
     nav_sign_out: 'Sign out',
     nav_language: 'English',
 
+    // Find Pandit Page
+    pandit_list_title: 'Find the Perfect Pandit',
+    pandit_list_subtitle: 'Browse our curated list of highly experienced, verified Pandits available for all your spiritual needs.',
+    pandit_list_available: 'Available Pandits',
+    pandit_list_results: 'results',
+    pandit_list_no_found: 'No Pandits Found',
+    pandit_list_try_adjusting: 'Try adjusting your filters or search query.',
+
+    // Pandit Filter
+    filter_title: 'Filters',
+    filter_search_name: 'Search Name',
+    filter_search_placeholder: 'Search pandits...',
+    filter_location: 'Location',
+    filter_locating: 'Locating...',
+    filter_use_my_location: 'Use My Location',
+    filter_all_locations: 'All Locations',
+
+    // Pandit Card
+    card_location_unavail: 'Location unavailable',
+    card_away: 'km away',
+    card_specializations: 'Specializations:',
+    card_all_pujas: 'All standard Pujas and Homas',
+    card_profile: 'Profile',
+    card_book_now: 'Book Now',
+
     // Home Hero
     home_badge: "India's Premium Puja Booking Platform",
     home_h1_line1: 'Sacred Pujas,',
@@ -33,11 +58,11 @@ const translations = {
     // About
     about_label: 'Our Story',
     about_h2: 'Bringing Tradition to the Modern World.',
-    about_p1: 'PanditJi was born from a simple mission: to ensure that every spiritual seeker has access to authentic, high-quality Vedic ceremonies without the stress of searching.',
+    about_p1: 'पंडितजी was born from a simple mission: to ensure that every spiritual seeker has access to authentic, high-quality Vedic ceremonies without the stress of searching.',
     about_p2: 'We have curated a network of thousands of Pandits who are not just experts in their craft, but also deeply committed to the sanctity of the rituals they perform.',
     about_pan_india: 'Pan India Service',
     about_cities: 'Currently serving in 80+ major cities',
-
+ 
     // Puja Types
     puja_section_label: 'Service Portfolio',
     puja_section_h2_line1: 'Sacred Pujas for',
@@ -60,9 +85,9 @@ const translations = {
     puja_ganesh_desc: 'Invoking the remover of obstacles for any new beginning.',
     puja_lakshmi: 'Lakshmi Puja',
     puja_lakshmi_desc: 'Prayer for wealth, light, and abundance in your life.',
-
+ 
     // Features
-    feat_h2: 'Why Choose PanditJi?',
+    feat_h2: 'Why Choose पंडितजी?',
     feat_desc: 'We take the guesswork out of finding the right Pandit for your most important moments.',
     feat1_title: 'Verified & Trusted',
     feat1_desc: 'Every Pandit undergoes a thorough background and credential verification process before listing.',
@@ -70,10 +95,10 @@ const translations = {
     feat2_desc: 'Real reviews from real devotees help you choose the right Pandit with complete confidence.',
     feat3_title: 'All Ceremonies',
     feat3_desc: 'From Griha Pravesh to Vivah Sanskar — find experts for every sacred occasion.',
-
+ 
     // CTA Banner
     cta_h2: 'Ready to Book Your Puja?',
-    cta_desc: 'Join thousands of devotees who trust PanditJi for their most sacred celebrations.',
+    cta_desc: 'Join thousands of devotees who trust पंडितजी for their most sacred celebrations.',
     cta_btn: 'Browse Pandits',
 
     // Panchang / Calendar
@@ -212,7 +237,7 @@ const translations = {
     footer_contact: 'Contact',
     footer_privacy: 'Privacy Policy',
     footer_terms: 'Terms of Service',
-    footer_rights: '© 2025 PanditJi. All rights reserved.',
+    footer_rights: '© 2025 पंडितजी. All rights reserved.',
 
     // Book A Puja
     bap_title: 'All Puja Services',
@@ -303,6 +328,30 @@ const translations = {
     sc_linked_booking: 'Linked Booking:', sc_support_reply: 'Support Team Reply',
     sc_team_replied: 'Support Team Replied!', sc_view_tickets: 'View in My Tickets',
 
+    // Floating Support
+    fs_need_help: 'Need Help?',
+    fs_live_support: 'Live Support',
+    fs_reply_time: 'We typically reply in minutes',
+    fs_contact_directly: 'Contact Us Directly',
+    fs_common_questions: 'Common Questions',
+    fs_email_label: 'Email',
+    fs_call_label: 'Call',
+    fs_whatsapp_label: 'WhatsApp',
+    fs_whatsapp_value: 'Chat Now',
+    fs_cat_booking: 'Booking',
+    fs_cat_payments: 'Payments',
+    fs_cat_technical: 'Technical',
+    fs_faq_book_q1: 'How do I book a Pandit?',
+    fs_faq_book_a1: 'Go to the "Find Pandit" tab, browse available Pandits, and click "Book Now".',
+    fs_faq_book_q2: 'What if no Pandit is available?',
+    fs_faq_book_a2: 'We will show you trusted Pandits from nearby cities.',
+    fs_faq_pay_q1: 'When do I pay?',
+    fs_faq_pay_a1: 'Payment is made after a Pandit accepts your booking.',
+    fs_faq_pay_q2: 'What payment methods are supported?',
+    fs_faq_pay_a2: 'We support UPI, Credit/Debit Cards, Net Banking, and Wallets.',
+    fs_faq_tech_q1: 'Chat is not working?',
+    fs_faq_tech_a1: 'Ensure payment is completed for the booking — chat is locked until payment.',
+
     // E-Puja Page
     ep_detecting: 'Detecting Your Sacred Location',
     ep_detecting_desc: 'We are scanning your location coordinates to determine your region. This enables customized Vedic priest matching and accurate pricing structures.',
@@ -345,18 +394,18 @@ const translations = {
     ep_no_pujas_found_sub: 'Try a different search term or category',
     ep_why_title: 'Why E-Puja?',
     ep_why_desc: 'Are you out of the country or not present physically? Our e-puja service makes it possible to perform your puja virtually anywhere through WhatsApp, Google Meet, or Zoom.',
-    ep_advantages_title: 'PanditJi Advantages',
+    ep_advantages_title: 'पंडितजी Advantages',
     ep_badge_online: 'Online Puja',
     ep_badge_trusted: 'Trusted Pandits',
     ep_on: 'on',
     ep_hero_hindi1: 'सुख, शांति और समृद्धि के लिए पावन पूजा',
     ep_hero_hindi2: 'ग्रह दोषों से मुक्ति के लिए ऑनलाइन पूजा',
-    ep_step1_title: 'Visit PanditJi', ep_step1_desc: 'Go to our website to explore puja services and details.',
+    ep_step1_title: 'Visit पंडितजी', ep_step1_desc: 'Go to our website to explore puja services and details.',
     ep_step2_title: 'Select Your Puja', ep_step2_desc: 'Choose the puja you want to perform from our wide list.',
     ep_step3_title: 'Advance Booking Payment', ep_step3_desc: 'Securely pay in advance to confirm your booking.',
     ep_step4_title: 'Perform Online Puja', ep_step4_desc: 'Join the online puja session from the comfort of your home.',
     ep_adv1: 'Book only verified Pandits for every ritual.',
-    ep_adv2: 'Experience 100% trust with PanditJi secure booking.',
+    ep_adv2: 'Experience 100% trust with पंडितजी secure booking.',
     ep_adv3: 'Get quality services at an affordable price.',
     ep_adv4: 'No Hidden Charges – pay only what you see.',
     ep_adv5: 'Perform online rituals easily with E-Puja.',
@@ -375,6 +424,31 @@ const translations = {
     nav_get_started: 'शुरू करें',
     nav_sign_out: 'साइन आउट',
     nav_language: 'हिन्दी',
+
+    // Find Pandit Page
+    pandit_list_title: 'परफेक्ट पंडित खोजें',
+    pandit_list_subtitle: 'अपनी सभी आध्यात्मिक जरूरतों के लिए हमारे अत्यधिक अनुभवी, सत्यापित पंडितों की सूची ब्राउज़ करें।',
+    pandit_list_available: 'उपलब्ध पंडित',
+    pandit_list_results: 'परिणाम',
+    pandit_list_no_found: 'कोई पंडित नहीं मिला',
+    pandit_list_try_adjusting: 'अपने फ़िल्टर या खोज क्वेरी को समायोजित करने का प्रयास करें।',
+
+    // Pandit Filter
+    filter_title: 'फ़िल्टर',
+    filter_search_name: 'नाम खोजें',
+    filter_search_placeholder: 'पंडित खोजें...',
+    filter_location: 'स्थान',
+    filter_locating: 'पता लगा रहा है...',
+    filter_use_my_location: 'मेरे स्थान का उपयोग करें',
+    filter_all_locations: 'सभी स्थान',
+
+    // Pandit Card
+    card_location_unavail: 'स्थान अनुपलब्ध',
+    card_away: 'किमी दूर',
+    card_specializations: 'विशेषज्ञता:',
+    card_all_pujas: 'सभी मानक पूजा और हवन',
+    card_profile: 'प्रोफ़ाइल',
+    card_book_now: 'अभी बुक करें',
 
     // Home Hero
     home_badge: 'भारत का प्रीमियम पूजा बुकिंग प्लेटफार्म',
@@ -665,6 +739,30 @@ const translations = {
     sc_status_open: 'खुला', sc_status_in_progress: 'प्रगति में', sc_status_resolved: 'हल हुआ', sc_status_closed: 'बंद',
     sc_linked_booking: 'संबंधित बुकिंग:', sc_support_reply: 'सहायता टीम का जवाब',
     sc_team_replied: 'सहायता टीम ने जवाब दिया!', sc_view_tickets: 'मेरे टिकट में देखें',
+
+    // Floating Support
+    fs_need_help: 'मदद चाहिए?',
+    fs_live_support: 'लाइव सपोर्ट',
+    fs_reply_time: 'हम आमतौर पर कुछ ही मिनटों में जवाब देते हैं',
+    fs_contact_directly: 'हमसे सीधे संपर्क करें',
+    fs_common_questions: 'सामान्य प्रश्न',
+    fs_email_label: 'ईमेल',
+    fs_call_label: 'कॉल',
+    fs_whatsapp_label: 'व्हाट्सएप',
+    fs_whatsapp_value: 'अभी चैट करें',
+    fs_cat_booking: 'बुकिंग',
+    fs_cat_payments: 'भुगतान',
+    fs_cat_technical: 'तकनीकी',
+    fs_faq_book_q1: 'मैं पंडित कैसे बुक करूं?',
+    fs_faq_book_a1: '"पंडित खोजें" टैब पर जाएं, उपलब्ध पंडितों को देखें, और "अभी बुक करें" पर क्लिक करें।',
+    fs_faq_book_q2: 'यदि कोई पंडित उपलब्ध न हो तो क्या होगा?',
+    fs_faq_book_a2: 'हम आपको आस-पास के शहरों के विश्वसनीय पंडित दिखाएंगे।',
+    fs_faq_pay_q1: 'मुझे भुगतान कब करना होगा?',
+    fs_faq_pay_a1: 'पंडित द्वारा आपकी बुकिंग स्वीकार करने के बाद भुगतान किया जाता है।',
+    fs_faq_pay_q2: 'कौन सी भुगतान विधियां समर्थित हैं?',
+    fs_faq_pay_a2: 'हम यूपीआई, क्रेडिट/डेबिट कार्ड, नेट बैंकिंग और वॉलेट का समर्थन करते हैं।',
+    fs_faq_tech_q1: 'चैट काम नहीं कर रही है?',
+    fs_faq_tech_a1: 'सुनिश्चित करें कि बुकिंग के लिए भुगतान पूरा हो गया है - भुगतान होने तक चैट बंद रहती है।',
 
     // E-Puja Page
     ep_detecting: 'आपके पवित्र स्थान का पता लगाया जा रहा है',

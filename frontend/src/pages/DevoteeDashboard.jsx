@@ -814,7 +814,7 @@ const DevoteeDashboard = () => {
             <div className="dd-brand" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
               <span className="dd-brand-om">🕉</span>
               <div>
-                <div className="dd-brand-name">PanditJi</div>
+                <div className="dd-brand-name">पंडितजी</div>
                 <div className="dd-brand-sub">Sacred Services</div>
               </div>
             </div>
