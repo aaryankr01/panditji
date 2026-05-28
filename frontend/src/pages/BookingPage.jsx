@@ -58,7 +58,7 @@ const BookingPage = () => {
   useEffect(() => {
     const fetchPandit = async () => {
       try {
-        const res = await axios.get(`http://panditji-1tf8.onrender.com/api/pandits/${id}`);
+        const res = await axios.get(`https://panditji-1tf8.onrender.com/api/pandits/${id}`);
         setPandit(res.data.data);
       } catch (err) {
         console.error(err);
@@ -81,7 +81,7 @@ const BookingPage = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await axios.post('http://panditji-1tf8.onrender.com/api/bookings', {
+      await axios.post('https://panditji-1tf8.onrender.com/api/bookings', {
         panditId: id === 'any' ? null : id,
         ...formData,
         fee: currentFee

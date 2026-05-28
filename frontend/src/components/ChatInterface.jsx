@@ -27,8 +27,8 @@ const MessageBubble = memo(({ msg, isMine, onOpenOptions, optionsActive, onDelet
       )}
 
       <div className={`max-w-[75%] px-3 py-2 rounded-2xl ${isMine
-          ? 'bg-orange-600 text-white rounded-br-sm'
-          : 'bg-white border border-gray-200 text-gray-800 rounded-bl-sm shadow-sm'
+        ? 'bg-orange-600 text-white rounded-br-sm'
+        : 'bg-white border border-gray-200 text-gray-800 rounded-bl-sm shadow-sm'
         } ${msg.status === 'sending' ? 'opacity-70' : ''}`}>
         {msg.content === 'This message was deleted' ? (
           <div className="text-sm italic opacity-70 flex items-center gap-1">
@@ -82,7 +82,7 @@ const ChatInterface = ({ otherUser, socket }) => {
 
     const fetchHistory = async () => {
       try {
-        const res = await axios.get(`http://panditji-1tf8.onrender.com/api/chat/${otherUser._id}`, {
+        const res = await axios.get(`https://panditji-1tf8.onrender.com/api/chat/${otherUser._id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setMessages(res.data.data);
@@ -93,7 +93,7 @@ const ChatInterface = ({ otherUser, socket }) => {
 
     const checkBookingStatus = async () => {
       try {
-        const res = await axios.get('http://panditji-1tf8.onrender.com/api/bookings', {
+        const res = await axios.get('https://panditji-1tf8.onrender.com/api/bookings', {
           headers: { Authorization: `Bearer ${token}` }
         });
         const bookings = res.data.data;
@@ -233,7 +233,7 @@ const ChatInterface = ({ otherUser, socket }) => {
     const formData = new FormData();
     formData.append('file', file);
     try {
-      const res = await axios.post('http://panditji-1tf8.onrender.com/api/chat/upload', formData, {
+      const res = await axios.post('https://panditji-1tf8.onrender.com/api/chat/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${token}` }
       });
       socketRef.current.emit('sendMessage', { senderId: user._id || user.id, receiverId: otherUser._id, text: caption, type: type, fileUrl: res.data.fileUrl });
@@ -292,7 +292,7 @@ const ChatInterface = ({ otherUser, socket }) => {
   };
 
   const renderMessageContent = (msg, isMine) => {
-    const getMediaUrl = (url) => url?.startsWith('http') ? url : `http://panditji-1tf8.onrender.com${url}`;
+    const getMediaUrl = (url) => url?.startsWith('http') ? url : `https://panditji-1tf8.onrender.com${url}`;
     switch (msg.type) {
       case 'image':
         return (

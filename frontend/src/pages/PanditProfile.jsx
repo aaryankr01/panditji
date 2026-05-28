@@ -63,7 +63,7 @@ const PanditProfile = () => {
   useEffect(() => {
     const fetchPandit = async () => {
       try {
-        const res = await axios.get(`http://panditji-1tf8.onrender.com/api/pandits/${id}`);
+        const res = await axios.get(`https://panditji-1tf8.onrender.com/api/pandits/${id}`);
         setPandit(res.data.data);
         setLoading(false);
       } catch (err) {

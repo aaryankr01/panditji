@@ -34,27 +34,27 @@ const AdminDashboard = () => {
 
     const fetchData = async () => {
       try {
-        const statsRes = await axios.get('http://panditji-1tf8.onrender.com/api/admin/stats', {
+        const statsRes = await axios.get('https://panditji-1tf8.onrender.com/api/admin/stats', {
           headers: { Authorization: `Bearer ${token}` }
         });
         setStats(statsRes.data.data);
 
-        const usersRes = await axios.get('http://panditji-1tf8.onrender.com/api/admin/users', {
+        const usersRes = await axios.get('https://panditji-1tf8.onrender.com/api/admin/users', {
           headers: { Authorization: `Bearer ${token}` }
         });
         setUsersList(usersRes.data.data);
 
-        const paymentsRes = await axios.get('http://panditji-1tf8.onrender.com/api/admin/payments', {
+        const paymentsRes = await axios.get('https://panditji-1tf8.onrender.com/api/admin/payments', {
           headers: { Authorization: `Bearer ${token}` }
         });
         setPaymentsList(paymentsRes.data.data);
 
-        const ticketsRes = await axios.get('http://panditji-1tf8.onrender.com/api/admin/support', {
+        const ticketsRes = await axios.get('https://panditji-1tf8.onrender.com/api/admin/support', {
           headers: { Authorization: `Bearer ${token}` }
         });
         setTickets(ticketsRes.data.data);
 
-        const bookingsRes = await axios.get('http://panditji-1tf8.onrender.com/api/admin/bookings', {
+        const bookingsRes = await axios.get('https://panditji-1tf8.onrender.com/api/admin/bookings', {
           headers: { Authorization: `Bearer ${token}` }
         });
         setBookingsList(bookingsRes.data.data || []);
@@ -65,7 +65,7 @@ const AdminDashboard = () => {
 
     const fetchTickets = async () => {
       try {
-        const res = await axios.get('http://panditji-1tf8.onrender.com/api/admin/support', {
+        const res = await axios.get('https://panditji-1tf8.onrender.com/api/admin/support', {
           headers: { Authorization: `Bearer ${token}` }
         });
         setTickets(res.data.data);
@@ -84,7 +84,7 @@ const AdminDashboard = () => {
     if (!broadcastTitle.trim() || !broadcastMessage.trim()) return;
     setBroadcastLoading(true);
     try {
-      await axios.post('http://panditji-1tf8.onrender.com/api/admin/broadcast', {
+      await axios.post('https://panditji-1tf8.onrender.com/api/admin/broadcast', {
         title: broadcastTitle,
         message: broadcastMessage,
         target: broadcastTarget
@@ -109,7 +109,7 @@ const AdminDashboard = () => {
     if (!replyText.trim()) return;
     setReplyLoading(true);
     try {
-      const res = await axios.patch(`http://panditji-1tf8.onrender.com/api/admin/support/${ticketId}`,
+      const res = await axios.patch(`https://panditji-1tf8.onrender.com/api/admin/support/${ticketId}`,
         { adminReply: replyText, status: 'resolved' },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -122,7 +122,7 @@ const AdminDashboard = () => {
 
   const handleStatusChange = async (ticketId, status) => {
     try {
-      const res = await axios.patch(`http://panditji-1tf8.onrender.com/api/admin/support/${ticketId}`,
+      const res = await axios.patch(`https://panditji-1tf8.onrender.com/api/admin/support/${ticketId}`,
         { status },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -134,7 +134,7 @@ const AdminDashboard = () => {
   const handleDeleteTicket = async (ticketId) => {
     if (!window.confirm('Are you sure you want to permanently delete this ticket?')) return;
     try {
-      await axios.delete(`http://panditji-1tf8.onrender.com/api/admin/support/${ticketId}`, {
+      await axios.delete(`https://panditji-1tf8.onrender.com/api/admin/support/${ticketId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setTickets(prev => prev.filter(t => t._id !== ticketId));
@@ -145,10 +145,10 @@ const AdminDashboard = () => {
   const handleApprovePandit = async (id) => {
     if (!window.confirm('Approve this Pandit?')) return;
     try {
-      await axios.patch(`http://panditji-1tf8.onrender.com/api/admin/users/${id}/approve-pandit`, {}, {
+      await axios.patch(`https://panditji-1tf8.onrender.com/api/admin/users/${id}/approve-pandit`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      const usersRes = await axios.get('http://panditji-1tf8.onrender.com/api/admin/users', { headers: { Authorization: `Bearer ${token}` } });
+      const usersRes = await axios.get('https://panditji-1tf8.onrender.com/api/admin/users', { headers: { Authorization: `Bearer ${token}` } });
       setUsersList(usersRes.data.data);
     } catch (err) { alert('Failed to approve'); }
   };
@@ -156,10 +156,10 @@ const AdminDashboard = () => {
   const handleRejectPandit = async (id) => {
     if (!window.confirm('Reject this Pandit?')) return;
     try {
-      await axios.patch(`http://panditji-1tf8.onrender.com/api/admin/users/${id}/reject-pandit`, {}, {
+      await axios.patch(`https://panditji-1tf8.onrender.com/api/admin/users/${id}/reject-pandit`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      const usersRes = await axios.get('http://panditji-1tf8.onrender.com/api/admin/users', { headers: { Authorization: `Bearer ${token}` } });
+      const usersRes = await axios.get('https://panditji-1tf8.onrender.com/api/admin/users', { headers: { Authorization: `Bearer ${token}` } });
       setUsersList(usersRes.data.data);
     } catch (err) { alert('Failed to reject'); }
   };
@@ -167,16 +167,16 @@ const AdminDashboard = () => {
   const handleApproveCancellation = async (bookingId, reason) => {
     if (!window.confirm('Are you sure you want to approve this cancellation and refund the devotee (with 10% deduction)?')) return false;
     try {
-      const res = await axios.patch(`http://panditji-1tf8.onrender.com/api/admin/bookings/${bookingId}/cancel-approve`, { reason }, {
+      const res = await axios.patch(`https://panditji-1tf8.onrender.com/api/admin/bookings/${bookingId}/cancel-approve`, { reason }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       alert(`Cancellation approved successfully. Refund of ₹${res.data.refundedAmount.toFixed(2)} processed to the devotee.`);
-      const bookingsRes = await axios.get('http://panditji-1tf8.onrender.com/api/admin/bookings', { headers: { Authorization: `Bearer ${token}` } });
+      const bookingsRes = await axios.get('https://panditji-1tf8.onrender.com/api/admin/bookings', { headers: { Authorization: `Bearer ${token}` } });
       setBookingsList(bookingsRes.data.data || []);
       setSelectedBookingModal(null);
-      const statsRes = await axios.get('http://panditji-1tf8.onrender.com/api/admin/stats', { headers: { Authorization: `Bearer ${token}` } });
+      const statsRes = await axios.get('https://panditji-1tf8.onrender.com/api/admin/stats', { headers: { Authorization: `Bearer ${token}` } });
       setStats(statsRes.data.data);
-      const paymentsRes = await axios.get('http://panditji-1tf8.onrender.com/api/admin/payments', { headers: { Authorization: `Bearer ${token}` } });
+      const paymentsRes = await axios.get('https://panditji-1tf8.onrender.com/api/admin/payments', { headers: { Authorization: `Bearer ${token}` } });
       setPaymentsList(paymentsRes.data.data);
       if (window._adminFetchTickets) window._adminFetchTickets();
       return true;
@@ -189,11 +189,11 @@ const AdminDashboard = () => {
   const handleRejectCancellation = async (bookingId) => {
     if (!window.confirm('Are you sure you want to reject this cancellation request and keep the booking active?')) return false;
     try {
-      await axios.patch(`http://panditji-1tf8.onrender.com/api/admin/bookings/${bookingId}/cancel-reject`, {}, {
+      await axios.patch(`https://panditji-1tf8.onrender.com/api/admin/bookings/${bookingId}/cancel-reject`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       alert('Cancellation request declined. Booking status restored to confirmed.');
-      const bookingsRes = await axios.get('http://panditji-1tf8.onrender.com/api/admin/bookings', { headers: { Authorization: `Bearer ${token}` } });
+      const bookingsRes = await axios.get('https://panditji-1tf8.onrender.com/api/admin/bookings', { headers: { Authorization: `Bearer ${token}` } });
       setBookingsList(bookingsRes.data.data || []);
       setSelectedBookingModal(null);
       if (window._adminFetchTickets) window._adminFetchTickets();
@@ -693,7 +693,7 @@ const AdminDashboard = () => {
                                 const success = await handleApproveCancellation(selectedTicket.booking._id, reason);
                                 if (success) {
                                   try {
-                                    const ticketRes = await axios.patch(`http://panditji-1tf8.onrender.com/api/admin/support/${selectedTicket._id}`,
+                                    const ticketRes = await axios.patch(`https://panditji-1tf8.onrender.com/api/admin/support/${selectedTicket._id}`,
                                       { adminReply: `Cancellation approved. 90% refund has been processed. Notes: ${reason}`, status: 'resolved' },
                                       { headers: { Authorization: `Bearer ${token}` } }
                                     );
@@ -713,7 +713,7 @@ const AdminDashboard = () => {
                                 const success = await handleRejectCancellation(selectedTicket.booking._id);
                                 if (success) {
                                   try {
-                                    const ticketRes = await axios.patch(`http://panditji-1tf8.onrender.com/api/admin/support/${selectedTicket._id}`,
+                                    const ticketRes = await axios.patch(`https://panditji-1tf8.onrender.com/api/admin/support/${selectedTicket._id}`,
                                       { adminReply: `Cancellation request declined. The booking remains active. Please contact support for further queries.`, status: 'resolved' },
                                       { headers: { Authorization: `Bearer ${token}` } }
                                     );

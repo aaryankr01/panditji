@@ -1,6 +1,6 @@
 import { io } from 'socket.io-client';
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://panditji-1tf8.onrender.com';
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'https://panditji-1tf8.onrender.com';
 
 let socket = null;
 

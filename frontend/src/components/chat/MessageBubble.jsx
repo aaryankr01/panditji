@@ -2,7 +2,7 @@ import React from 'react';
 
 const MessageBubble = ({ message, isMine }) => {
   const renderMessageContent = (msg) => {
-    const getMediaUrl = (url) => url?.startsWith('http') ? url : `http://panditji-1tf8.onrender.com${url}`;
+    const getMediaUrl = (url) => url?.startsWith('http') ? url : `https://panditji-1tf8.onrender.com${url}`;
 
     switch (msg.type) {
       case 'image':
@@ -22,8 +22,8 @@ const MessageBubble = ({ message, isMine }) => {
   return (
     <div className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
       <div className={`max-w-[75%] px-3 py-2 rounded-2xl ${isMine
-          ? 'bg-orange-600 text-white rounded-br-sm'
-          : 'bg-white border border-gray-200 text-gray-800 rounded-bl-sm shadow-sm'
+        ? 'bg-orange-600 text-white rounded-br-sm'
+        : 'bg-white border border-gray-200 text-gray-800 rounded-bl-sm shadow-sm'
         }`}>
         {renderMessageContent(message)}
         <div className={`text-[10px] mt-1 text-right ${isMine ? 'text-orange-200' : 'text-gray-400'}`}>

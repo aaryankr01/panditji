@@ -18,7 +18,7 @@ const PujaList = () => {
   const fetchPandits = async (queryParams = '') => {
     setLoading(true);
     try {
-      const res = await axios.get(`http://panditji-1tf8.onrender.com/api/pandits${queryParams}`);
+      const res = await axios.get(`https://panditji-1tf8.onrender.com/api/pandits${queryParams}`);
       setPandits(res.data.data);
       if (res.data.message) {
         setLocationMessage(res.data.message);

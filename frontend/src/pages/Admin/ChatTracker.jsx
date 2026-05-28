@@ -36,7 +36,7 @@ const ChatTracker = () => {
 
     const fetchUsers = async () => {
       try {
-        const res = await axios.get('http://panditji-1tf8.onrender.com/api/admin/users', {
+        const res = await axios.get('https://panditji-1tf8.onrender.com/api/admin/users', {
           headers: { Authorization: `Bearer ${token}` }
         });
         setUsers(res.data.data);
@@ -47,7 +47,7 @@ const ChatTracker = () => {
     fetchUsers();
 
     // Connect to socket for real-time tracking
-    socketRef.current = io('http://panditji-1tf8.onrender.com');
+    socketRef.current = io('https://panditji-1tf8.onrender.com');
     socketRef.current.emit('adminJoin');
 
     socketRef.current.on('admin_newMessage', (msg) => {
@@ -76,7 +76,7 @@ const ChatTracker = () => {
     if (!selectedPandit || !selectedDevotee) return;
     setLoading(true);
     try {
-      const res = await axios.get(`http://panditji-1tf8.onrender.com/api/admin/conversations/${selectedPandit}/${selectedDevotee}`, {
+      const res = await axios.get(`https://panditji-1tf8.onrender.com/api/admin/conversations/${selectedPandit}/${selectedDevotee}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setMessages(res.data.data);

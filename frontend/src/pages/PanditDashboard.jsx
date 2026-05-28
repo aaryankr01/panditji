@@ -12,8 +12,8 @@ import ChatInterface from '../components/ChatInterface';
 import SupportCare from '../components/SupportCare';
 import LanguageToggle from '../components/common/LanguageToggle';
 
-const SOCKET_URL = 'http://panditji-1tf8.onrender.com';
-const API = 'http://panditji-1tf8.onrender.com/api';
+const SOCKET_URL = 'https://panditji-1tf8.onrender.com';
+const API = 'https://panditji-1tf8.onrender.com/api';
 
 /* ─── Design tokens from DevoteeDashboard ─── */
 const C = {
@@ -246,7 +246,7 @@ const PanditDashboard = () => {
     const formData = new FormData();
     formData.append('file', file);
     try {
-      const res = await axios.post('http://panditji-1tf8.onrender.com/api/users/avatar', formData, {
+      const res = await axios.post('https://panditji-1tf8.onrender.com/api/users/avatar', formData, {
         headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${token}` }
       });
       updateUser({ avatar: res.data.avatarUrl });

@@ -141,7 +141,7 @@ const ForgotPassword = () => {
         }
 
         // Pre-check phone with backend (must exist)
-        await axios.post("http://panditji-1tf8.onrender.com/api/auth/check-phone", {
+        await axios.post("https://panditji-1tf8.onrender.com/api/auth/check-phone", {
           phone: clean,
           purpose: "password_reset",
         });
@@ -157,7 +157,7 @@ const ForgotPassword = () => {
         }
 
         // Send email OTP via Brevo API
-        await axios.post("http://panditji-1tf8.onrender.com/api/auth/otp/send-email", {
+        await axios.post("https://panditji-1tf8.onrender.com/api/auth/otp/send-email", {
           email: email.trim().toLowerCase(),
           purpose: "password_reset"
         });
@@ -191,7 +191,7 @@ const ForgotPassword = () => {
         const idToken = await result.user.getIdToken();
 
         // Backend verifies Firebase token, returns resetToken
-        const verifyRes = await axios.post("http://panditji-1tf8.onrender.com/api/auth/verify-firebase-otp", {
+        const verifyRes = await axios.post("https://panditji-1tf8.onrender.com/api/auth/verify-firebase-otp", {
           idToken,
           phone: phone.replace(/\D/g, ""),
           purpose: "password_reset",
@@ -199,7 +199,7 @@ const ForgotPassword = () => {
         resetToken = verifyRes.data.resetToken;
       } else {
         // Verify with Brevo Email OTP
-        const verifyRes = await axios.post("http://panditji-1tf8.onrender.com/api/auth/otp/verify-email", {
+        const verifyRes = await axios.post("https://panditji-1tf8.onrender.com/api/auth/otp/verify-email", {
           email: email.trim().toLowerCase(),
           otp,
           purpose: "password_reset"
@@ -236,7 +236,7 @@ const ForgotPassword = () => {
         const result = await signInWithPhoneNumber(auth, `+91${clean}`, verifier);
         confirmationRef.current = result;
       } else {
-        await axios.post("http://panditji-1tf8.onrender.com/api/auth/otp/send-email", {
+        await axios.post("https://panditji-1tf8.onrender.com/api/auth/otp/send-email", {
           email: email.trim().toLowerCase(),
           purpose: "password_reset"
         });
@@ -258,7 +258,7 @@ const ForgotPassword = () => {
     setLoading(true);
     try {
       const resetToken = sessionStorage.getItem("resetToken");
-      await axios.post("http://panditji-1tf8.onrender.com/api/auth/reset-password", {
+      await axios.post("https://panditji-1tf8.onrender.com/api/auth/reset-password", {
         resetToken,
         newPassword,
       });
@@ -273,10 +273,10 @@ const ForgotPassword = () => {
 
   const stepIndicatorClass = (active, done) => {
     return `w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all border-2 ${done
-        ? "bg-saffron border-saffron text-white"
-        : active
-          ? "bg-saffron-light border-saffron text-saffron"
-          : "bg-surface border-brandborder text-textMuted"
+      ? "bg-saffron border-saffron text-white"
+      : active
+        ? "bg-saffron-light border-saffron text-saffron"
+        : "bg-surface border-brandborder text-textMuted"
       }`;
   };
 
@@ -354,8 +354,8 @@ const ForgotPassword = () => {
                     type="button"
                     onClick={() => { setVerificationMethod("phone"); setError(""); }}
                     className={`py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 ${verificationMethod === "phone"
-                        ? "bg-saffron text-white shadow-sm"
-                        : "text-textMid hover:text-maroon hover:bg-white/50"
+                      ? "bg-saffron text-white shadow-sm"
+                      : "text-textMid hover:text-maroon hover:bg-white/50"
                       }`}
                   >
                     <span>📱</span> Phone SMS
@@ -364,8 +364,8 @@ const ForgotPassword = () => {
                     type="button"
                     onClick={() => { setVerificationMethod("email"); setError(""); }}
                     className={`py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 ${verificationMethod === "email"
-                        ? "bg-saffron text-white shadow-sm"
-                        : "text-textMid hover:text-maroon hover:bg-white/50"
+                      ? "bg-saffron text-white shadow-sm"
+                      : "text-textMid hover:text-maroon hover:bg-white/50"
                       }`}
                   >
                     <span>✉️</span> Email Inbox

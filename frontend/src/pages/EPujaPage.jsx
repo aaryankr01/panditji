@@ -323,7 +323,7 @@ export default function EPujaPage() {
   useEffect(() => {
     const fetchPujas = async () => {
       try {
-        const res = await axios.get("http://panditji-1tf8.onrender.com/api/pujas");
+        const res = await axios.get("https://panditji-1tf8.onrender.com/api/pujas");
         if (res.data && res.data.success && res.data.data.length > 0) {
           setPujas(res.data.data);
         } else {
@@ -394,7 +394,7 @@ export default function EPujaPage() {
         pujaMode: "online",
         panditId: null,
       };
-      const res = await axios.post("http://panditji-1tf8.onrender.com/api/bookings", bookingData, {
+      const res = await axios.post("https://panditji-1tf8.onrender.com/api/bookings", bookingData, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.data && res.data.success) {

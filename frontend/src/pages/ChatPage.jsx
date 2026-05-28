@@ -17,7 +17,7 @@ const ChatPage = () => {
   useEffect(() => {
     const fetchConversations = async () => {
       try {
-        const res = await axios.get('http://panditji-1tf8.onrender.com/api/chat/conversations/list', {
+        const res = await axios.get('https://panditji-1tf8.onrender.com/api/chat/conversations/list', {
           headers: { Authorization: `Bearer ${token}` }
         });
         const convos = res.data.data;
