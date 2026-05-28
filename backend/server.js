@@ -39,10 +39,19 @@ const allowedOriginsList = [
   process.env.CLIENT_URL,
 ].filter(Boolean);
 
+// Allow any Vercel preview deployment URL in addition to the exact allowed origins
+const isOriginAllowed = (origin) => {
+  if (!origin) return true; // same-origin / server-to-server
+  if (allowedOriginsList.includes(origin)) return true;
+  // Allow all *.vercel.app subdomains (Vercel preview deployments)
+  if (origin.endsWith('.vercel.app')) return true;
+  return false;
+};
+
 const io = new Server(server, {
   cors: {
-    origin: allowedOriginsList,
-    methods: ['GET', 'POST'],
+    origin: (origin, cb) => cb(null, isOriginAllowed(origin)),
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     credentials: true,
   },
 });
@@ -53,8 +62,28 @@ app.set('io', io);
 // Initialize socket handlers
 initSocket(io);
 
-// Security middleware
-app.use(helmet());
+// ─── CORS must come FIRST — before helmet and rate limiters ──────────────────
+// Pre-flight OPTIONS requests are short-circuited here so they never hit the
+// rate limiter or helmet restrictive headers.
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (isOriginAllowed(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('CORS not allowed from: ' + origin));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+};
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // Handle pre-flight for every route
+
+// Security middleware (after CORS so helmet doesn't strip CORS headers)
+app.use(helmet({
+  crossOriginResourcePolicy: false, // allow cross-origin responses
+}));
 
 // Rate limiting
 const limiter = rateLimit({
@@ -81,20 +110,6 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Sanitize data
 // app.use(mongoSanitize());
-
-// CORS
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOriginsList.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('CORS not allowed from: ' + origin));
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
 
 // Logger
 if (process.env.NODE_ENV === 'development') {
