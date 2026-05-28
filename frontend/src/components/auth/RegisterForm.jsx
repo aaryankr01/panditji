@@ -89,7 +89,7 @@ const RegisterForm = () => {
         const result = await signInWithPhoneNumber(auth, `+91${clean}`, verifier);
         confirmationRef.current = result;
       } else {
-        await axios.post('https://panditji-1tf8.onrender.com/api/auth/otp/send-email', {
+        await api.post('/auth/otp/send-email', {
           email: formData.email,
           purpose: "registration"
         });
@@ -117,7 +117,7 @@ const RegisterForm = () => {
         const idToken = await result.user.getIdToken();
 
         // Backend verifies Firebase token, returns resetToken
-        const verifyRes = await axios.post('https://panditji-1tf8.onrender.com/api/auth/verify-firebase-otp', {
+        const verifyRes = await api.post('/auth/verify-firebase-otp', {
           idToken,
           phone: clean,
           purpose: "registration"
@@ -125,7 +125,7 @@ const RegisterForm = () => {
         resetToken = verifyRes.data.resetToken;
       } else {
         // Verify with Brevo Email OTP
-        const verifyRes = await axios.post('https://panditji-1tf8.onrender.com/api/auth/otp/verify-email', {
+        const verifyRes = await api.post('/auth/otp/verify-email', {
           email: formData.email,
           otp: otpValue,
           purpose: "registration"
@@ -183,7 +183,7 @@ const RegisterForm = () => {
     try {
       if (verificationMethod === 'phone') {
         // Pre-check phone with backend
-        await axios.post('https://panditji-1tf8.onrender.com/api/auth/check-phone', {
+        await api.post('/auth/check-phone', {
           phone: cleanPhone,
           purpose: "registration"
         });
@@ -194,7 +194,7 @@ const RegisterForm = () => {
         confirmationRef.current = result;
       } else {
         // Send email OTP via Brevo API
-        await axios.post('https://panditji-1tf8.onrender.com/api/auth/otp/send-email', {
+        await api.post('/auth/otp/send-email', {
           email: formData.email,
           purpose: "registration"
         });

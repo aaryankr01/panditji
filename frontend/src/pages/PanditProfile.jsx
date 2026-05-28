@@ -6,6 +6,7 @@ import Footer from '../components/common/Footer';
 import Loader from '../components/common/Loader';
 import { Star, MapPin, CheckCircle, CalendarCheck } from 'lucide-react';
 import useT from '../hooks/useT';
+import api from '../utils/api';
 
 const PanditProfile = () => {
   const { id } = useParams();
@@ -63,7 +64,7 @@ const PanditProfile = () => {
   useEffect(() => {
     const fetchPandit = async () => {
       try {
-        const res = await axios.get(`https://panditji-1tf8.onrender.com/api/pandits/${id}`);
+        const res = await api.get(`/pandits/${id}`);
         setPandit(res.data.data);
         setLoading(false);
       } catch (err) {

@@ -141,7 +141,7 @@ const ForgotPassword = () => {
         }
 
         // Pre-check phone with backend (must exist)
-        await axios.post("https://panditji-1tf8.onrender.com/api/auth/check-phone", {
+        await api.post("/auth/check-phone", {
           phone: clean,
           purpose: "password_reset",
         });
@@ -157,7 +157,7 @@ const ForgotPassword = () => {
         }
 
         // Send email OTP via Brevo API
-        await axios.post("https://panditji-1tf8.onrender.com/api/auth/otp/send-email", {
+        await api.post("/auth/otp/send-email", {
           email: email.trim().toLowerCase(),
           purpose: "password_reset"
         });
@@ -191,7 +191,7 @@ const ForgotPassword = () => {
         const idToken = await result.user.getIdToken();
 
         // Backend verifies Firebase token, returns resetToken
-        const verifyRes = await axios.post("https://panditji-1tf8.onrender.com/api/auth/verify-firebase-otp", {
+        const verifyRes = await api.post("/auth/verify-firebase-otp", {
           idToken,
           phone: phone.replace(/\D/g, ""),
           purpose: "password_reset",
@@ -199,7 +199,7 @@ const ForgotPassword = () => {
         resetToken = verifyRes.data.resetToken;
       } else {
         // Verify with Brevo Email OTP
-        const verifyRes = await axios.post("https://panditji-1tf8.onrender.com/api/auth/otp/verify-email", {
+        const verifyRes = await api.post("/auth/otp/verify-email", {
           email: email.trim().toLowerCase(),
           otp,
           purpose: "password_reset"
@@ -236,7 +236,7 @@ const ForgotPassword = () => {
         const result = await signInWithPhoneNumber(auth, `+91${clean}`, verifier);
         confirmationRef.current = result;
       } else {
-        await axios.post("https://panditji-1tf8.onrender.com/api/auth/otp/send-email", {
+        await api.post("/auth/otp/send-email", {
           email: email.trim().toLowerCase(),
           purpose: "password_reset"
         });
@@ -258,7 +258,7 @@ const ForgotPassword = () => {
     setLoading(true);
     try {
       const resetToken = sessionStorage.getItem("resetToken");
-      await axios.post("https://panditji-1tf8.onrender.com/api/auth/reset-password", {
+      await api.post("/auth/reset-password", {
         resetToken,
         newPassword,
       });

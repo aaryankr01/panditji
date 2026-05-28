@@ -6,6 +6,7 @@ import Navbar from '../components/common/Navbar';
 import ChatWindow from '../components/chat/ChatWindow';
 import Loader from '../components/common/Loader';
 import { MessageCircle } from 'lucide-react';
+import api from '../utils/api';
 
 const ChatPage = () => {
   const { token } = useAuthStore();
@@ -17,7 +18,7 @@ const ChatPage = () => {
   useEffect(() => {
     const fetchConversations = async () => {
       try {
-        const res = await axios.get('https://panditji-1tf8.onrender.com/api/chat/conversations/list', {
+        const res = await api.get('/chat/conversations/list', {
           headers: { Authorization: `Bearer ${token}` }
         });
         const convos = res.data.data;

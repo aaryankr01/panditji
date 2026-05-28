@@ -82,7 +82,7 @@ const ChatInterface = ({ otherUser, socket }) => {
 
     const fetchHistory = async () => {
       try {
-        const res = await axios.get(`https://panditji-1tf8.onrender.com/api/chat/${otherUser._id}`, {
+        const res = await api.get(`/chat/${otherUser._id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setMessages(res.data.data);
@@ -93,7 +93,7 @@ const ChatInterface = ({ otherUser, socket }) => {
 
     const checkBookingStatus = async () => {
       try {
-        const res = await axios.get('https://panditji-1tf8.onrender.com/api/bookings', {
+        const res = await api.get('/bookings', {
           headers: { Authorization: `Bearer ${token}` }
         });
         const bookings = res.data.data;
@@ -233,7 +233,7 @@ const ChatInterface = ({ otherUser, socket }) => {
     const formData = new FormData();
     formData.append('file', file);
     try {
-      const res = await axios.post('https://panditji-1tf8.onrender.com/api/chat/upload', formData, {
+      const res = await api.post('/chat/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${token}` }
       });
       socketRef.current.emit('sendMessage', { senderId: user._id || user.id, receiverId: otherUser._id, text: caption, type: type, fileUrl: res.data.fileUrl });

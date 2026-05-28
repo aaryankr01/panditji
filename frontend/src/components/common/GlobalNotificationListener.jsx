@@ -4,7 +4,6 @@ import { io } from 'socket.io-client';
 import toast from 'react-hot-toast';
 import useAuthStore from '../../store/useAuthStore';
 
-const SOCKET_URL = 'https://panditji-1tf8.onrender.com';
 
 const GlobalNotificationListener = () => {
   const { user, token } = useAuthStore();

@@ -1,8 +1,9 @@
 import React from 'react';
 
 const MessageBubble = ({ message, isMine }) => {
+  const BASE = import.meta.env.VITE_SOCKET_URL || 'https://panditji-1tf8.onrender.com';
   const renderMessageContent = (msg) => {
-    const getMediaUrl = (url) => url?.startsWith('http') ? url : `https://panditji-1tf8.onrender.com${url}`;
+    const getMediaUrl = (url) => url?.startsWith('http') ? url : `${BASE}${url}`;
 
     switch (msg.type) {
       case 'image':

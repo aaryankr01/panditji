@@ -9,6 +9,7 @@ import ChatInterface from '../components/ChatInterface';
 import SupportCare from '../components/SupportCare';
 import LanguageToggle from '../components/common/LanguageToggle';
 import ImageCropperModal from '../components/common/ImageCropperModal';
+import api from '../utils/api';
 
 const loadRazorpayScript = () =>
   new Promise((resolve) => {
@@ -438,14 +439,14 @@ const DevoteeDashboard = () => {
 
   const fetchConversations = useCallback(async () => {
     try {
-      const res = await axios.get('https://panditji-1tf8.onrender.com/api/chat/conversations/list', { headers: { Authorization: `Bearer ${token}` } });
+      const res = await api.get('/chat/conversations/list', { headers: { Authorization: `Bearer ${token}` } });
       setConversations(res.data.data);
     } catch (err) { console.error(err); }
   }, [token]);
 
   const fetchMyBookings = useCallback(async () => {
     try {
-      const res = await axios.get('https://panditji-1tf8.onrender.com/api/bookings', { headers: { Authorization: `Bearer ${token}` } });
+      const res = await api.get('/bookings', { headers: { Authorization: `Bearer ${token}` } });
       const fetchedBookings = res.data.data;
       setBookings(fetchedBookings);
       const accepted = fetchedBookings.find(b => b.status === 'confirmed' && b.paymentStatus === 'pending');
@@ -457,7 +458,7 @@ const DevoteeDashboard = () => {
 
   const fetchMyPayments = useCallback(async () => {
     try {
-      const res = await axios.get('https://panditji-1tf8.onrender.com/api/payments', { headers: { Authorization: `Bearer ${token}` } });
+      const res = await api.get('/payments', { headers: { Authorization: `Bearer ${token}` } });
       setPayments(res.data.data);
     } catch (err) { console.error(err); }
   }, [token]);
@@ -469,7 +470,7 @@ const DevoteeDashboard = () => {
     fetchMyBookings();
     fetchMyPayments();
 
-    const socket = io('https://panditji-1tf8.onrender.com', { transports: ['websocket'] });
+    const socket = io(import.meta.env.VITE_SOCKET_URL || 'https://panditji-1tf8.onrender.com', { transports: ['websocket'] });
     socketRef.current = socket;
     socket.on('connect', () => {
       socket.emit('join', { userId: user._id || user.id, role: 'devotee', city: user.city });
@@ -505,7 +506,7 @@ const DevoteeDashboard = () => {
     try {
       const { pandit } = bookingModal;
       const { pujaType, date, time, address, notes } = bookingForm;
-      const res = await axios.post('https://panditji-1tf8.onrender.com/api/bookings', {
+      const res = await api.post('/bookings', {
         panditId: pandit._id, pujaType, date, time, address, city: user?.city, notes,
         pujaMode: bookingForm.pujaMode,
         fee: bookingForm.pujaMode === 'online'
@@ -520,7 +521,7 @@ const DevoteeDashboard = () => {
   const deleteBooking = async (bookingId) => {
     if (!window.confirm('Are you sure you want to remove this booking from your history?')) return;
     try {
-      await axios.delete(`https://panditji-1tf8.onrender.com/api/bookings/${bookingId}`, { headers: { Authorization: `Bearer ${token}` } });
+      await api.delete(`/bookings/${bookingId}`, { headers: { Authorization: `Bearer ${token}` } });
       setBookings(bookings.filter(b => b._id !== bookingId));
     } catch { alert('Failed to delete booking'); }
   };
@@ -589,7 +590,7 @@ const DevoteeDashboard = () => {
     const formData = new FormData();
     formData.append('file', croppedFile);
     try {
-      const res = await axios.post('https://panditji-1tf8.onrender.com/api/users/avatar', formData, {
+      const res = await api.post('/users/avatar', formData, {
         headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${token}` }
       });
       updateUser({ avatar: res.data.avatarUrl });
@@ -604,7 +605,7 @@ const DevoteeDashboard = () => {
     if (!res) { alert('Razorpay SDK failed to load. Are you online?'); return; }
     try {
       setLoading(true);
-      const { data } = await axios.post('https://panditji-1tf8.onrender.com/api/payments/create-order', { bookingId: booking._id }, { headers: { Authorization: `Bearer ${token}` } });
+      const { data } = await api.post('/payments/create-order', { bookingId: booking._id }, { headers: { Authorization: `Bearer ${token}` } });
       if (!data.success) { alert('Failed to initiate payment.'); setLoading(false); return; }
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_YourKeyHere',
@@ -615,7 +616,7 @@ const DevoteeDashboard = () => {
         order_id: data.orderId,
         handler: async function (response) {
           try {
-            const verifyRes = await axios.post('https://panditji-1tf8.onrender.com/api/payments/verify', {
+            const verifyRes = await api.post('/payments/verify', {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
@@ -889,7 +890,7 @@ const DevoteeDashboard = () => {
                   const formData = new FormData(e.target);
                   const data = Object.fromEntries(formData);
                   try {
-                    const res = await axios.patch('https://panditji-1tf8.onrender.com/api/devotees/profile', data, { headers: { Authorization: `Bearer ${token}` } });
+                    const res = await api.patch('/devotees/profile', data, { headers: { Authorization: `Bearer ${token}` } });
                     updateUser(res.data.data);
                     alert('Profile updated successfully!');
                   } catch { alert('Failed to update profile'); }

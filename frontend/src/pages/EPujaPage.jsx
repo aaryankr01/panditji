@@ -7,6 +7,7 @@ import useT from '../hooks/useT';
 import Navbar from "../components/common/Navbar";
 import Footer from "../components/common/Footer";
 import { Star, Clock, ChevronRight, MapPin, Shield, Tag, CheckCircle } from 'lucide-react';
+import api from '../utils/api';
 
 const initialPujas = [
   { _id: 1, name: 'Rudrabhishek', image: '/pictures/rudrabhisek.png', rating: 4.8, conducted: 875, isPopular: true, desc: 'Lord Shiva abhisheka for peace and prosperity.', longDesc: 'Rudrabhishek is a highly auspicious puja dedicated to Lord Shiva. It involves bathing the Shiva Lingam with sacred items like milk, honey, and gangajal while chanting powerful mantras. This brings peace, prosperity, and removes negative energies.', duration: '2-3 hrs', price: 3100, category: 'Devotional' },
@@ -323,7 +324,7 @@ export default function EPujaPage() {
   useEffect(() => {
     const fetchPujas = async () => {
       try {
-        const res = await axios.get("https://panditji-1tf8.onrender.com/api/pujas");
+        const res = await api.get("/pujas");
         if (res.data && res.data.success && res.data.data.length > 0) {
           setPujas(res.data.data);
         } else {
@@ -394,7 +395,7 @@ export default function EPujaPage() {
         pujaMode: "online",
         panditId: null,
       };
-      const res = await axios.post("https://panditji-1tf8.onrender.com/api/bookings", bookingData, {
+      const res = await api.post("/bookings", bookingData, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.data && res.data.success) {

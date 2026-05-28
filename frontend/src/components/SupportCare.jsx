@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { io } from 'socket.io-client';
 import useAuthStore from '../store/useAuthStore';
@@ -10,9 +10,9 @@ import {
   Ticket, Clock, RefreshCw, XCircle, Inbox
 } from 'lucide-react';
 
-const API = 'https://panditji-1tf8.onrender.com/api';
+const API = import.meta.env.VITE_API_URL || 'https://panditji-1tf8.onrender.com/api';
 
-/* ─── Design tokens from DevoteeDashboard ─── */
+/* --- Design tokens from DevoteeDashboard --- */
 const C = {
   saffron: '#E8710A',
   saffronDk: '#C45F06',
@@ -78,7 +78,7 @@ const faqs = [
     icon: Zap,
     color: 'purple',
     questions: [
-      { q: 'Chat is not working. What should I do?', a: 'Ensure payment is completed for the booking — chat is locked until payment. Also check your internet connection. If the issue persists, try refreshing the page.' },
+      { q: 'Chat is not working. What should I do?', a: 'Ensure payment is completed for the booking � chat is locked until payment. Also check your internet connection. If the issue persists, try refreshing the page.' },
       { q: 'The app is slow or not loading.', a: 'Try clearing your browser cache and refreshing. If the problem continues, please report it using the contact form below.' },
     ]
   },
@@ -183,7 +183,7 @@ const SupportCare = ({ userRole = 'devotee' }) => {
 
   useEffect(() => {
     if (!user?._id && !user?.id) return;
-    const socket = io('https://panditji-1tf8.onrender.com', { transports: ['websocket'] });
+    const socket = io(import.meta.env.VITE_SOCKET_URL || 'https://panditji-1tf8.onrender.com', { transports: ['websocket'] });
     socket.on('connect', () => { socket.emit('join', { userId: user._id || user.id, role: userRole }); });
     socket.on('supportTicketReplied', (data) => {
       setReplyNotification(data);
@@ -219,7 +219,7 @@ const SupportCare = ({ userRole = 'devotee' }) => {
               <Headphones size={20} color="#fff" />
               <span style={{ color: '#fff', fontWeight: 800, fontSize: 14 }}>{t('sc_team_replied')}</span>
             </div>
-            <button onClick={() => setReplyNotification(null)} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', fontSize: 18 }}>×</button>
+            <button onClick={() => setReplyNotification(null)} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', fontSize: 18 }}>�</button>
           </div>
           <div style={{ padding: '14px 16px' }}>
             <p style={{ fontSize: 11, color: C.textMuted }}>Re: {replyNotification.subject}</p>
@@ -418,7 +418,7 @@ const SupportCare = ({ userRole = 'devotee' }) => {
                           <div>
                             <span style={{ fontWeight: 700, color: C.maroon }}>{t('sc_linked_booking')} </span>
                             <span style={{ fontWeight: 600, color: C.text }}>{ticket.booking.pujaType}</span>
-                            <span style={{ color: C.textMuted }}> (₹{ticket.booking.fee?.toLocaleString()})</span>
+                            <span style={{ color: C.textMuted }}> (?{ticket.booking.fee?.toLocaleString()})</span>
                           </div>
                           <span className={`dd-badge dd-badge-${ticket.booking.status}`} style={{ fontSize: 9.5 }}>{ticket.booking.status}</span>
                         </div>

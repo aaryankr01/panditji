@@ -5,6 +5,7 @@ import useAuthStore from '../store/useAuthStore';
 import Navbar from '../components/common/Navbar';
 import Loader from '../components/common/Loader';
 import { Video, MapPin, Clock, Calendar, ShieldCheck, Tag } from 'lucide-react';
+import api from '../utils/api';
 
 // Puja-based pricing (matches BookAPuja.jsx)
 const PUJA_PRICES = {
@@ -58,7 +59,7 @@ const BookingPage = () => {
   useEffect(() => {
     const fetchPandit = async () => {
       try {
-        const res = await axios.get(`https://panditji-1tf8.onrender.com/api/pandits/${id}`);
+        const res = await api.get(`/pandits/${id}`);
         setPandit(res.data.data);
       } catch (err) {
         console.error(err);
@@ -81,7 +82,7 @@ const BookingPage = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await axios.post('https://panditji-1tf8.onrender.com/api/bookings', {
+      await api.post('/bookings', {
         panditId: id === 'any' ? null : id,
         ...formData,
         fee: currentFee

@@ -80,7 +80,7 @@ const BookAPuja = () => {
     setCheckingLocation(true);
     setLocationStatus(null);
     try {
-      const res = await axios.get(`https://panditji-1tf8.onrender.com/api/pandits?city=${encodeURIComponent(city)}`);
+      const res = await api.get(`/pandits?city=${encodeURIComponent(city)}`);
       if (res.data.isLocal && res.data.count > 0) {
         setLocationStatus('available');
       } else {

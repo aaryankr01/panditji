@@ -5,6 +5,7 @@ import axios from 'axios';
 import { io } from 'socket.io-client';
 import { Users, MessageSquare, LayoutDashboard, LogOut, ArrowLeft } from 'lucide-react';
 import { State, City } from 'country-state-city';
+import api from '../../utils/api';
 
 const ChatTracker = () => {
   const { user, token, logout } = useAuthStore();
@@ -36,7 +37,7 @@ const ChatTracker = () => {
 
     const fetchUsers = async () => {
       try {
-        const res = await axios.get('https://panditji-1tf8.onrender.com/api/admin/users', {
+        const res = await api.get('/admin/users', {
           headers: { Authorization: `Bearer ${token}` }
         });
         setUsers(res.data.data);
@@ -47,7 +48,7 @@ const ChatTracker = () => {
     fetchUsers();
 
     // Connect to socket for real-time tracking
-    socketRef.current = io('https://panditji-1tf8.onrender.com');
+    socketRef.current = io(import.meta.env.VITE_SOCKET_URL || 'https://panditji-1tf8.onrender.com');
     socketRef.current.emit('adminJoin');
 
     socketRef.current.on('admin_newMessage', (msg) => {
@@ -76,7 +77,7 @@ const ChatTracker = () => {
     if (!selectedPandit || !selectedDevotee) return;
     setLoading(true);
     try {
-      const res = await axios.get(`https://panditji-1tf8.onrender.com/api/admin/conversations/${selectedPandit}/${selectedDevotee}`, {
+      const res = await api.get(`/admin/conversations/${selectedPandit}/${selectedDevotee}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setMessages(res.data.data);

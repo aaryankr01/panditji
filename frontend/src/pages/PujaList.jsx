@@ -7,6 +7,7 @@ import PanditCard from '../components/pandit/PanditCard';
 import PanditFilter from '../components/pandit/PanditFilter';
 import { Search } from 'lucide-react';
 import useT from '../hooks/useT';
+import api from '../utils/api';
 
 const PujaList = () => {
   const t = useT();
@@ -18,7 +19,7 @@ const PujaList = () => {
   const fetchPandits = async (queryParams = '') => {
     setLoading(true);
     try {
-      const res = await axios.get(`https://panditji-1tf8.onrender.com/api/pandits${queryParams}`);
+      const res = await api.get(`/pandits${queryParams}`);
       setPandits(res.data.data);
       if (res.data.message) {
         setLocationMessage(res.data.message);

@@ -1,7 +1,5 @@
 import { create } from 'zustand';
-import axios from 'axios';
-
-const API_URL = 'https://panditji-1tf8.onrender.com/api';
+import api from '../utils/api';
 
 const useAuthStore = create((set) => ({
   user: null,
@@ -13,7 +11,7 @@ const useAuthStore = create((set) => ({
   login: async (email, password) => {
     set({ isLoading: true, error: null });
     try {
-      const res = await axios.post(`${API_URL}/auth/login`, { email, password });
+      const res = await api.post('/auth/login', { email, password });
       localStorage.setItem('token', res.data.token);
       set({ user: res.data.user, token: res.data.token, isAuthenticated: true, isLoading: false });
       return { success: true, user: res.data.user };
@@ -27,7 +25,7 @@ const useAuthStore = create((set) => ({
   register: async (formData) => {
     set({ isLoading: true, error: null });
     try {
-      const res = await axios.post(`${API_URL}/auth/register`, formData);
+      const res = await api.post('/auth/register', formData);
       localStorage.setItem('token', res.data.token);
       set({ user: res.data.user, token: res.data.token, isAuthenticated: true, isLoading: false });
       return { success: true, user: res.data.user };
@@ -41,7 +39,7 @@ const useAuthStore = create((set) => ({
   adminLogin: async (email, password) => {
     set({ isLoading: true, error: null });
     try {
-      const res = await axios.post(`${API_URL}/auth/admin/login`, { email, password });
+      const res = await api.post('/auth/admin/login', { email, password });
       localStorage.setItem('token', res.data.token);
       set({ user: { ...res.data.admin, role: 'admin' }, token: res.data.token, isAuthenticated: true, isLoading: false });
       return { success: true };
@@ -64,9 +62,7 @@ const useAuthStore = create((set) => ({
       return;
     }
     try {
-      const res = await axios.get(`${API_URL}/auth/me`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await api.get('/auth/me');
       set({ user: res.data.data, isAuthenticated: true });
     } catch (err) {
       localStorage.removeItem('token');
