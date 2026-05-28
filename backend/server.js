@@ -35,7 +35,10 @@ const server = http.createServer(app);
 // Socket.io setup
 const io = new Server(server, {
   cors: {
-    origin: process.env.CLIENT_URL || 'http://localhost:3000',
+    origin: [
+      'http://localhost:3000',
+      'https://panditji-liart-two.vercel.app'
+    ],
     methods: ['GET', 'POST'],
     credentials: true,
   },
@@ -77,9 +80,22 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // app.use(mongoSanitize());
 
 // CORS
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://panditji-liart-two.vercel.app'
+];
+
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:3000',
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('CORS not allowed'));
+    }
+  },
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 // Logger
