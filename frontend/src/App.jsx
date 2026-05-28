@@ -58,42 +58,42 @@ function App() {
         <Route path="/guidelines" element={<Guidelines />} />
         <Route path="/e-puja" element={<EPujaPage />} />
 
-      {/* Auth Routes */}
-      <Route path="/login" element={isAuthenticated ? <Navigate to="/" /> : <Login />} />
-      <Route path="/register" element={isAuthenticated ? <Navigate to="/" /> : <Register />} />
-      <Route path="/forgot-password" element={isAuthenticated ? <Navigate to="/" /> : <ForgotPassword />} />
+        {/* Auth Routes */}
+        <Route path="/login" element={isAuthenticated ? <Navigate to="/" /> : <Login />} />
+        <Route path="/register" element={isAuthenticated ? <Navigate to="/" /> : <Register />} />
+        <Route path="/forgot-password" element={isAuthenticated ? <Navigate to="/" /> : <ForgotPassword />} />
 
-      {/* Protected - Devotee */}
-      <Route path="/devotee-dashboard" element={
-        <ProtectedRoute allowedRoles={['devotee']}><DevoteeDashboard /></ProtectedRoute>
-      } />
-      <Route path="/book/:id" element={
-        <ProtectedRoute allowedRoles={['devotee']}><BookingPage /></ProtectedRoute>
-      } />
+        {/* Protected - Devotee */}
+        <Route path="/devotee-dashboard" element={
+          <ProtectedRoute allowedRoles={['devotee']}><DevoteeDashboard /></ProtectedRoute>
+        } />
+        <Route path="/book/:id" element={
+          <ProtectedRoute allowedRoles={['devotee']}><BookingPage /></ProtectedRoute>
+        } />
 
-      {/* Protected - Pandit */}
-      <Route path="/pandit-dashboard" element={
-        <ProtectedRoute allowedRoles={['pandit']}><PanditDashboard /></ProtectedRoute>
-      } />
+        {/* Protected - Pandit */}
+        <Route path="/pandit-dashboard" element={
+          <ProtectedRoute allowedRoles={['pandit']}><PanditDashboard /></ProtectedRoute>
+        } />
 
-      {/* Protected - Both */}
-      <Route path="/chat" element={
-        <ProtectedRoute allowedRoles={['devotee', 'pandit']}><ChatPage /></ProtectedRoute>
-      } />
+        {/* Protected - Both */}
+        <Route path="/chat" element={
+          <ProtectedRoute allowedRoles={['devotee', 'pandit']}><ChatPage /></ProtectedRoute>
+        } />
 
-      {/* Admin Routes */}
-      <Route path="/admin/login" element={<AdminLogin />} />
-      <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-      <Route path="/admin/chats" element={<AdminRoute><ChatTracker /></AdminRoute>} />
-      <Route path="/admin/pandits" element={<AdminRoute><ManagePandits /></AdminRoute>} />
-      <Route path="/admin/devotees" element={<AdminRoute><ManageDevotees /></AdminRoute>} />
-      <Route path="/admin/bookings" element={<AdminRoute><AllBookings /></AdminRoute>} />
-      <Route path="/admin/payments" element={<AdminRoute><Payments /></AdminRoute>} />
-      <Route path="/admin/analytics" element={<AdminRoute><Analytics /></AdminRoute>} />
+        {/* Admin Routes */}
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+        <Route path="/admin/chats" element={<AdminRoute><ChatTracker /></AdminRoute>} />
+        <Route path="/admin/pandits" element={<AdminRoute><ManagePandits /></AdminRoute>} />
+        <Route path="/admin/devotees" element={<AdminRoute><ManageDevotees /></AdminRoute>} />
+        <Route path="/admin/bookings" element={<AdminRoute><AllBookings /></AdminRoute>} />
+        <Route path="/admin/payments" element={<AdminRoute><Payments /></AdminRoute>} />
+        <Route path="/admin/analytics" element={<AdminRoute><Analytics /></AdminRoute>} />
 
-      {/* Fallback */}
-      <Route path="*" element={<Navigate to="/" />} />
-    </Routes>
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
     </>
   );
 }

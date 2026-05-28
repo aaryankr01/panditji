@@ -67,7 +67,8 @@ exports.register = async (req, res, next) => {
         lastName: user.lastName,
         email: user.email,
         role: user.role,
-        city: user.city
+        city: user.city,
+        avatar: user.avatar
       }
     });
   } catch (err) {
@@ -113,7 +114,8 @@ exports.login = async (req, res, next) => {
         lastName: user.lastName,
         email: user.email,
         role: user.role,
-        city: user.city
+        city: user.city,
+        avatar: user.avatar
       }
     });
   } catch (err) {

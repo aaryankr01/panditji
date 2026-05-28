@@ -49,8 +49,12 @@ const PanditCard = ({ pandit }) => {
   return (
     <div className="bg-white rounded-[32px] p-6 border border-brandborder shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 flex flex-col h-full group">
       <div className="flex justify-between items-start mb-4">
-        <div className="w-14 h-14 bg-saffron-light text-saffron rounded-full flex items-center justify-center font-bold text-2xl shadow-sm">
-          {pandit.firstName.charAt(0)}
+        <div className="w-14 h-14 bg-saffron-light text-saffron rounded-full flex items-center justify-center font-bold text-2xl shadow-sm overflow-hidden">
+          {pandit.avatar ? (
+            <img src={pandit.avatar} alt="Profile" className="w-full h-full object-cover" />
+          ) : (
+            pandit.firstName.charAt(0)
+          )}
         </div>
         <div className="flex items-center gap-1 bg-surface text-maroon px-3 py-1.5 rounded-xl text-sm font-bold border border-brandborder">
           <Star size={14} className="fill-gold text-gold" /> 4.8

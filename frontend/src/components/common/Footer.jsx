@@ -49,7 +49,6 @@ const Footer = () => {
 
         <div className="border-t border-[#5a140a] mt-12 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-[#EAD9CC]">
           <p>&copy; {new Date().getFullYear()} PanditJi Technologies Pvt. Ltd. All rights reserved.</p>
-          <Link to="/admin/login" className="mt-3 md:mt-0 hover:text-white transition-colors">Admin Portal</Link>
         </div>
       </div>
     </footer>

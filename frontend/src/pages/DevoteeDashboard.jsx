@@ -8,6 +8,7 @@ import { LogOut, MessageSquare, Search, Star, MapPin, AlertCircle, CheckCircle, 
 import ChatInterface from '../components/ChatInterface';
 import SupportCare from '../components/SupportCare';
 import LanguageToggle from '../components/common/LanguageToggle';
+import ImageCropperModal from '../components/common/ImageCropperModal';
 
 const loadRazorpayScript = () =>
   new Promise((resolve) => {
@@ -356,6 +357,7 @@ const DevoteeDashboard = () => {
   const t = useT();
   const navigate = useNavigate();
   const [pandits, setPandits] = useState([]);
+  const [cropFile, setCropFile] = useState(null);
   const [isLocal, setIsLocal] = useState(true);
   const [locationMessage, setLocationMessage] = useState('');
   const [activeTab, setActiveTab] = useState('bookings');
@@ -575,13 +577,26 @@ const DevoteeDashboard = () => {
     }
   };
 
-  const handleAvatarUpload = async (e) => {
-    const file = e.target.files[0]; if (!file) return;
-    const formData = new FormData(); formData.append('file', file);
+  const handleAvatarUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setCropFile(file);
+    e.target.value = '';
+  };
+
+  const handleCroppedUpload = async (croppedFile) => {
+    setCropFile(null);
+    const formData = new FormData();
+    formData.append('file', croppedFile);
     try {
-      const res = await axios.post('http://localhost:5000/api/users/avatar', formData, { headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${token}` } });
+      const res = await axios.post('http://localhost:5000/api/users/avatar', formData, {
+        headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${token}` }
+      });
       updateUser({ avatar: res.data.avatarUrl });
-    } catch { alert('Failed to upload profile picture'); }
+      alert('Profile picture updated successfully!');
+    } catch {
+      alert('Failed to upload profile picture');
+    }
   };
 
   const handlePayment = async (booking) => {

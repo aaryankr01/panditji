@@ -316,7 +316,13 @@ const ChatInterface = ({ otherUser, socket }) => {
     <div className="flex flex-col h-full bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden relative">
       <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-orange-50 shrink-0">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-orange-200 flex items-center justify-center text-orange-600"><UserIcon size={20} /></div>
+          <div className="w-10 h-10 rounded-full bg-orange-200 flex items-center justify-center text-orange-600 overflow-hidden">
+            {otherUser.avatar ? (
+              <img src={otherUser.avatar} alt="Profile" className="w-full h-full object-cover" />
+            ) : (
+              <UserIcon size={20} />
+            )}
+          </div>
           <div><h3 className="font-bold text-gray-800">{otherUser.firstName} {otherUser.lastName}</h3><span className="text-xs text-orange-600 font-medium capitalize">{otherUser.role}</span></div>
         </div>
       </div>

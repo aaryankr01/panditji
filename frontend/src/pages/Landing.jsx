@@ -152,9 +152,7 @@ const Landing = () => {
             <div className="form-footer">
               Don't have an account? <a onClick={() => switchTab('signup')}>Sign up free</a>
             </div>
-            <div className="form-footer" style={{ marginTop: '10px' }}>
-              <a onClick={() => navigate('/admin/login')}>Admin Login</a>
-            </div>
+
           </form>
         </div>
 

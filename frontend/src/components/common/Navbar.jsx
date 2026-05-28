@@ -60,8 +60,12 @@ const Navbar = () => {
             ) : (
               <div className="flex items-center gap-3">
                 <Link to={dashboardPath} className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-surface border border-transparent hover:border-brandborder transition-all group">
-                  <div className="w-8 h-8 rounded-full bg-saffron text-white flex items-center justify-center text-sm font-bold shadow-sm">
-                    {user?.firstName?.charAt(0) || <UserIcon size={14} />}
+                  <div className="w-8 h-8 rounded-full bg-saffron text-white flex items-center justify-center text-sm font-bold shadow-sm overflow-hidden">
+                    {user?.avatar ? (
+                      <img src={user.avatar} alt="Profile" className="w-full h-full object-cover" />
+                    ) : (
+                      user?.firstName?.charAt(0) || <UserIcon size={14} />
+                    )}
                   </div>
                   <div className="hidden sm:block text-left">
                     <p className="text-sm font-bold text-maroon leading-none group-hover:text-saffron transition-colors">{user?.firstName}</p>

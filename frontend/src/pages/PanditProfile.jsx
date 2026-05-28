@@ -85,8 +85,12 @@ const PanditProfile = () => {
         <div className="bg-white rounded-3xl p-8 border border-gray-200 shadow-sm flex flex-col md:flex-row gap-10">
           {/* Left Column - Avatar & Quick Info */}
           <div className="w-full md:w-1/3 flex flex-col items-center text-center">
-            <div className="w-40 h-40 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center font-bold text-6xl mb-6 shadow-inner">
-              {pandit.firstName.charAt(0)}
+            <div className="w-40 h-40 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center font-bold text-6xl mb-6 shadow-inner overflow-hidden">
+              {pandit.avatar ? (
+                <img src={pandit.avatar} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                pandit.firstName.charAt(0)
+              )}
             </div>
             <h1 className="text-3xl font-bold text-gray-800 mb-2">{t('profile_pt_prefix')} {pandit.firstName} {pandit.lastName}</h1>
             <div className="flex items-center gap-2 text-yellow-500 font-bold mb-4">
