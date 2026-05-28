@@ -3,10 +3,10 @@ import { Navigate, useLocation } from 'react-router-dom';
 import useAuthStore from '../../store/useAuthStore';
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
-  const { isAuthenticated, user, isLoading } = useAuthStore();
+  const { isAuthenticated, user, isLoading, isInitialized } = useAuthStore();
   const location = useLocation();
 
-  if (isLoading) {
+  if (isLoading || !isInitialized) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 

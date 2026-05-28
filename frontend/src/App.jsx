@@ -1,3 +1,4 @@
+import React, { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import useAuthStore from './store/useAuthStore';
 import { Toaster } from 'react-hot-toast';
@@ -40,7 +41,11 @@ import Payments from './admin/Payments';
 import Analytics from './admin/Analytics';
 
 function App() {
-  const { user, isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated, checkAuth } = useAuthStore();
+
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
 
   return (
     <>

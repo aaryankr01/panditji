@@ -354,7 +354,7 @@ const CancelContactModal = ({ booking, onClose, onGoToChat, onRequestCancel }) =
 };
 
 const DevoteeDashboard = () => {
-  const { user, token, logout, updateUser } = useAuthStore();
+  const { user, token, logout, updateUser, isInitialized } = useAuthStore();
   const t = useT();
   const navigate = useNavigate();
   const [pandits, setPandits] = useState([]);
@@ -464,6 +464,7 @@ const DevoteeDashboard = () => {
   }, [token]);
 
   useEffect(() => {
+    if (!isInitialized) return;
     if (!token || user?.role !== 'devotee') { navigate('/'); return; }
     fetchPandits();
     fetchConversations();
@@ -490,7 +491,7 @@ const DevoteeDashboard = () => {
       setBookings(prev => prev.map(b => b._id === bookingId ? { ...b, videoLink } : b));
     });
     return () => socket.disconnect();
-  }, [token, user, navigate, fetchConversations, fetchMyBookings, fetchMyPayments]);
+  }, [token, user, isInitialized, navigate, fetchConversations, fetchMyBookings, fetchMyPayments]);
 
   const handleLogout = () => { logout(); navigate('/'); };
   const startChat = (pandit) => { setSelectedChatUser(pandit); setActiveTab('chat'); };

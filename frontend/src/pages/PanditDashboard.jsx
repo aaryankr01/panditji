@@ -72,7 +72,7 @@ const SectionTitle = ({ children }) => (
 );
 
 const PanditDashboard = () => {
-  const { user, token, logout, updateUser } = useAuthStore();
+  const { user, token, logout, updateUser, isInitialized } = useAuthStore();
   const t = useT();
   const navigate = useNavigate();
   const [bookings, setBookings] = useState([]);
@@ -100,15 +100,16 @@ const PanditDashboard = () => {
   const [verifyingAadhar, setVerifyingAadhar] = useState(false);
 
   useEffect(() => {
+    if (!isInitialized) return;
     if (!token || user?.role !== 'pandit') { navigate('/'); return; }
 
-    axios.get(`${API}/bookings`, { headers: { Authorization: `Bearer ${token}` } })
+    api.get('/bookings')
       .then(r => setBookings(r.data.data)).catch(console.error);
 
-    axios.get(`${API}/chat/conversations/list`, { headers: { Authorization: `Bearer ${token}` } })
+    api.get('/chat/conversations/list')
       .then(r => setConversations(r.data.data)).catch(console.error);
 
-    axios.get(`${API}/payments`, { headers: { Authorization: `Bearer ${token}` } })
+    api.get('/payments')
       .then(r => {
         const payments = r.data.data;
         const sum = payments.reduce((acc, curr) => acc + (curr.panditEarnings || 0), 0);
@@ -117,7 +118,7 @@ const PanditDashboard = () => {
 
     const fetchProfile = async () => {
       try {
-        const res = await axios.get(`${API}/pandits/my-profile`, { headers: { Authorization: `Bearer ${token}` } });
+        const res = await api.get('/pandits/my-profile');
         const data = res.data.data;
         setProfileData(data);
         setEditForm({
@@ -145,7 +146,7 @@ const PanditDashboard = () => {
     };
     fetchProfile();
 
-    const socket = io(SOCKET_URL, { transports: ['websocket'] });
+    const socket = io(import.meta.env.VITE_SOCKET_URL || 'https://panditji-1tf8.onrender.com', { transports: ['websocket'] });
     socketRef.current = socket;
 
     socket.on('connect', () => {
@@ -177,7 +178,7 @@ const PanditDashboard = () => {
     });
 
     return () => socket.disconnect();
-  }, [token, user, navigate]);
+  }, [token, user, isInitialized, navigate]);
 
   useEffect(() => {
     if (!incomingRequest) { clearInterval(timerRef.current); return; }
@@ -197,10 +198,7 @@ const PanditDashboard = () => {
     }
     setAccepting(true);
     try {
-      const res = await axios.patch(
-        `${API}/bookings/${bookingId}/accept`, {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const res = await api.patch(`/bookings/${bookingId}/accept`);
       const accepted = res.data.data;
 
       setBookings(prev => {
@@ -224,10 +222,7 @@ const PanditDashboard = () => {
 
   const handleReject = async (bookingId) => {
     try {
-      await axios.patch(`${API}/bookings/${bookingId}/status`,
-        { status: 'rejected' },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await api.patch(`/bookings/${bookingId}/status`, { status: 'rejected' });
       setBookings(prev => prev.map(b => b._id === bookingId ? { ...b, status: 'rejected' } : b));
       if (incomingRequest?._id === bookingId) setIncomingRequest(null);
     } catch {
@@ -257,7 +252,7 @@ const PanditDashboard = () => {
 
   const updateBookingStatus = async (bookingId, status) => {
     try {
-      await axios.patch(`${API}/bookings/${bookingId}/status`, { status }, { headers: { Authorization: `Bearer ${token}` } });
+      await api.patch(`/bookings/${bookingId}/status`, { status });
       setBookings(bookings.map(b => b._id === bookingId ? { ...b, status } : b));
     } catch { alert('Failed to update status'); }
   };
@@ -266,7 +261,7 @@ const PanditDashboard = () => {
     const link = window.prompt('Enter Zoom/Meet link for this Puja:');
     if (!link) return;
     try {
-      await axios.patch(`${API}/bookings/${bookingId}/link`, { videoLink: link }, { headers: { Authorization: `Bearer ${token}` } });
+      await api.patch(`/bookings/${bookingId}/link`, { videoLink: link });
       setBookings(bookings.map(b => b._id === bookingId ? { ...b, videoLink: link } : b));
       alert('Link shared with devotee!');
     } catch { alert('Failed to share link'); }
@@ -279,7 +274,7 @@ const PanditDashboard = () => {
 
     script.onload = async () => {
       try {
-        const { data } = await axios.post(`${API}/payments/create-subscription-order`, {}, { headers: { Authorization: `Bearer ${token}` } });
+        const { data } = await api.post('/payments/create-subscription-order');
         if (!data.success) return alert('Failed to initiate subscription payment.');
 
         const options = {
@@ -291,11 +286,11 @@ const PanditDashboard = () => {
           order_id: data.orderId,
           handler: async function (response) {
             try {
-              const verifyRes = await axios.post(`${API}/payments/verify-subscription`, {
+              const verifyRes = await api.post('/payments/verify-subscription', {
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_signature: response.razorpay_signature,
-              }, { headers: { Authorization: `Bearer ${token}` } });
+              });
 
               if (verifyRes.data.success) {
                 alert('Subscription successful!');
@@ -315,7 +310,7 @@ const PanditDashboard = () => {
   const deleteBooking = async (bookingId) => {
     if (!window.confirm('Are you sure you want to delete this booking from your history?')) return;
     try {
-      await axios.delete(`${API}/bookings/${bookingId}`, { headers: { Authorization: `Bearer ${token}` } });
+      await api.delete(`/bookings/${bookingId}`);
       setBookings(bookings.filter(b => b._id !== bookingId));
     } catch (err) {
       console.error('[deleteBooking]', err.response?.data || err.message);
@@ -326,7 +321,7 @@ const PanditDashboard = () => {
   const handleSaveProfile = async () => {
     setSavingProfile(true);
     try {
-      const res = await axios.patch(`${API}/pandits/profile`, editForm, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await api.patch('/pandits/profile', editForm);
       setProfileData(res.data.data);
       updateUser(res.data.data); // Update local user state if needed
       alert('Profile updated successfully!');
@@ -352,9 +347,8 @@ const PanditDashboard = () => {
     formData.append('document', aadharFile);
 
     try {
-      const res = await axios.post(`${API}/pandits/aadhar/upload`, formData, {
+      const res = await api.post('/pandits/aadhar/upload', formData, {
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'
         }
       });

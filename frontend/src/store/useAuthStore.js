@@ -5,6 +5,7 @@ const useAuthStore = create((set) => ({
   user: null,
   token: localStorage.getItem('token') || null,
   isAuthenticated: false, // Start false; checkAuth() will hydrate this
+  isInitialized: false,   // True once checkAuth() has run (success or failure)
   isLoading: false,
   error: null,
 
@@ -58,15 +59,15 @@ const useAuthStore = create((set) => ({
   checkAuth: async () => {
     const token = localStorage.getItem('token');
     if (!token) {
-      set({ isAuthenticated: false });
+      set({ isAuthenticated: false, isInitialized: true });
       return;
     }
     try {
       const res = await api.get('/auth/me');
-      set({ user: res.data.data, isAuthenticated: true });
+      set({ user: res.data.data, isAuthenticated: true, isInitialized: true });
     } catch (err) {
       localStorage.removeItem('token');
-      set({ user: null, token: null, isAuthenticated: false });
+      set({ user: null, token: null, isAuthenticated: false, isInitialized: true });
     }
   },
 
