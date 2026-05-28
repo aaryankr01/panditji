@@ -5,6 +5,47 @@ import useT from '../../hooks/useT';
 
 const PanditCard = ({ pandit }) => {
   const t = useT();
+
+  const translateSpecialization = (spec) => {
+    const cleanSpec = spec.trim();
+    const specMap = {
+      'Griha Pravesh': 'puja_3_name',
+      'Satyanarayan Katha': 'puja_5_name',
+      'Vivah Ceremony': 'puja_4_name',
+      'Mundan Ceremony': 'puja_6_name',
+      'Navratri Puja': 'puja_7_name',
+      'Durga Puja': 'puja_8_name',
+      'Havan & Yagya': 'puja_9_name',
+      'Naamkaran': 'puja_10_name',
+      'Ganesh Puja': 'puja_11_name',
+      'Lakshmi Puja': 'puja_12_name',
+      'Rudrabhishek': 'puja_1_name',
+      'Surya Puja': 'puja_13_name',
+      'All Pujas': 'card_all_pujas',
+      'Vivah': 'puja_vivah_shorthand',
+      'Satyanarayan': 'puja_satya_shorthand',
+      'Havan': 'puja_havan_shorthand',
+    };
+
+    const key = specMap[cleanSpec];
+    if (key) {
+      return t(key);
+    }
+    return cleanSpec;
+  };
+
+  const getSpecializationsText = () => {
+    let specs = [];
+    if (Array.isArray(pandit.panditProfile?.specializations) && pandit.panditProfile.specializations.length > 0) {
+      specs = pandit.panditProfile.specializations;
+    } else if (pandit.panditProfile?.specialization) {
+      specs = pandit.panditProfile.specialization.split(',').map(s => s.trim());
+    } else {
+      return t('card_all_pujas');
+    }
+    return specs.map(s => translateSpecialization(s)).join(', ');
+  };
+
   return (
     <div className="bg-white rounded-[32px] p-6 border border-brandborder shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 flex flex-col h-full group">
       <div className="flex justify-between items-start mb-4">
@@ -16,7 +57,7 @@ const PanditCard = ({ pandit }) => {
         </div>
       </div>
       
-      <h3 className="font-bold font-serif text-xl text-maroon mb-1 group-hover:text-saffron transition-colors">Pt. {pandit.firstName} {pandit.lastName}</h3>
+      <h3 className="font-bold font-serif text-xl text-maroon mb-1 group-hover:text-saffron transition-colors">{t('profile_pt_prefix')} {pandit.firstName} {pandit.lastName}</h3>
       
       <div className="flex items-center gap-1 text-textMid text-sm mb-4">
         <MapPin size={14} /> 
@@ -30,7 +71,7 @@ const PanditCard = ({ pandit }) => {
       
       <div className="text-sm text-textMid mb-6 bg-surface p-3 rounded-xl border border-brandborder flex-1">
         <span className="font-bold text-maroon block mb-1">{t('card_specializations')}</span> 
-        {pandit.panditProfile?.specialization || t('card_all_pujas')}
+        {getSpecializationsText()}
       </div>
       
       <div className="flex gap-2 mt-auto">

@@ -5,11 +5,60 @@ import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
 import Loader from '../components/common/Loader';
 import { Star, MapPin, CheckCircle, CalendarCheck } from 'lucide-react';
+import useT from '../hooks/useT';
 
 const PanditProfile = () => {
   const { id } = useParams();
   const [pandit, setPandit] = useState(null);
   const [loading, setLoading] = useState(true);
+  const t = useT();
+
+  const translateSpecialization = (spec) => {
+    const cleanSpec = spec.trim();
+    const specMap = {
+      'Griha Pravesh': 'puja_3_name',
+      'Satyanarayan Katha': 'puja_5_name',
+      'Vivah Ceremony': 'puja_4_name',
+      'Mundan Ceremony': 'puja_6_name',
+      'Navratri Puja': 'puja_7_name',
+      'Durga Puja': 'puja_8_name',
+      'Havan & Yagya': 'puja_9_name',
+      'Naamkaran': 'puja_10_name',
+      'Ganesh Puja': 'puja_11_name',
+      'Lakshmi Puja': 'puja_12_name',
+      'Rudrabhishek': 'puja_1_name',
+      'Surya Puja': 'puja_13_name',
+      'All Pujas': 'card_all_pujas',
+      'Vivah': 'puja_vivah_shorthand',
+      'Satyanarayan': 'puja_satya_shorthand',
+      'Havan': 'puja_havan_shorthand',
+    };
+
+    const key = specMap[cleanSpec];
+    if (key) {
+      return t(key);
+    }
+    return cleanSpec;
+  };
+
+  const getTranslatedBio = (bio, firstName) => {
+    if (!bio) {
+      return t('profile_default_bio', { name: firstName });
+    }
+    
+    const prefix = 'Specializes in:';
+    if (bio.toLowerCase().startsWith(prefix.toLowerCase())) {
+      const specializationText = bio.slice(prefix.length).trim();
+      
+      const translatedSpecialization = specializationText
+        .split(',')
+        .map(s => translateSpecialization(s))
+        .join(', ');
+        
+      return `${t('profile_specializes_in')} ${translatedSpecialization}`;
+    }
+    return bio;
+  };
 
   useEffect(() => {
     const fetchPandit = async () => {
@@ -26,7 +75,7 @@ const PanditProfile = () => {
   }, [id]);
 
   if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader size={48} /></div>;
-  if (!pandit) return <div className="min-h-screen flex items-center justify-center">Pandit not found</div>;
+  if (!pandit) return <div className="min-h-screen flex items-center justify-center">{t('profile_not_found')}</div>;
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 font-sans">
@@ -39,12 +88,12 @@ const PanditProfile = () => {
             <div className="w-40 h-40 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center font-bold text-6xl mb-6 shadow-inner">
               {pandit.firstName.charAt(0)}
             </div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">Pt. {pandit.firstName} {pandit.lastName}</h1>
+            <h1 className="text-3xl font-bold text-gray-800 mb-2">{t('profile_pt_prefix')} {pandit.firstName} {pandit.lastName}</h1>
             <div className="flex items-center gap-2 text-yellow-500 font-bold mb-4">
-              <Star fill="currentColor" /> 4.9 <span className="text-gray-400 font-normal text-sm">(120 reviews)</span>
+              <Star fill="currentColor" /> 4.9 <span className="text-gray-400 font-normal text-sm">{t('profile_reviews', { count: 120 })}</span>
             </div>
             <div className="flex items-center gap-2 text-gray-600 mb-6 bg-gray-50 px-4 py-2 rounded-full border border-gray-100">
-              <MapPin size={18} /> {pandit.city || 'Available Worldwide'}
+              <MapPin size={18} /> {pandit.city || t('profile_available_worldwide')}
             </div>
             
             <div className="flex flex-col w-full gap-3">
@@ -52,14 +101,7 @@ const PanditProfile = () => {
                 to={`/book/${pandit._id}`}
                 className="w-full bg-orange-600 text-white font-bold py-4 rounded-xl hover:bg-orange-700 transition-all shadow-md flex items-center justify-center gap-2 text-lg"
               >
-                <CalendarCheck /> Book Puja
-              </Link>
-              <Link 
-                to="/chat"
-                state={{ preSelectedUser: pandit }}
-                className="w-full bg-orange-50 text-orange-600 border border-orange-200 font-bold py-4 rounded-xl hover:bg-orange-100 transition-all shadow-sm flex items-center justify-center gap-2 text-lg"
-              >
-                Message Pandit
+                <CalendarCheck /> {t('profile_book_puja')}
               </Link>
             </div>
           </div>
@@ -67,32 +109,42 @@ const PanditProfile = () => {
           {/* Right Column - Details */}
           <div className="w-full md:w-2/3">
             <div className="flex items-center gap-2 text-green-600 bg-green-50 px-4 py-2 rounded-lg font-bold text-sm w-max mb-8 border border-green-100">
-              <CheckCircle size={18} /> Verified PanditJi Partner
+              <CheckCircle size={18} /> {t('profile_verified_partner')}
             </div>
             
             <div className="space-y-8">
               <section>
-                <h2 className="text-xl font-bold text-gray-800 mb-3 border-b border-gray-100 pb-2">About PanditJi</h2>
+                <h2 className="text-xl font-bold text-gray-800 mb-3 border-b border-gray-100 pb-2">{t('profile_about_panditji')}</h2>
                 <p className="text-gray-600 leading-relaxed">
-                  {pandit.panditProfile?.bio || `Acharya ${pandit.firstName} is a highly respected Vedic scholar with years of experience in conducting auspicious ceremonies. Known for their deep understanding of scriptures and perfect pronunciation of mantras.`}
+                  {getTranslatedBio(pandit.panditProfile?.bio, pandit.firstName)}
                 </p>
               </section>
 
               <section>
-                <h2 className="text-xl font-bold text-gray-800 mb-3 border-b border-gray-100 pb-2">Specializations</h2>
+                <h2 className="text-xl font-bold text-gray-800 mb-3 border-b border-gray-100 pb-2">{t('profile_specializations')}</h2>
                 <div className="flex flex-wrap gap-2">
-                  {(pandit.panditProfile?.specialization || 'Griha Pravesh, Vivah, Satyanarayan, Havan').split(',').map((spec, idx) => (
-                    <span key={idx} className="bg-orange-50 text-orange-700 px-4 py-2 rounded-lg text-sm font-semibold border border-orange-100">
-                      {spec.trim()}
-                    </span>
-                  ))}
+                  {(() => {
+                    let specs = [];
+                    if (Array.isArray(pandit.panditProfile?.specializations) && pandit.panditProfile.specializations.length > 0) {
+                      specs = pandit.panditProfile.specializations;
+                    } else if (pandit.panditProfile?.specialization) {
+                      specs = pandit.panditProfile.specialization.split(',').map(s => s.trim());
+                    } else {
+                      specs = ['Griha Pravesh', 'Vivah', 'Satyanarayan', 'Havan'];
+                    }
+                    return specs.map((spec, idx) => (
+                      <span key={idx} className="bg-orange-50 text-orange-700 px-4 py-2 rounded-lg text-sm font-semibold border border-orange-100">
+                        {translateSpecialization(spec)}
+                      </span>
+                    ));
+                  })()}
                 </div>
               </section>
 
               <section>
-                <h2 className="text-xl font-bold text-gray-800 mb-3 border-b border-gray-100 pb-2">Experience</h2>
+                <h2 className="text-xl font-bold text-gray-800 mb-3 border-b border-gray-100 pb-2">{t('profile_experience')}</h2>
                 <p className="text-gray-600">
-                  {pandit.panditProfile?.experience || '10+'} Years of spiritual service.
+                  {pandit.panditProfile?.experience || '10+'} {t('profile_years_service')}
                 </p>
               </section>
             </div>

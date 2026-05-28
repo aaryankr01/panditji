@@ -38,6 +38,24 @@ const translations = {
     card_profile: 'Profile',
     card_book_now: 'Book Now',
 
+    // Pandit Profile
+    profile_not_found: 'Pandit not found',
+    profile_reviews: '({{count}} reviews)',
+    profile_available_worldwide: 'Available Worldwide',
+    profile_book_puja: 'Book Puja',
+    profile_message_pandit: 'Message Pandit',
+    profile_verified_partner: 'Verified PanditJi Partner',
+    profile_about_panditji: 'About PanditJi',
+    profile_specializations: 'Specializations',
+    profile_experience: 'Experience',
+    profile_years_service: 'Years of spiritual service.',
+    profile_specializes_in: 'Specializes in:',
+    profile_default_bio: 'Acharya {{name}} is a highly respected Vedic scholar with years of experience in conducting auspicious ceremonies. Known for their deep understanding of scriptures and perfect pronunciation of mantras.',
+    profile_pt_prefix: 'Pt.',
+    puja_vivah_shorthand: 'Vivah',
+    puja_satya_shorthand: 'Satyanarayan',
+    puja_havan_shorthand: 'Havan',
+
     // Home Hero
     home_badge: "India's Premium Puja Booking Platform",
     home_h1_line1: 'Sacred Pujas,',
@@ -449,6 +467,24 @@ const translations = {
     card_all_pujas: 'सभी मानक पूजा और हवन',
     card_profile: 'प्रोफ़ाइल',
     card_book_now: 'अभी बुक करें',
+
+    // Pandit Profile
+    profile_not_found: 'पंडित नहीं मिला',
+    profile_reviews: '({{count}} समीक्षाएं)',
+    profile_available_worldwide: 'दुनिया भर में उपलब्ध',
+    profile_book_puja: 'पूजा बुक करें',
+    profile_message_pandit: 'पंडित जी को संदेश भेजें',
+    profile_verified_partner: 'सत्यापित पंडितजी पार्टनर',
+    profile_about_panditji: 'पंडितजी के बारे में',
+    profile_specializations: 'विशेषज्ञता',
+    profile_experience: 'अनुभव',
+    profile_years_service: 'वर्षों की आध्यात्मिक सेवा।',
+    profile_specializes_in: 'विशेषज्ञता:',
+    profile_default_bio: 'आचार्य {{name}} एक अत्यधिक सम्मानित वैदिक विद्वान हैं, जिन्हें शुभ समारोहों के संचालन में वर्षों का अनुभव है। वे शास्त्रों की अपनी गहरी समझ और मंत्रों के स्पष्ट उच्चारण के लिए जाने जाते हैं।',
+    profile_pt_prefix: 'पं.',
+    puja_vivah_shorthand: 'विवाह',
+    puja_satya_shorthand: 'सत्यनारायण',
+    puja_havan_shorthand: 'हवन',
 
     // Home Hero
     home_badge: 'भारत का प्रीमियम पूजा बुकिंग प्लेटफार्म',

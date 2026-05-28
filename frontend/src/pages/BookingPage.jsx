@@ -1,10 +1,42 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import useAuthStore from '../store/useAuthStore';
 import Navbar from '../components/common/Navbar';
 import Loader from '../components/common/Loader';
 import { Video, MapPin, Clock, Calendar, ShieldCheck, Tag } from 'lucide-react';
+
+// Puja-based pricing (matches BookAPuja.jsx)
+const PUJA_PRICES = {
+  'Rudrabhishek': 3100,
+  'Sunderkand Path': 3500,
+  'Griha Pravesh': 5100,
+  'Vivah Ceremony': 11000,
+  'Vivah Sanskar': 11000,
+  'Satyanarayan Katha': 2100,
+  'Mundan Ceremony': 2100,
+  'Navratri Puja': 3100,
+  'Durga Puja': 5100,
+  'Havan & Yagya': 3100,
+  'Naamkaran': 2100,
+  'Namakaran': 2100,
+  'Ganesh Puja': 2100,
+  'Laxmi Puja': 2100,
+  'Lakshmi Puja': 2100,
+  'Surya Puja': 2100,
+  'Kaal Sarp Dosh': 5500,
+  'Vastu Shanti': 6100,
+  'Maha Mrityunjaya': 3100,
+  'Annaprashan': 1500,
+  'Navagraha Puja': 3500,
+  'Navgrah Puja': 3500,
+  'Lakshmi Narayan': 2500,
+  'Janmashtami Puja': 3100,
+  'Janeu Ceremony': 2100,
+  'Pitru Tarpan': 2100,
+  'Hanuman Puja': 2100,
+};
+const DEFAULT_FEE = 2100;
 
 const BookingPage = () => {
   const { id } = useParams(); // Pandit ID
@@ -40,8 +72,8 @@ const BookingPage = () => {
     return null;
   }
 
-  const baseFee = pandit?.panditProfile?.feePerPuja || 1500;
-  const currentFee = formData.pujaMode === 'online' ? baseFee * 0.7 : baseFee;
+  const baseFee = PUJA_PRICES[formData.pujaType] ?? DEFAULT_FEE;
+  const currentFee = formData.pujaMode === 'online' ? Math.round(baseFee * 0.7) : baseFee;
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
@@ -73,6 +105,17 @@ const BookingPage = () => {
             <h1 className="text-2xl font-bold font-serif">Book Your Puja</h1>
             <p className="text-orange-100 text-sm mt-1">Fill out the details below to request a booking.</p>
           </div>
+          {pandit && id !== 'any' && (
+            <div className="bg-orange-50 border-b border-orange-100 px-6 py-3 flex items-center gap-3">
+              <div className="w-9 h-9 bg-orange-600 text-white rounded-full flex items-center justify-center font-bold text-lg flex-shrink-0">
+                {pandit.firstName?.charAt(0)}
+              </div>
+              <div>
+                <p className="text-xs font-black text-orange-600 uppercase tracking-widest">Booking for Pandit</p>
+                <p className="font-bold text-gray-800">Pt. {pandit.firstName} {pandit.lastName} — {pandit.city}</p>
+              </div>
+            </div>
+          )}
           
           <form onSubmit={handleSubmit} className="p-8 space-y-6">
             <div className="bg-orange-50 p-4 rounded-2xl border border-orange-100 flex items-center justify-between mb-4">
