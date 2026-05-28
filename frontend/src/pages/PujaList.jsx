@@ -18,7 +18,7 @@ const PujaList = () => {
   const fetchPandits = async (queryParams = '') => {
     setLoading(true);
     try {
-      const res = await axios.get(`http://localhost:5000/api/pandits${queryParams}`);
+      const res = await axios.get(`http://panditji-1tf8.onrender.com/api/pandits${queryParams}`);
       setPandits(res.data.data);
       if (res.data.message) {
         setLocationMessage(res.data.message);
@@ -50,15 +50,15 @@ const PujaList = () => {
     fetchPandits(`?lat=${lat}&lng=${lng}`);
   };
 
-  const filteredPandits = pandits.filter(p => 
-    p.firstName.toLowerCase().includes(searchQuery.toLowerCase()) || 
+  const filteredPandits = pandits.filter(p =>
+    p.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
     p.lastName.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
     <div className="flex flex-col min-h-screen bg-surface font-sans">
       <Navbar />
-      
+
       <div className="bg-maroon text-white py-12 px-4 sm:px-6 lg:px-8 border-b-8 border-saffron relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-saffron opacity-10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
         <div className="max-w-7xl mx-auto text-center relative z-10">
@@ -70,9 +70,9 @@ const PujaList = () => {
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full flex flex-col md:flex-row gap-8">
         {/* Sidebar Filters */}
         <aside className="w-full md:w-64 shrink-0">
-          <PanditFilter 
-            onSearch={setSearchQuery} 
-            onFilterChange={handleFilterChange} 
+          <PanditFilter
+            onSearch={setSearchQuery}
+            onFilterChange={handleFilterChange}
             onLocationRequest={handleLocationRequest}
           />
         </aside>

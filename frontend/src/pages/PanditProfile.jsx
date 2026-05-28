@@ -45,16 +45,16 @@ const PanditProfile = () => {
     if (!bio) {
       return t('profile_default_bio', { name: firstName });
     }
-    
+
     const prefix = 'Specializes in:';
     if (bio.toLowerCase().startsWith(prefix.toLowerCase())) {
       const specializationText = bio.slice(prefix.length).trim();
-      
+
       const translatedSpecialization = specializationText
         .split(',')
         .map(s => translateSpecialization(s))
         .join(', ');
-        
+
       return `${t('profile_specializes_in')} ${translatedSpecialization}`;
     }
     return bio;
@@ -63,7 +63,7 @@ const PanditProfile = () => {
   useEffect(() => {
     const fetchPandit = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/pandits/${id}`);
+        const res = await axios.get(`http://panditji-1tf8.onrender.com/api/pandits/${id}`);
         setPandit(res.data.data);
         setLoading(false);
       } catch (err) {
@@ -80,7 +80,7 @@ const PanditProfile = () => {
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 font-sans">
       <Navbar />
-      
+
       <main className="flex-1 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full">
         <div className="bg-white rounded-3xl p-8 border border-gray-200 shadow-sm flex flex-col md:flex-row gap-10">
           {/* Left Column - Avatar & Quick Info */}
@@ -99,9 +99,9 @@ const PanditProfile = () => {
             <div className="flex items-center gap-2 text-gray-600 mb-6 bg-gray-50 px-4 py-2 rounded-full border border-gray-100">
               <MapPin size={18} /> {pandit.city || t('profile_available_worldwide')}
             </div>
-            
+
             <div className="flex flex-col w-full gap-3">
-              <Link 
+              <Link
                 to={`/book/${pandit._id}`}
                 className="w-full bg-orange-600 text-white font-bold py-4 rounded-xl hover:bg-orange-700 transition-all shadow-md flex items-center justify-center gap-2 text-lg"
               >
@@ -115,7 +115,7 @@ const PanditProfile = () => {
             <div className="flex items-center gap-2 text-green-600 bg-green-50 px-4 py-2 rounded-lg font-bold text-sm w-max mb-8 border border-green-100">
               <CheckCircle size={18} /> {t('profile_verified_partner')}
             </div>
-            
+
             <div className="space-y-8">
               <section>
                 <h2 className="text-xl font-bold text-gray-800 mb-3 border-b border-gray-100 pb-2">{t('profile_about_panditji')}</h2>

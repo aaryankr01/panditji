@@ -17,12 +17,12 @@ const ChatPage = () => {
   useEffect(() => {
     const fetchConversations = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/chat/conversations/list', {
+        const res = await axios.get('http://panditji-1tf8.onrender.com/api/chat/conversations/list', {
           headers: { Authorization: `Bearer ${token}` }
         });
         const convos = res.data.data;
         setConversations(convos);
-        
+
         // If we came from a profile with a pre-selected user
         if (location.state?.preSelectedUser) {
           const preUser = location.state.preSelectedUser;
@@ -41,7 +41,7 @@ const ChatPage = () => {
         setLoading(false);
       }
     };
-    
+
     if (token) fetchConversations();
   }, [token, location.state]);
 
@@ -83,7 +83,7 @@ const ChatPage = () => {
               )}
             </div>
           </div>
-          
+
           {/* Chat Window */}
           <div className="flex-1 h-full bg-gray-50">
             {selectedUser ? (

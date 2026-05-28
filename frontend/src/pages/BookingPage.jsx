@@ -42,7 +42,7 @@ const BookingPage = () => {
   const { id } = useParams(); // Pandit ID
   const { token, isAuthenticated } = useAuthStore();
   const navigate = useNavigate();
-  
+
   const [formData, setFormData] = useState({
     pujaType: 'Griha Pravesh',
     date: '',
@@ -58,7 +58,7 @@ const BookingPage = () => {
   useEffect(() => {
     const fetchPandit = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/pandits/${id}`);
+        const res = await axios.get(`http://panditji-1tf8.onrender.com/api/pandits/${id}`);
         setPandit(res.data.data);
       } catch (err) {
         console.error(err);
@@ -81,7 +81,7 @@ const BookingPage = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await axios.post('http://localhost:5000/api/bookings', {
+      await axios.post('http://panditji-1tf8.onrender.com/api/bookings', {
         panditId: id === 'any' ? null : id,
         ...formData,
         fee: currentFee
@@ -116,22 +116,22 @@ const BookingPage = () => {
               </div>
             </div>
           )}
-          
+
           <form onSubmit={handleSubmit} className="p-8 space-y-6">
             <div className="bg-orange-50 p-4 rounded-2xl border border-orange-100 flex items-center justify-between mb-4">
               <div>
                 <p className="text-xs font-black text-orange-600 uppercase tracking-widest mb-1">Select Puja Mode</p>
                 <div className="flex bg-white p-1 rounded-xl border border-orange-200">
-                  <button 
+                  <button
                     type="button"
-                    onClick={() => setFormData({...formData, pujaMode: 'in-person'})}
+                    onClick={() => setFormData({ ...formData, pujaMode: 'in-person' })}
                     className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${formData.pujaMode === 'in-person' ? 'bg-orange-600 text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}
                   >
                     In-Person
                   </button>
-                  <button 
+                  <button
                     type="button"
-                    onClick={() => setFormData({...formData, pujaMode: 'online'})}
+                    onClick={() => setFormData({ ...formData, pujaMode: 'online' })}
                     className={`px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${formData.pujaMode === 'online' ? 'bg-orange-600 text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}
                   >
                     Online <span className="bg-green-100 text-green-700 text-[10px] px-1.5 py-0.5 rounded uppercase">-30%</span>

@@ -34,27 +34,27 @@ const AdminDashboard = () => {
 
     const fetchData = async () => {
       try {
-        const statsRes = await axios.get('http://localhost:5000/api/admin/stats', {
+        const statsRes = await axios.get('http://panditji-1tf8.onrender.com/api/admin/stats', {
           headers: { Authorization: `Bearer ${token}` }
         });
         setStats(statsRes.data.data);
 
-        const usersRes = await axios.get('http://localhost:5000/api/admin/users', {
+        const usersRes = await axios.get('http://panditji-1tf8.onrender.com/api/admin/users', {
           headers: { Authorization: `Bearer ${token}` }
         });
         setUsersList(usersRes.data.data);
 
-        const paymentsRes = await axios.get('http://localhost:5000/api/admin/payments', {
+        const paymentsRes = await axios.get('http://panditji-1tf8.onrender.com/api/admin/payments', {
           headers: { Authorization: `Bearer ${token}` }
         });
         setPaymentsList(paymentsRes.data.data);
 
-        const ticketsRes = await axios.get('http://localhost:5000/api/admin/support', {
+        const ticketsRes = await axios.get('http://panditji-1tf8.onrender.com/api/admin/support', {
           headers: { Authorization: `Bearer ${token}` }
         });
         setTickets(ticketsRes.data.data);
 
-        const bookingsRes = await axios.get('http://localhost:5000/api/admin/bookings', {
+        const bookingsRes = await axios.get('http://panditji-1tf8.onrender.com/api/admin/bookings', {
           headers: { Authorization: `Bearer ${token}` }
         });
         setBookingsList(bookingsRes.data.data || []);
@@ -65,7 +65,7 @@ const AdminDashboard = () => {
 
     const fetchTickets = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/admin/support', {
+        const res = await axios.get('http://panditji-1tf8.onrender.com/api/admin/support', {
           headers: { Authorization: `Bearer ${token}` }
         });
         setTickets(res.data.data);
@@ -84,7 +84,7 @@ const AdminDashboard = () => {
     if (!broadcastTitle.trim() || !broadcastMessage.trim()) return;
     setBroadcastLoading(true);
     try {
-      await axios.post('http://localhost:5000/api/admin/broadcast', {
+      await axios.post('http://panditji-1tf8.onrender.com/api/admin/broadcast', {
         title: broadcastTitle,
         message: broadcastMessage,
         target: broadcastTarget
@@ -109,7 +109,7 @@ const AdminDashboard = () => {
     if (!replyText.trim()) return;
     setReplyLoading(true);
     try {
-      const res = await axios.patch(`http://localhost:5000/api/admin/support/${ticketId}`,
+      const res = await axios.patch(`http://panditji-1tf8.onrender.com/api/admin/support/${ticketId}`,
         { adminReply: replyText, status: 'resolved' },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -122,7 +122,7 @@ const AdminDashboard = () => {
 
   const handleStatusChange = async (ticketId, status) => {
     try {
-      const res = await axios.patch(`http://localhost:5000/api/admin/support/${ticketId}`,
+      const res = await axios.patch(`http://panditji-1tf8.onrender.com/api/admin/support/${ticketId}`,
         { status },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -134,7 +134,7 @@ const AdminDashboard = () => {
   const handleDeleteTicket = async (ticketId) => {
     if (!window.confirm('Are you sure you want to permanently delete this ticket?')) return;
     try {
-      await axios.delete(`http://localhost:5000/api/admin/support/${ticketId}`, {
+      await axios.delete(`http://panditji-1tf8.onrender.com/api/admin/support/${ticketId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setTickets(prev => prev.filter(t => t._id !== ticketId));
@@ -145,10 +145,10 @@ const AdminDashboard = () => {
   const handleApprovePandit = async (id) => {
     if (!window.confirm('Approve this Pandit?')) return;
     try {
-      await axios.patch(`http://localhost:5000/api/admin/users/${id}/approve-pandit`, {}, {
+      await axios.patch(`http://panditji-1tf8.onrender.com/api/admin/users/${id}/approve-pandit`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      const usersRes = await axios.get('http://localhost:5000/api/admin/users', { headers: { Authorization: `Bearer ${token}` } });
+      const usersRes = await axios.get('http://panditji-1tf8.onrender.com/api/admin/users', { headers: { Authorization: `Bearer ${token}` } });
       setUsersList(usersRes.data.data);
     } catch (err) { alert('Failed to approve'); }
   };
@@ -156,10 +156,10 @@ const AdminDashboard = () => {
   const handleRejectPandit = async (id) => {
     if (!window.confirm('Reject this Pandit?')) return;
     try {
-      await axios.patch(`http://localhost:5000/api/admin/users/${id}/reject-pandit`, {}, {
+      await axios.patch(`http://panditji-1tf8.onrender.com/api/admin/users/${id}/reject-pandit`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      const usersRes = await axios.get('http://localhost:5000/api/admin/users', { headers: { Authorization: `Bearer ${token}` } });
+      const usersRes = await axios.get('http://panditji-1tf8.onrender.com/api/admin/users', { headers: { Authorization: `Bearer ${token}` } });
       setUsersList(usersRes.data.data);
     } catch (err) { alert('Failed to reject'); }
   };
@@ -167,16 +167,16 @@ const AdminDashboard = () => {
   const handleApproveCancellation = async (bookingId, reason) => {
     if (!window.confirm('Are you sure you want to approve this cancellation and refund the devotee (with 10% deduction)?')) return false;
     try {
-      const res = await axios.patch(`http://localhost:5000/api/admin/bookings/${bookingId}/cancel-approve`, { reason }, {
+      const res = await axios.patch(`http://panditji-1tf8.onrender.com/api/admin/bookings/${bookingId}/cancel-approve`, { reason }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       alert(`Cancellation approved successfully. Refund of ₹${res.data.refundedAmount.toFixed(2)} processed to the devotee.`);
-      const bookingsRes = await axios.get('http://localhost:5000/api/admin/bookings', { headers: { Authorization: `Bearer ${token}` } });
+      const bookingsRes = await axios.get('http://panditji-1tf8.onrender.com/api/admin/bookings', { headers: { Authorization: `Bearer ${token}` } });
       setBookingsList(bookingsRes.data.data || []);
       setSelectedBookingModal(null);
-      const statsRes = await axios.get('http://localhost:5000/api/admin/stats', { headers: { Authorization: `Bearer ${token}` } });
+      const statsRes = await axios.get('http://panditji-1tf8.onrender.com/api/admin/stats', { headers: { Authorization: `Bearer ${token}` } });
       setStats(statsRes.data.data);
-      const paymentsRes = await axios.get('http://localhost:5000/api/admin/payments', { headers: { Authorization: `Bearer ${token}` } });
+      const paymentsRes = await axios.get('http://panditji-1tf8.onrender.com/api/admin/payments', { headers: { Authorization: `Bearer ${token}` } });
       setPaymentsList(paymentsRes.data.data);
       if (window._adminFetchTickets) window._adminFetchTickets();
       return true;
@@ -189,11 +189,11 @@ const AdminDashboard = () => {
   const handleRejectCancellation = async (bookingId) => {
     if (!window.confirm('Are you sure you want to reject this cancellation request and keep the booking active?')) return false;
     try {
-      await axios.patch(`http://localhost:5000/api/admin/bookings/${bookingId}/cancel-reject`, {}, {
+      await axios.patch(`http://panditji-1tf8.onrender.com/api/admin/bookings/${bookingId}/cancel-reject`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       alert('Cancellation request declined. Booking status restored to confirmed.');
-      const bookingsRes = await axios.get('http://localhost:5000/api/admin/bookings', { headers: { Authorization: `Bearer ${token}` } });
+      const bookingsRes = await axios.get('http://panditji-1tf8.onrender.com/api/admin/bookings', { headers: { Authorization: `Bearer ${token}` } });
       setBookingsList(bookingsRes.data.data || []);
       setSelectedBookingModal(null);
       if (window._adminFetchTickets) window._adminFetchTickets();
@@ -228,22 +228,22 @@ const AdminDashboard = () => {
           </h1>
         </div>
         <nav className="flex-1 p-4 space-y-2">
-          <button 
-            onClick={() => setActiveTab('overview')} 
+          <button
+            onClick={() => setActiveTab('overview')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'overview' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
           >
             <LayoutDashboard size={20} />
             Overview
           </button>
-          <button 
-            onClick={() => setActiveTab('users')} 
+          <button
+            onClick={() => setActiveTab('users')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'users' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
           >
             <Users size={20} />
             Users
           </button>
-          <button 
-            onClick={() => setActiveTab('financials')} 
+          <button
+            onClick={() => setActiveTab('financials')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'financials' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
@@ -293,38 +293,38 @@ const AdminDashboard = () => {
           </h2>
           {activeTab === 'users' && (
             <div className="flex gap-3 flex-wrap">
-               <input 
-                 type="text" 
-                 placeholder="Search users..." 
-                 className="p-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 outline-none w-56"
-                 value={filters.search}
-                 onChange={(e) => setFilters({...filters, search: e.target.value})}
-               />
-               <select 
-                 className="p-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 outline-none"
-                 value={filters.role}
-                 onChange={(e) => setFilters({...filters, role: e.target.value, verification: 'all'})}
-               >
-                 <option value="">All Roles</option>
-                 <option value="pandit">Pandits</option>
-                 <option value="devotee">Devotees</option>
-               </select>
-               {(filters.role === 'pandit' || filters.role === '') && (
-                 <select 
-                   className="p-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 outline-none"
-                   value={filters.verification}
-                   onChange={(e) => setFilters({...filters, verification: e.target.value})}
-                 >
-                   <option value="all">All Status</option>
-                   <option value="verified">✅ Verified</option>
-                   <option value="pending">🟡 Pending</option>
-                   <option value="unverified">🔴 Unverified</option>
-                 </select>
-               )}
+              <input
+                type="text"
+                placeholder="Search users..."
+                className="p-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 outline-none w-56"
+                value={filters.search}
+                onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+              />
+              <select
+                className="p-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 outline-none"
+                value={filters.role}
+                onChange={(e) => setFilters({ ...filters, role: e.target.value, verification: 'all' })}
+              >
+                <option value="">All Roles</option>
+                <option value="pandit">Pandits</option>
+                <option value="devotee">Devotees</option>
+              </select>
+              {(filters.role === 'pandit' || filters.role === '') && (
+                <select
+                  className="p-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 outline-none"
+                  value={filters.verification}
+                  onChange={(e) => setFilters({ ...filters, verification: e.target.value })}
+                >
+                  <option value="all">All Status</option>
+                  <option value="verified">✅ Verified</option>
+                  <option value="pending">🟡 Pending</option>
+                  <option value="unverified">🔴 Unverified</option>
+                </select>
+              )}
             </div>
           )}
         </div>
-        
+
         {activeTab === 'overview' && (
           <>
             {/* Stats */}
@@ -356,9 +356,8 @@ const AdminDashboard = () => {
                       <td className="p-4 font-medium text-gray-800">{u.firstName} {u.lastName}</td>
                       <td className="p-4 text-gray-600">{u.email}</td>
                       <td className="p-4">
-                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                          u.role === 'pandit' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'
-                        }`}>
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${u.role === 'pandit' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'
+                          }`}>
                           {u.role.toUpperCase()}
                         </span>
                       </td>
@@ -411,9 +410,8 @@ const AdminDashboard = () => {
                         </td>
                         <td className="p-4 font-bold text-gray-800">₹{(b.fee || 0).toLocaleString()}</td>
                         <td className="p-4">
-                          <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
-                            b.pujaMode === 'online' ? 'bg-purple-100 text-purple-700' : 'bg-orange-100 text-orange-700'
-                          }`}>
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${b.pujaMode === 'online' ? 'bg-purple-100 text-purple-700' : 'bg-orange-100 text-orange-700'
+                            }`}>
                             {b.pujaMode === 'online' ? '🎥 Online' : '🏠 In-Person'}
                           </span>
                         </td>
@@ -455,9 +453,8 @@ const AdminDashboard = () => {
                     <td className="p-4 font-medium text-gray-800">{u.firstName} {u.lastName}</td>
                     <td className="p-4 text-gray-600">{u.email}</td>
                     <td className="p-4">
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                        u.role === 'pandit' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'
-                      }`}>
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${u.role === 'pandit' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'
+                        }`}>
                         {u.role.toUpperCase()}
                       </span>
                     </td>
@@ -479,8 +476,8 @@ const AdminDashboard = () => {
                       {u.role === 'pandit' && (
                         <div className="flex gap-2">
                           {u.panditProfile?.documents?.length > 0 && (
-                            <a href={u.panditProfile.documents[0]} target="_blank" rel="noopener noreferrer" 
-                               className="p-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100" title="View Document">
+                            <a href={u.panditProfile.documents[0]} target="_blank" rel="noopener noreferrer"
+                              className="p-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100" title="View Document">
                               <Eye size={16} />
                             </a>
                           )}
@@ -545,11 +542,10 @@ const AdminDashboard = () => {
             <div className="w-2/5 bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col overflow-hidden">
               <div className="p-4 border-b border-gray-100">
                 <div className="flex flex-wrap gap-1.5">
-                  {['all','open','in_progress','resolved','closed'].map(s => (
+                  {['all', 'open', 'in_progress', 'resolved', 'closed'].map(s => (
                     <button key={s} onClick={() => setTicketFilter(s)}
-                      className={`px-3 py-1 rounded-full text-xs font-bold transition-colors capitalize ${
-                        ticketFilter === s ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                      }`}>
+                      className={`px-3 py-1 rounded-full text-xs font-bold transition-colors capitalize ${ticketFilter === s ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}>
                       {s === 'all' ? 'All' : s.replace('_', ' ')}
                       {s !== 'all' && ` (${tickets.filter(t => t.status === s).length})`}
                     </button>
@@ -563,9 +559,8 @@ const AdminDashboard = () => {
                     const statusColors = { open: 'bg-yellow-100 text-yellow-700', in_progress: 'bg-blue-100 text-blue-700', resolved: 'bg-green-100 text-green-700', closed: 'bg-gray-100 text-gray-600' };
                     return (
                       <div key={ticket._id} onClick={() => { setSelectedTicket(ticket); setReplyText(ticket.adminReply || ''); }}
-                        className={`p-4 border-b border-gray-50 cursor-pointer transition-colors ${
-                          selectedTicket?._id === ticket._id ? 'bg-orange-50 border-l-4 border-l-orange-500' : 'hover:bg-gray-50'
-                        }`}>
+                        className={`p-4 border-b border-gray-50 cursor-pointer transition-colors ${selectedTicket?._id === ticket._id ? 'bg-orange-50 border-l-4 border-l-orange-500' : 'hover:bg-gray-50'
+                          }`}>
                         <div className="flex items-start justify-between gap-2 mb-1">
                           <p className="font-semibold text-gray-800 text-sm line-clamp-1">{ticket.subject}</p>
                           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 capitalize ${statusColors[ticket.status]}`}>
@@ -573,9 +568,8 @@ const AdminDashboard = () => {
                           </span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                            ticket.userRole === 'pandit' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'
-                          }`}>{ticket.userRole?.toUpperCase()}</span>
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${ticket.userRole === 'pandit' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'
+                            }`}>{ticket.userRole?.toUpperCase()}</span>
                           <span className="text-xs text-gray-500">{ticket.user?.firstName} {ticket.user?.lastName}</span>
                         </div>
                         <p className="text-xs text-gray-400 mt-1">{new Date(ticket.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</p>
@@ -608,9 +602,8 @@ const AdminDashboard = () => {
                       <div>
                         <h3 className="font-bold text-gray-800 text-lg">{selectedTicket.subject}</h3>
                         <div className="flex items-center gap-2 mt-1.5">
-                          <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                            selectedTicket.userRole === 'pandit' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'
-                          }`}>{selectedTicket.userRole?.toUpperCase()}</span>
+                          <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${selectedTicket.userRole === 'pandit' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'
+                            }`}>{selectedTicket.userRole?.toUpperCase()}</span>
                           <span className="text-xs text-gray-600 font-medium">{selectedTicket.user?.firstName} {selectedTicket.user?.lastName}</span>
                           <span className="text-xs text-gray-400">•</span>
                           <span className="text-xs text-gray-400">{selectedTicket.user?.email}</span>
@@ -625,7 +618,7 @@ const AdminDashboard = () => {
                           <option value="resolved">Resolved</option>
                           <option value="closed">Closed</option>
                         </select>
-                        <button 
+                        <button
                           onClick={() => handleDeleteTicket(selectedTicket._id)}
                           className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                           title="Delete Ticket"
@@ -700,7 +693,7 @@ const AdminDashboard = () => {
                                 const success = await handleApproveCancellation(selectedTicket.booking._id, reason);
                                 if (success) {
                                   try {
-                                    const ticketRes = await axios.patch(`http://localhost:5000/api/admin/support/${selectedTicket._id}`,
+                                    const ticketRes = await axios.patch(`http://panditji-1tf8.onrender.com/api/admin/support/${selectedTicket._id}`,
                                       { adminReply: `Cancellation approved. 90% refund has been processed. Notes: ${reason}`, status: 'resolved' },
                                       { headers: { Authorization: `Bearer ${token}` } }
                                     );
@@ -720,7 +713,7 @@ const AdminDashboard = () => {
                                 const success = await handleRejectCancellation(selectedTicket.booking._id);
                                 if (success) {
                                   try {
-                                    const ticketRes = await axios.patch(`http://localhost:5000/api/admin/support/${selectedTicket._id}`,
+                                    const ticketRes = await axios.patch(`http://panditji-1tf8.onrender.com/api/admin/support/${selectedTicket._id}`,
                                       { adminReply: `Cancellation request declined. The booking remains active. Please contact support for further queries.`, status: 'resolved' },
                                       { headers: { Authorization: `Bearer ${token}` } }
                                     );
@@ -880,9 +873,8 @@ const AdminDashboard = () => {
                           <div className="flex items-center gap-2 mb-1">
                             <span className="text-red-500">📢</span>
                             <h4 className="font-bold text-gray-800 text-sm">{b.title}</h4>
-                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                              b.target === 'pandit' ? 'bg-orange-100 text-orange-700' : b.target === 'devotee' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'
-                            }`}>
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${b.target === 'pandit' ? 'bg-orange-100 text-orange-700' : b.target === 'devotee' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'
+                              }`}>
                               {b.target === 'pandit' ? 'Pandits' : b.target === 'devotee' ? 'Devotees' : 'Everyone'}
                             </span>
                           </div>
@@ -997,7 +989,7 @@ const AdminDashboard = () => {
                           <p className="text-sm text-gray-600 px-1"><span className="font-semibold">Aadhar:</span> XXXX XXXX {selectedUserModal.panditProfile.aadharNumber.slice(-4)}</p>
                         )}
                         <a href={selectedUserModal.panditProfile.documents[0]} target="_blank" rel="noopener noreferrer"
-                           className="flex items-center gap-2 text-blue-600 hover:underline text-sm font-medium px-1">
+                          className="flex items-center gap-2 text-blue-600 hover:underline text-sm font-medium px-1">
                           <Eye size={16} /> View Uploaded Aadhar Document
                         </a>
                         <div className="flex gap-3 pt-1">
@@ -1132,7 +1124,7 @@ const AdminDashboard = () => {
 
 const ShieldIcon = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
   </svg>
 );
 

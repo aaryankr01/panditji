@@ -11,7 +11,7 @@ const MessageBubble = memo(({ msg, isMine, onOpenOptions, optionsActive, onDelet
   return (
     <div className={`flex ${isMine ? 'justify-end' : 'justify-start'} group relative`}>
       {isMine && !optionsActive && (
-        <button 
+        <button
           onClick={() => onOpenOptions(msg._id)}
           className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-gray-600 transition-opacity self-center mr-1"
         >
@@ -26,11 +26,10 @@ const MessageBubble = memo(({ msg, isMine, onOpenOptions, optionsActive, onDelet
         </div>
       )}
 
-      <div className={`max-w-[75%] px-3 py-2 rounded-2xl ${
-        isMine 
-          ? 'bg-orange-600 text-white rounded-br-sm' 
+      <div className={`max-w-[75%] px-3 py-2 rounded-2xl ${isMine
+          ? 'bg-orange-600 text-white rounded-br-sm'
           : 'bg-white border border-gray-200 text-gray-800 rounded-bl-sm shadow-sm'
-      } ${msg.status === 'sending' ? 'opacity-70' : ''}`}>
+        } ${msg.status === 'sending' ? 'opacity-70' : ''}`}>
         {msg.content === 'This message was deleted' ? (
           <div className="text-sm italic opacity-70 flex items-center gap-1">
             <Trash2 size={12} /> This message was deleted
@@ -38,7 +37,7 @@ const MessageBubble = memo(({ msg, isMine, onOpenOptions, optionsActive, onDelet
         ) : (
           renderMessageContent(msg, isMine)
         )}
-        
+
         <div className={`text-[10px] mt-1 flex justify-end items-center gap-1 ${isMine ? 'text-orange-200' : 'text-gray-400'}`}>
           {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           {isMine && msg.status !== 'sending' && renderTicks(msg.status)}
@@ -54,10 +53,10 @@ const ChatInterface = ({ otherUser, socket }) => {
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
   const [isLocked, setIsLocked] = useState(false);
-  
+
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
-  
+
   const socketRef = useRef(null);
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -76,14 +75,14 @@ const ChatInterface = ({ otherUser, socket }) => {
 
   useEffect(() => {
     if (!socket || !otherUser || !user) return;
-    
+
     socketRef.current = socket;
     const userId = user._id || user.id;
     socketRef.current.emit('join', { userId, role: user.role, city: user.city });
 
     const fetchHistory = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/chat/${otherUser._id}`, {
+        const res = await axios.get(`http://panditji-1tf8.onrender.com/api/chat/${otherUser._id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setMessages(res.data.data);
@@ -94,12 +93,12 @@ const ChatInterface = ({ otherUser, socket }) => {
 
     const checkBookingStatus = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/bookings', {
+        const res = await axios.get('http://panditji-1tf8.onrender.com/api/bookings', {
           headers: { Authorization: `Bearer ${token}` }
         });
         const bookings = res.data.data;
-        const paidBooking = bookings.find(b => 
-          (b.pandit?._id === otherUser._id || b.devotee?._id === otherUser._id) && 
+        const paidBooking = bookings.find(b =>
+          (b.pandit?._id === otherUser._id || b.devotee?._id === otherUser._id) &&
           b.paymentStatus === 'paid'
         );
         setIsLocked(!paidBooking);
@@ -234,7 +233,7 @@ const ChatInterface = ({ otherUser, socket }) => {
     const formData = new FormData();
     formData.append('file', file);
     try {
-      const res = await axios.post('http://localhost:5000/api/chat/upload', formData, {
+      const res = await axios.post('http://panditji-1tf8.onrender.com/api/chat/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${token}` }
       });
       socketRef.current.emit('sendMessage', { senderId: user._id || user.id, receiverId: otherUser._id, text: caption, type: type, fileUrl: res.data.fileUrl });
@@ -293,7 +292,7 @@ const ChatInterface = ({ otherUser, socket }) => {
   };
 
   const renderMessageContent = (msg, isMine) => {
-    const getMediaUrl = (url) => url?.startsWith('http') ? url : `http://localhost:5000${url}`;
+    const getMediaUrl = (url) => url?.startsWith('http') ? url : `http://panditji-1tf8.onrender.com${url}`;
     switch (msg.type) {
       case 'image':
         return (
@@ -329,9 +328,9 @@ const ChatInterface = ({ otherUser, socket }) => {
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50/50 relative">
         {messages.map((msg, idx) => (
-          <MessageBubble 
-            key={msg._id || idx} 
-            msg={msg} 
+          <MessageBubble
+            key={msg._id || idx}
+            msg={msg}
             isMine={msg.sender?.toString() === (user._id || user.id)?.toString()}
             onOpenOptions={setActiveMessageOptions}
             optionsActive={activeMessageOptions === msg._id}

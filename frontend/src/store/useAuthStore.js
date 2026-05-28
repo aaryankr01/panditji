@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = 'http://panditji-1tf8.onrender.com/api';
 
 const useAuthStore = create((set) => ({
   user: null,

@@ -12,8 +12,8 @@ import ChatInterface from '../components/ChatInterface';
 import SupportCare from '../components/SupportCare';
 import LanguageToggle from '../components/common/LanguageToggle';
 
-const SOCKET_URL = 'http://localhost:5000';
-const API = 'http://localhost:5000/api';
+const SOCKET_URL = 'http://panditji-1tf8.onrender.com';
+const API = 'http://panditji-1tf8.onrender.com/api';
 
 /* ─── Design tokens from DevoteeDashboard ─── */
 const C = {
@@ -81,7 +81,7 @@ const PanditDashboard = () => {
   const [selectedChatUser, setSelectedChatUser] = useState(null);
   const [conversations, setConversations] = useState([]);
   const [totalEarnings, setTotalEarnings] = useState(0);
-  const [incomingRequest, setIncomingRequest] = useState(null); 
+  const [incomingRequest, setIncomingRequest] = useState(null);
   const [accepting, setAccepting] = useState(false);
   const [profileData, setProfileData] = useState(null);
   const [daysToExpiry, setDaysToExpiry] = useState(null);
@@ -94,7 +94,7 @@ const PanditDashboard = () => {
   // Profile Edit State
   const [editForm, setEditForm] = useState({ firstName: '', lastName: '', phone: '', city: '', bio: '', experience: 0, feePerPuja: 1500, specializations: [] });
   const [savingProfile, setSavingProfile] = useState(false);
-  
+
   // Aadhar Upload State
   const [aadharNumber, setAadharNumber] = useState('');
   const [aadharFile, setAadharFile] = useState(null);
@@ -113,7 +113,7 @@ const PanditDashboard = () => {
       .then(r => {
         const payments = r.data.data;
         const sum = payments.reduce((acc, curr) => acc + (curr.panditEarnings || 0), 0);
-        setTotalEarnings(sum / 100); 
+        setTotalEarnings(sum / 100);
       }).catch(console.error);
 
     const fetchProfile = async () => {
@@ -131,7 +131,7 @@ const PanditDashboard = () => {
           feePerPuja: data.panditProfile?.feePerPuja || 1500,
           specializations: data.panditProfile?.specializations || []
         });
-        
+
         const sub = data.panditProfile?.subscription;
         if (!sub || !sub.isActive || !sub.endDate || new Date(sub.endDate) < new Date()) {
           setSubscriptionStatus('inactive');
@@ -203,7 +203,7 @@ const PanditDashboard = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const accepted = res.data.data;
-      
+
       setBookings(prev => {
         const exists = prev.find(b => b._id === bookingId);
         if (exists) {
@@ -225,8 +225,8 @@ const PanditDashboard = () => {
 
   const handleReject = async (bookingId) => {
     try {
-      await axios.patch(`${API}/bookings/${bookingId}/status`, 
-        { status: 'rejected' }, 
+      await axios.patch(`${API}/bookings/${bookingId}/status`,
+        { status: 'rejected' },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setBookings(prev => prev.map(b => b._id === bookingId ? { ...b, status: 'rejected' } : b));
@@ -246,7 +246,7 @@ const PanditDashboard = () => {
     const formData = new FormData();
     formData.append('file', file);
     try {
-      const res = await axios.post('http://localhost:5000/api/users/avatar', formData, {
+      const res = await axios.post('http://panditji-1tf8.onrender.com/api/users/avatar', formData, {
         headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${token}` }
       });
       updateUser({ avatar: res.data.avatarUrl });
@@ -300,7 +300,7 @@ const PanditDashboard = () => {
 
               if (verifyRes.data.success) {
                 alert('Subscription successful!');
-                window.location.reload(); 
+                window.location.reload();
               }
             } catch (err) { alert('Verification failed.'); }
           },
@@ -353,11 +353,11 @@ const PanditDashboard = () => {
     formData.append('document', aadharFile);
 
     try {
-      const res = await axios.post(`${API}/pandits/aadhar/upload`, formData, { 
-        headers: { 
+      const res = await axios.post(`${API}/pandits/aadhar/upload`, formData, {
+        headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'
-        } 
+        }
       });
       setProfileData(res.data.data);
       alert('Aadhar document uploaded successfully! Please wait up to 24 hours for admin verification.');
@@ -509,9 +509,9 @@ const PanditDashboard = () => {
         <nav style={{ flex: 1, padding: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
           {[
             { id: 'bookings', label: t('pd_booking_requests'), icon: Calendar },
-            { id: 'chat',     label: t('dd_messages'),         icon: MessageSquare },
-            { id: 'profile',  label: t('dd_my_profile'),       icon: User },
-            { id: 'support',  label: t('dd_support'),          icon: Headphones },
+            { id: 'chat', label: t('dd_messages'), icon: MessageSquare },
+            { id: 'profile', label: t('dd_my_profile'), icon: User },
+            { id: 'support', label: t('dd_support'), icon: Headphones },
           ].map(tab => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
               style={{
@@ -544,7 +544,7 @@ const PanditDashboard = () => {
           </h1>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: 13, fontWeight: 700 }}>
             {subscriptionStatus === 'inactive' ? (
-              <span style={{ color: C.red, display: 'flex', alignItems: 'center', gap: 6 }}><XCircle size={16}/> {t('pd_offline_expired')}</span>
+              <span style={{ color: C.red, display: 'flex', alignItems: 'center', gap: 6 }}><XCircle size={16} /> {t('pd_offline_expired')}</span>
             ) : (
               <span style={{ color: C.success, display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ width: 8, height: 8, background: C.success, borderRadius: '50%', animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }} /> {t('pd_online_receiving')}</span>
             )}
@@ -553,7 +553,7 @@ const PanditDashboard = () => {
         </header>
 
         <main style={{ flex: 1, overflowY: 'auto', padding: 32 }}>
-          
+
           {/* SUBSCRIPTION ALERTS */}
           {subscriptionStatus === 'inactive' && (
             <div style={{ background: C.redLt, border: `1px solid rgba(192,57,43,0.2)`, borderRadius: 16, padding: 24, marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 4px 12px rgba(192,57,43,0.05)' }}>
@@ -629,7 +629,7 @@ const PanditDashboard = () => {
                             </button>
                           </>
                         )}
-                        
+
                         {booking.status === 'confirmed' && (
                           <>
                             {booking.pujaMode === 'online' && (
@@ -718,11 +718,11 @@ const PanditDashboard = () => {
 
           {activeTab === 'profile' && (
             <div style={{ maxWidth: 900, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 24 }}>
-              
+
               {/* Aadhar Verification Status */}
               <div style={{ background: '#fff', padding: 24, borderRadius: 24, border: `1px solid ${C.border}`, boxShadow: '0 4px 12px rgba(0,0,0,0.02)' }}>
                 <h2 style={{ fontFamily: "'Playfair Display',serif", fontSize: 20, fontWeight: 700, color: C.maroon, marginBottom: 16 }}>{t('pd_aadhar_title') || 'Aadhar eKYC Verification'}</h2>
-                
+
                 {profileData?.panditProfile?.isAadharVerified ? (
                   <div style={{ background: C.successLt, color: C.success, padding: 16, borderRadius: 12, display: 'flex', alignItems: 'center', gap: 12, fontWeight: 700 }}>
                     <ShieldCheck size={24} />
@@ -737,15 +737,15 @@ const PanditDashboard = () => {
                   <div style={{ background: C.surface, padding: 20, borderRadius: 16 }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                       <p style={{ fontSize: 14, color: C.textMid }}>{t('pd_aadhar_upload_desc') || 'Upload your Aadhar Card for manual verification by our Admin team.'}</p>
-                      <input 
-                        type="text" 
+                      <input
+                        type="text"
                         placeholder={t('pd_aadhar_placeholder') || 'Enter 12-digit Aadhar Number'}
                         value={aadharNumber}
                         onChange={e => setAadharNumber(e.target.value.replace(/\D/g, '').slice(0, 12))}
                         style={{ padding: 12, borderRadius: 8, border: `1px solid ${C.border}`, outline: 'none' }}
                       />
-                      <input 
-                        type="file" 
+                      <input
+                        type="file"
                         accept="image/*"
                         onChange={e => setAadharFile(e.target.files[0])}
                         style={{ padding: 12, borderRadius: 8, border: `1px solid ${C.border}`, outline: 'none', background: '#fff' }}
@@ -761,35 +761,35 @@ const PanditDashboard = () => {
               {/* Edit Profile Form */}
               <div style={{ background: '#fff', padding: 24, borderRadius: 24, border: `1px solid ${C.border}`, boxShadow: '0 4px 12px rgba(0,0,0,0.02)' }}>
                 <h2 style={{ fontFamily: "'Playfair Display',serif", fontSize: 20, fontWeight: 700, color: C.maroon, marginBottom: 20 }}>{t('pd_profile_details_title') || 'Personal & Professional Details'}</h2>
-                
+
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <label style={{ fontSize: 13, fontWeight: 700, color: C.textMid }}>{t('dd_first_name')}</label>
-                    <input type="text" value={editForm.firstName} onChange={e => setEditForm({...editForm, firstName: e.target.value})} style={{ padding: 12, borderRadius: 8, border: `1px solid ${C.border}`, outline: 'none' }} />
+                    <input type="text" value={editForm.firstName} onChange={e => setEditForm({ ...editForm, firstName: e.target.value })} style={{ padding: 12, borderRadius: 8, border: `1px solid ${C.border}`, outline: 'none' }} />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <label style={{ fontSize: 13, fontWeight: 700, color: C.textMid }}>{t('dd_last_name')}</label>
-                    <input type="text" value={editForm.lastName} onChange={e => setEditForm({...editForm, lastName: e.target.value})} style={{ padding: 12, borderRadius: 8, border: `1px solid ${C.border}`, outline: 'none' }} />
+                    <input type="text" value={editForm.lastName} onChange={e => setEditForm({ ...editForm, lastName: e.target.value })} style={{ padding: 12, borderRadius: 8, border: `1px solid ${C.border}`, outline: 'none' }} />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <label style={{ fontSize: 13, fontWeight: 700, color: C.textMid }}>{t('dd_primary_phone')}</label>
-                    <input type="text" value={editForm.phone} onChange={e => setEditForm({...editForm, phone: e.target.value})} style={{ padding: 12, borderRadius: 8, border: `1px solid ${C.border}`, outline: 'none' }} />
+                    <input type="text" value={editForm.phone} onChange={e => setEditForm({ ...editForm, phone: e.target.value })} style={{ padding: 12, borderRadius: 8, border: `1px solid ${C.border}`, outline: 'none' }} />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <label style={{ fontSize: 13, fontWeight: 700, color: C.textMid }}>{t('dd_city')}</label>
-                    <input type="text" value={editForm.city} onChange={e => setEditForm({...editForm, city: e.target.value})} style={{ padding: 12, borderRadius: 8, border: `1px solid ${C.border}`, outline: 'none' }} />
+                    <input type="text" value={editForm.city} onChange={e => setEditForm({ ...editForm, city: e.target.value })} style={{ padding: 12, borderRadius: 8, border: `1px solid ${C.border}`, outline: 'none' }} />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <label style={{ fontSize: 13, fontWeight: 700, color: C.textMid }}>{t('pd_experience') || 'Experience (Years)'}</label>
-                    <input type="number" value={editForm.experience} onChange={e => setEditForm({...editForm, experience: parseInt(e.target.value) || 0})} style={{ padding: 12, borderRadius: 8, border: `1px solid ${C.border}`, outline: 'none' }} />
+                    <input type="number" value={editForm.experience} onChange={e => setEditForm({ ...editForm, experience: parseInt(e.target.value) || 0 })} style={{ padding: 12, borderRadius: 8, border: `1px solid ${C.border}`, outline: 'none' }} />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <label style={{ fontSize: 13, fontWeight: 700, color: C.textMid }}>{t('pd_fee_per_puja') || 'Fee Per Puja (₹)'}</label>
-                    <input type="number" value={editForm.feePerPuja} onChange={e => setEditForm({...editForm, feePerPuja: parseInt(e.target.value) || 0})} style={{ padding: 12, borderRadius: 8, border: `1px solid ${C.border}`, outline: 'none' }} />
+                    <input type="number" value={editForm.feePerPuja} onChange={e => setEditForm({ ...editForm, feePerPuja: parseInt(e.target.value) || 0 })} style={{ padding: 12, borderRadius: 8, border: `1px solid ${C.border}`, outline: 'none' }} />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6, gridColumn: '1 / -1' }}>
                     <label style={{ fontSize: 13, fontWeight: 700, color: C.textMid }}>{t('pd_bio') || 'Bio / About'}</label>
-                    <textarea rows="4" value={editForm.bio} onChange={e => setEditForm({...editForm, bio: e.target.value})} style={{ padding: 12, borderRadius: 8, border: `1px solid ${C.border}`, outline: 'none', resize: 'vertical' }} />
+                    <textarea rows="4" value={editForm.bio} onChange={e => setEditForm({ ...editForm, bio: e.target.value })} style={{ padding: 12, borderRadius: 8, border: `1px solid ${C.border}`, outline: 'none', resize: 'vertical' }} />
                   </div>
                 </div>
 

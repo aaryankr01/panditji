@@ -36,7 +36,7 @@ const ChatTracker = () => {
 
     const fetchUsers = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/admin/users', {
+        const res = await axios.get('http://panditji-1tf8.onrender.com/api/admin/users', {
           headers: { Authorization: `Bearer ${token}` }
         });
         setUsers(res.data.data);
@@ -47,17 +47,17 @@ const ChatTracker = () => {
     fetchUsers();
 
     // Connect to socket for real-time tracking
-    socketRef.current = io('http://localhost:5000');
+    socketRef.current = io('http://panditji-1tf8.onrender.com');
     socketRef.current.emit('adminJoin');
 
     socketRef.current.on('admin_newMessage', (msg) => {
       const pId = selectedPanditRef.current;
       const dId = selectedDevoteeRef.current;
-      
+
       // Only append if the message is between the currently selected users
-      const isMatch = (msg.sender === pId && msg.receiver === dId) || 
-                      (msg.sender === dId && msg.receiver === pId);
-      
+      const isMatch = (msg.sender === pId && msg.receiver === dId) ||
+        (msg.sender === dId && msg.receiver === pId);
+
       if (isMatch) {
         setMessages((prev) => [...prev, msg]);
       }
@@ -76,7 +76,7 @@ const ChatTracker = () => {
     if (!selectedPandit || !selectedDevotee) return;
     setLoading(true);
     try {
-      const res = await axios.get(`http://localhost:5000/api/admin/conversations/${selectedPandit}/${selectedDevotee}`, {
+      const res = await axios.get(`http://panditji-1tf8.onrender.com/api/admin/conversations/${selectedPandit}/${selectedDevotee}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setMessages(res.data.data);
@@ -133,7 +133,7 @@ const ChatTracker = () => {
         <div className="p-6 bg-white border-b border-gray-200">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-bold text-gray-800">Track Conversations</h2>
-            <button 
+            <button
               onClick={loadConversation}
               disabled={!selectedPandit || !selectedDevotee || loading}
               className="px-6 py-2 bg-orange-600 text-white font-bold rounded-lg hover:bg-orange-700 disabled:opacity-50 shadow-lg transition-all active:scale-95"
@@ -147,36 +147,36 @@ const ChatTracker = () => {
             <div className="space-y-3 p-4 bg-gray-50 rounded-xl border border-gray-100">
               <h3 className="text-sm font-bold text-orange-600 uppercase tracking-wider">Find Pandit</h3>
               <div className="grid grid-cols-2 gap-3">
-                <input 
-                  type="text" 
-                  placeholder="Search Name..." 
+                <input
+                  type="text"
+                  placeholder="Search Name..."
                   className="col-span-2 p-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 outline-none"
                   value={panditFilters.search}
-                  onChange={(e) => setPanditFilters({...panditFilters, search: e.target.value})}
+                  onChange={(e) => setPanditFilters({ ...panditFilters, search: e.target.value })}
                 />
-                <select 
+                <select
                   className="p-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 outline-none"
                   value={panditFilters.stateCode}
                   onChange={(e) => {
                     const code = e.target.value;
                     const name = indianStates.find(s => s.isoCode === code)?.name || '';
-                    setPanditFilters({...panditFilters, stateCode: code, state: name, city: ''});
+                    setPanditFilters({ ...panditFilters, stateCode: code, state: name, city: '' });
                   }}
                 >
                   <option value="">All States</option>
                   {indianStates.map(s => <option key={s.isoCode} value={s.isoCode}>{s.name}</option>)}
                 </select>
-                <select 
+                <select
                   className="p-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 outline-none"
                   value={panditFilters.city}
-                  onChange={(e) => setPanditFilters({...panditFilters, city: e.target.value})}
+                  onChange={(e) => setPanditFilters({ ...panditFilters, city: e.target.value })}
                   disabled={!panditFilters.stateCode}
                 >
                   <option value="">All Cities</option>
                   {getCities(panditFilters.stateCode).map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
                 </select>
               </div>
-              <select 
+              <select
                 className="w-full p-2 border border-orange-200 bg-white rounded-lg text-sm font-medium focus:ring-2 focus:ring-orange-500 outline-none"
                 value={selectedPandit || ''}
                 onChange={(e) => setSelectedPandit(e.target.value)}
@@ -190,36 +190,36 @@ const ChatTracker = () => {
             <div className="space-y-3 p-4 bg-gray-50 rounded-xl border border-gray-100">
               <h3 className="text-sm font-bold text-blue-600 uppercase tracking-wider">Find Devotee</h3>
               <div className="grid grid-cols-2 gap-3">
-                <input 
-                  type="text" 
-                  placeholder="Search Name..." 
+                <input
+                  type="text"
+                  placeholder="Search Name..."
                   className="col-span-2 p-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
                   value={devoteeFilters.search}
-                  onChange={(e) => setDevoteeFilters({...devoteeFilters, search: e.target.value})}
+                  onChange={(e) => setDevoteeFilters({ ...devoteeFilters, search: e.target.value })}
                 />
-                <select 
+                <select
                   className="p-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
                   value={devoteeFilters.stateCode}
                   onChange={(e) => {
                     const code = e.target.value;
                     const name = indianStates.find(s => s.isoCode === code)?.name || '';
-                    setDevoteeFilters({...devoteeFilters, stateCode: code, state: name, city: ''});
+                    setDevoteeFilters({ ...devoteeFilters, stateCode: code, state: name, city: '' });
                   }}
                 >
                   <option value="">All States</option>
                   {indianStates.map(s => <option key={s.isoCode} value={s.isoCode}>{s.name}</option>)}
                 </select>
-                <select 
+                <select
                   className="p-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
                   value={devoteeFilters.city}
-                  onChange={(e) => setDevoteeFilters({...devoteeFilters, city: e.target.value})}
+                  onChange={(e) => setDevoteeFilters({ ...devoteeFilters, city: e.target.value })}
                   disabled={!devoteeFilters.stateCode}
                 >
                   <option value="">All Cities</option>
                   {getCities(devoteeFilters.stateCode).map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
                 </select>
               </div>
-              <select 
+              <select
                 className="w-full p-2 border border-blue-200 bg-white rounded-lg text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none"
                 value={selectedDevotee || ''}
                 onChange={(e) => setSelectedDevotee(e.target.value)}
@@ -247,7 +247,7 @@ const ChatTracker = () => {
                       <div className="text-xs font-bold mb-1 opacity-75">
                         {isPandit ? 'Pandit' : 'Devotee'}
                       </div>
-                      
+
                       {msg.type === 'text' && (
                         <div className="text-sm">{msg.content}</div>
                       )}
@@ -292,7 +292,7 @@ const ChatTracker = () => {
                       )}
 
                       {!['text', 'image', 'audio', 'video', 'contact_share', 'booking_request'].includes(msg.type) && msg.content && (
-                         <div className="text-sm">{msg.content}</div>
+                        <div className="text-sm">{msg.content}</div>
                       )}
 
                       <div className="text-[10px] opacity-60 mt-2 text-right">

@@ -73,7 +73,7 @@ const RegisterForm = () => {
     }
     recaptchaRef.current = new RecaptchaVerifier(auth, "recaptcha-container-register", {
       size: "invisible",
-      callback: () => {},
+      callback: () => { },
     });
     return recaptchaRef.current;
   };
@@ -89,7 +89,7 @@ const RegisterForm = () => {
         const result = await signInWithPhoneNumber(auth, `+91${clean}`, verifier);
         confirmationRef.current = result;
       } else {
-        await axios.post('http://localhost:5000/api/auth/otp/send-email', {
+        await axios.post('http://panditji-1tf8.onrender.com/api/auth/otp/send-email', {
           email: formData.email,
           purpose: "registration"
         });
@@ -111,13 +111,13 @@ const RegisterForm = () => {
 
       if (verificationMethod === 'phone') {
         const clean = formData.phone.replace(/\D/g, "");
-        
+
         // Verify with Firebase
         const result = await confirmationRef.current.confirm(otpValue);
         const idToken = await result.user.getIdToken();
 
         // Backend verifies Firebase token, returns resetToken
-        const verifyRes = await axios.post('http://localhost:5000/api/auth/verify-firebase-otp', {
+        const verifyRes = await axios.post('http://panditji-1tf8.onrender.com/api/auth/verify-firebase-otp', {
           idToken,
           phone: clean,
           purpose: "registration"
@@ -125,7 +125,7 @@ const RegisterForm = () => {
         resetToken = verifyRes.data.resetToken;
       } else {
         // Verify with Brevo Email OTP
-        const verifyRes = await axios.post('http://localhost:5000/api/auth/otp/verify-email', {
+        const verifyRes = await axios.post('http://panditji-1tf8.onrender.com/api/auth/otp/verify-email', {
           email: formData.email,
           otp: otpValue,
           purpose: "registration"
@@ -183,7 +183,7 @@ const RegisterForm = () => {
     try {
       if (verificationMethod === 'phone') {
         // Pre-check phone with backend
-        await axios.post('http://localhost:5000/api/auth/check-phone', {
+        await axios.post('http://panditji-1tf8.onrender.com/api/auth/check-phone', {
           phone: cleanPhone,
           purpose: "registration"
         });
@@ -194,7 +194,7 @@ const RegisterForm = () => {
         confirmationRef.current = result;
       } else {
         // Send email OTP via Brevo API
-        await axios.post('http://localhost:5000/api/auth/otp/send-email', {
+        await axios.post('http://panditji-1tf8.onrender.com/api/auth/otp/send-email', {
           email: formData.email,
           purpose: "registration"
         });
@@ -218,7 +218,7 @@ const RegisterForm = () => {
       <div className="space-y-6">
         <div id="recaptcha-container-register" />
         {error && <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm font-medium">{error}</div>}
-        
+
         <div className="text-center">
           <p className="text-sm text-textMid mb-4">
             {verificationMethod === 'phone' ? (
@@ -227,24 +227,24 @@ const RegisterForm = () => {
               <>We have sent a 6-digit verification code to <span className="font-bold text-maroon">{formData.email}</span>.</>
             )}
           </p>
-          
+
           <div className="my-4">
             <OtpInput value={otpValue} onChange={setOtpValue} />
           </div>
         </div>
 
         <div className="space-y-3">
-          <button 
-            type="button" 
+          <button
+            type="button"
             onClick={handleRegisterWithOtp}
             disabled={otpLoading || otpValue.length < 6}
             className="w-full bg-saffron hover:bg-saffron-dark disabled:bg-brandborder disabled:text-textMuted disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-xl transition-all shadow-md flex justify-center items-center h-12 shadow-saffron/20"
           >
             {otpLoading ? <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : 'Verify & Create Account'}
           </button>
-          
-          <button 
-            type="button" 
+
+          <button
+            type="button"
             onClick={() => { setStep(1); setError(''); }}
             className="w-full text-center text-sm font-bold text-saffron hover:text-saffron-dark transition-colors"
           >
@@ -258,8 +258,8 @@ const RegisterForm = () => {
               Resend OTP in <span className="font-bold text-saffron">{resendTimer}s</span>
             </p>
           ) : (
-            <button 
-              type="button" 
+            <button
+              type="button"
               onClick={handleResendOtp}
               className="text-xs font-bold text-saffron hover:underline"
             >
@@ -275,13 +275,13 @@ const RegisterForm = () => {
     <form onSubmit={handleSubmit} className="space-y-4">
       <div id="recaptcha-container-register" />
       <RoleSelector selectedRole={formData.role} onRoleChange={handleRoleChange} />
-      
+
       {error && <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm font-medium">{error}</div>}
-      
+
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-bold text-textMid mb-1">First Name</label>
-          <input 
+          <input
             type="text" name="firstName" value={formData.firstName} onChange={handleChange} required
             className="w-full px-4 py-3 rounded-xl border border-brandborder focus:ring-2 focus:ring-saffron focus:border-saffron outline-none transition-all text-maroon"
             placeholder="John"
@@ -289,7 +289,7 @@ const RegisterForm = () => {
         </div>
         <div>
           <label className="block text-sm font-bold text-textMid mb-1">Last Name</label>
-          <input 
+          <input
             type="text" name="lastName" value={formData.lastName} onChange={handleChange} required
             className="w-full px-4 py-3 rounded-xl border border-brandborder focus:ring-2 focus:ring-saffron focus:border-saffron outline-none transition-all text-maroon"
             placeholder="Doe"
@@ -299,7 +299,7 @@ const RegisterForm = () => {
 
       <div>
         <label className="block text-sm font-bold text-textMid mb-1">Email Address</label>
-        <input 
+        <input
           type="email" name="email" value={formData.email} onChange={handleChange} required
           className="w-full px-4 py-3 rounded-xl border border-brandborder focus:ring-2 focus:ring-saffron focus:border-saffron outline-none transition-all text-maroon"
           placeholder="you@example.com"
@@ -308,7 +308,7 @@ const RegisterForm = () => {
 
       <div>
         <label className="block text-sm font-bold text-textMid mb-1">Phone Number</label>
-        <input 
+        <input
           type="tel" name="phone" value={formData.phone} onChange={handleChange} required
           className="w-full px-4 py-3 rounded-xl border border-brandborder focus:ring-2 focus:ring-saffron focus:border-saffron outline-none transition-all text-maroon"
           placeholder="+91 9876543210"
@@ -317,7 +317,7 @@ const RegisterForm = () => {
 
       <div>
         <label className="block text-sm font-bold text-textMid mb-1">Password</label>
-        <input 
+        <input
           type="password" name="password" value={formData.password} onChange={handleChange} required minLength="6"
           className="w-full px-4 py-3 rounded-xl border border-brandborder focus:ring-2 focus:ring-saffron focus:border-saffron outline-none transition-all text-maroon"
           placeholder="••••••••"
@@ -327,15 +327,15 @@ const RegisterForm = () => {
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-bold text-textMid mb-1">State</label>
-          <select 
-            name="state" 
-            value={selectedStateCode} 
+          <select
+            name="state"
+            value={selectedStateCode}
             onChange={(e) => {
               const code = e.target.value;
               setSelectedStateCode(code);
               const stateName = indianStates.find(s => s.isoCode === code)?.name || '';
               setFormData({ ...formData, state: stateName, city: '' });
-            }} 
+            }}
             required
             className="w-full px-4 py-3 rounded-xl border border-brandborder focus:ring-2 focus:ring-saffron focus:border-saffron outline-none transition-all bg-white text-maroon"
           >
@@ -347,7 +347,7 @@ const RegisterForm = () => {
         </div>
         <div>
           <label className="block text-sm font-bold text-textMid mb-1">City</label>
-          <select 
+          <select
             name="city" value={formData.city} onChange={handleChange} required disabled={!selectedStateCode}
             className="w-full px-4 py-3 rounded-xl border border-brandborder focus:ring-2 focus:ring-saffron focus:border-saffron outline-none transition-all bg-white disabled:bg-surface disabled:text-textMuted text-maroon"
           >
@@ -364,7 +364,7 @@ const RegisterForm = () => {
           <p className="text-sm font-bold text-maroon">Pandit Details</p>
           <div>
             <label className="block text-xs font-bold text-textMid mb-1">Specialization</label>
-            <input 
+            <input
               type="text" name="panditSpecialization" value={formData.panditSpecialization} onChange={handleChange} required={formData.role === 'pandit'}
               className="w-full px-4 py-2 rounded-xl border border-brandborder focus:ring-2 focus:ring-saffron focus:border-saffron outline-none transition-all text-sm text-maroon"
               placeholder="e.g. Vedic Rituals, Astrology"
@@ -372,7 +372,7 @@ const RegisterForm = () => {
           </div>
           <div>
             <label className="block text-xs font-bold text-textMid mb-1">Experience (Years)</label>
-            <input 
+            <input
               type="number" name="panditExperience" value={formData.panditExperience} onChange={handleChange} required={formData.role === 'pandit'}
               className="w-full px-4 py-2 rounded-xl border border-brandborder focus:ring-2 focus:ring-saffron focus:border-saffron outline-none transition-all text-sm text-maroon"
               placeholder="10"
@@ -388,22 +388,20 @@ const RegisterForm = () => {
           <button
             type="button"
             onClick={() => setVerificationMethod('phone')}
-            className={`py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 ${
-              verificationMethod === 'phone'
+            className={`py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 ${verificationMethod === 'phone'
                 ? 'bg-saffron text-white shadow-sm'
                 : 'text-textMid hover:text-maroon hover:bg-white/50'
-            }`}
+              }`}
           >
             <span>📱</span> Phone SMS
           </button>
           <button
             type="button"
             onClick={() => setVerificationMethod('email')}
-            className={`py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 ${
-              verificationMethod === 'email'
+            className={`py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 ${verificationMethod === 'email'
                 ? 'bg-saffron text-white shadow-sm'
                 : 'text-textMid hover:text-maroon hover:bg-white/50'
-            }`}
+              }`}
           >
             <span>✉️</span> Email Inbox
           </button>
@@ -413,8 +411,8 @@ const RegisterForm = () => {
       {/* Agreements Checklist */}
       <div className="mt-4">
         <label className="flex items-start gap-3 cursor-pointer group">
-          <input 
-            type="checkbox" 
+          <input
+            type="checkbox"
             checked={agreed}
             onChange={(e) => setAgreed(e.target.checked)}
             className="mt-0.5 w-4 h-4 rounded border-brandborder text-saffron focus:ring-saffron bg-white cursor-pointer"
@@ -425,8 +423,8 @@ const RegisterForm = () => {
         </label>
       </div>
 
-      <button 
-        type="submit" 
+      <button
+        type="submit"
         disabled={isLoading || !agreed}
         className="w-full bg-saffron hover:bg-saffron-dark disabled:bg-brandborder disabled:text-textMuted disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-xl transition-all shadow-md flex justify-center items-center h-12 shadow-saffron/20"
       >

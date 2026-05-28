@@ -37,7 +37,7 @@ const BookAPuja = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuthStore();
   const t = useT();
-  
+
   const categories = [t('bap_cat_all'), t('bap_cat_home'), t('bap_cat_wedding'), t('bap_cat_devotional'), t('bap_cat_festival'), t('bap_cat_ritual'), t('bap_cat_remedial'), t('bap_cat_life_events')];
   const steps = [t('bap_step_choose'), t('bap_step_location'), t('bap_step_book')];
 
@@ -58,7 +58,7 @@ const BookAPuja = () => {
 
   const indianStates = State.getStatesOfCountry('IN');
   const citiesOfState = stateCode ? City.getCitiesOfState('IN', stateCode) : [];
-  
+
   // Create a mapping or fallback for category filtering if needed, but since we rely on the English strings for the data, we might need a mapping.
   // Actually, pujas data has english category names.
   const catMap = {
@@ -71,7 +71,7 @@ const BookAPuja = () => {
     [t('bap_cat_remedial')]: 'Remedial',
     [t('bap_cat_life_events')]: 'Life Events',
   };
-  
+
   const englishCategory = catMap[selectedCategory] || 'All';
   const filtered = englishCategory === 'All' ? pujas : pujas.filter(p => p.category === englishCategory);
 
@@ -80,7 +80,7 @@ const BookAPuja = () => {
     setCheckingLocation(true);
     setLocationStatus(null);
     try {
-      const res = await axios.get(`http://localhost:5000/api/pandits?city=${encodeURIComponent(city)}`);
+      const res = await axios.get(`http://panditji-1tf8.onrender.com/api/pandits?city=${encodeURIComponent(city)}`);
       if (res.data.isLocal && res.data.count > 0) {
         setLocationStatus('available');
       } else {

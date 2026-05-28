@@ -10,7 +10,7 @@ import {
   Ticket, Clock, RefreshCw, XCircle, Inbox
 } from 'lucide-react';
 
-const API = 'http://localhost:5000/api';
+const API = 'http://panditji-1tf8.onrender.com/api';
 
 /* ─── Design tokens from DevoteeDashboard ─── */
 const C = {
@@ -183,7 +183,7 @@ const SupportCare = ({ userRole = 'devotee' }) => {
 
   useEffect(() => {
     if (!user?._id && !user?.id) return;
-    const socket = io('http://localhost:5000', { transports: ['websocket'] });
+    const socket = io('http://panditji-1tf8.onrender.com', { transports: ['websocket'] });
     socket.on('connect', () => { socket.emit('join', { userId: user._id || user.id, role: userRole }); });
     socket.on('supportTicketReplied', (data) => {
       setReplyNotification(data);
