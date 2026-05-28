@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
 import { auth } from "../config/firebase";
 import axios from "axios";
+import api from '../utils/api';
 import OtpInput from "../components/auth/OtpInput";
 import { BrandWordmark } from "../components/common/BrandLogo";
 

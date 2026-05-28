@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef, memo } from 'react';
 import axios from 'axios';
 import useAuthStore from '../store/useAuthStore';
+import api from '../utils/api';
 import { Send, User as UserIcon, Paperclip, Mic, Trash2, Check, CheckCheck, MoreVertical, X, Clock } from 'lucide-react';
 
 // MEMOIZED MESSAGE COMPONENT for performance
