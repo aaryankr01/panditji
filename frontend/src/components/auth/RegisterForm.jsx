@@ -7,7 +7,6 @@ import OtpInput from './OtpInput';
 import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
 import { auth } from "../../config/firebase";
 import axios from "axios";
-import api from '../../utils/api';
 
 const RegisterForm = () => {
   const { register, isLoading } = useAuthStore();
