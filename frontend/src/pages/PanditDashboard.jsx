@@ -386,11 +386,16 @@ const PanditDashboard = () => {
       <style>{`
         .pd-sidebar { transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); }
         .pd-mobile-btn { display: none !important; }
-        @media (max-width: 768px) {
+        .pd-close-btn { display: none !important; }
+        @media (max-width: 1024px) {
           .pd-sidebar { position: fixed !important; top: 0; bottom: 0; left: 0; z-index: 2000; transform: translateX(-100%); box-shadow: 4px 0 24px rgba(123,29,14,0.15); width: 280px; }
           .pd-sidebar.open { transform: translateX(0) !important; }
           .pd-mobile-btn { display: flex !important; }
+          .pd-close-btn { display: block !important; }
           .pd-header { padding: 0 16px !important; }
+        }
+        @media (max-width: 600px) {
+          .pd-booking-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
         }
       `}</style>
 
@@ -485,7 +490,14 @@ const PanditDashboard = () => {
 
       {/* ═══ SIDEBAR ═══ */}
       <div className={`pd-sidebar${isMobileSidebarOpen ? ' open' : ''}`} style={{ width: 280, background: '#fff', borderRight: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column' }}>
-        <div style={{ padding: 32, textAlign: 'center', borderBottom: `1px solid ${C.border}` }}>
+        <div style={{ padding: 32, textAlign: 'center', borderBottom: `1px solid ${C.border}`, position: 'relative' }}>
+          <button 
+            onClick={() => setIsMobileSidebarOpen(false)}
+            className="pd-close-btn"
+            style={{ position: 'absolute', top: 12, right: 12, background: C.saffronLt, border: 'none', borderRadius: '50%', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: C.maroon }}
+          >
+            <XCircle size={16} />
+          </button>
           <div style={{ position: 'relative', display: 'inline-block', marginBottom: 16 }}>
             {user?.avatar ? (
               <img src={user.avatar} alt="Profile" style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover', border: `3px solid ${C.saffronLt}` }} />
@@ -660,7 +672,7 @@ const PanditDashboard = () => {
                       </div>
                     </div>
 
-                    <div style={{ background: C.surface, borderRadius: 16, padding: 20, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                    <div className="pd-booking-grid" style={{ background: C.surface, borderRadius: 16, padding: 20, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                       <div style={{ display: 'flex', gap: 8, fontSize: 14 }}>
                         <Video size={16} color={C.purple} style={{ flexShrink: 0, marginTop: 2 }} />
                         <div><strong style={{ color: C.maroon }}>{t('pd_mode') || 'Mode:'}</strong> <span style={{ color: booking.pujaMode === 'online' ? C.purple : C.saffron, fontWeight: 700, textTransform: 'capitalize' }}>{booking.pujaMode || 'in-person'}</span></div>

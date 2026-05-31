@@ -670,12 +670,14 @@ const DevoteeDashboard = () => {
       <style>{`
         .dd-sidebar { transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); }
         .dd-mobile-btn { display: none !important; }
-        @media (max-width: 768px) {
-          .dd-sidebar { position: fixed; top: 0; bottom: 0; left: 0; z-index: 2000; transform: translateX(-100%); box-shadow: 4px 0 24px rgba(123,29,14,0.15); }
+        .dd-close-btn { display: none !important; }
+        @media (max-width: 1024px) {
+          .dd-sidebar { position: fixed; top: 0; bottom: 0; left: 0; z-index: 2000; transform: translateX(-100%); box-shadow: 4px 0 24px rgba(123,29,14,0.15); width: 250px !important; }
           .dd-sidebar.open { transform: translateX(0); }
           .dd-topbar { padding: 0 12px !important; }
           .dd-topbar-title { font-size: 15px !important; }
           .dd-mobile-btn { display: flex !important; }
+          .dd-close-btn { display: block !important; }
           .dd-lang-hide { display: none !important; }
         }
       `}</style>
@@ -843,12 +845,21 @@ const DevoteeDashboard = () => {
         {/* ════ SIDEBAR ════ */}
         <div className={`dd-sidebar${isMobileSidebarOpen ? ' open' : ''}`}>
           <div className="dd-sidebar-top">
-            <div className="dd-brand" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
-              <span className="dd-brand-om">🕉</span>
-              <div>
-                <div className="dd-brand-name">पंडितजी</div>
-                <div className="dd-brand-sub">Sacred Services</div>
+            <div className="dd-brand" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', gap: '10px' }}>
+              <div onClick={() => navigate('/')} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span className="dd-brand-om">🕉</span>
+                <div>
+                  <div className="dd-brand-name">पंडितजी</div>
+                  <div className="dd-brand-sub">Sacred Services</div>
+                </div>
               </div>
+              <button 
+                onClick={(e) => { e.stopPropagation(); setIsMobileSidebarOpen(false); }}
+                className="dd-close-btn"
+                style={{ background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: '50%', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#fff', marginRight: '16px' }}
+              >
+                <X size={16} />
+              </button>
             </div>
             <div className="dd-profile-area">
               <div className="dd-avatar-wrap">
