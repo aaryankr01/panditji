@@ -1,3 +1,13 @@
+window.onerror = (msg, src, line, col, err) => {
+  document.body.innerHTML = `
+    <div style="padding:20px;font-family:monospace">
+      <h2>JavaScript Error</h2>
+      <pre>${msg}</pre>
+      <pre>${err?.stack || ''}</pre>
+    </div>
+  `;
+};
+
 import React, { useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
