@@ -7,6 +7,7 @@ import OtpInput from './OtpInput';
 import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
 import { auth } from "../../config/firebase";
 import axios from "axios";
+import { Eye, EyeOff } from 'lucide-react';
 
 const RegisterForm = () => {
   const { register, isLoading } = useAuthStore();
@@ -31,6 +32,7 @@ const RegisterForm = () => {
   const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState('');
   const [selectedStateCode, setSelectedStateCode] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   // OTP flow states
   const [step, setStep] = useState(1);
@@ -317,11 +319,25 @@ const RegisterForm = () => {
 
       <div>
         <label className="block text-sm font-bold text-textMid mb-1">Password</label>
-        <input
-          type="password" name="password" value={formData.password} onChange={handleChange} required minLength="6"
-          className="w-full px-4 py-3 rounded-xl border border-brandborder focus:ring-2 focus:ring-saffron focus:border-saffron outline-none transition-all text-maroon"
-          placeholder="••••••••"
-        />
+        <div className="relative">
+          <input
+            type={showPassword ? 'text' : 'password'}
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            required
+            minLength="6"
+            className="w-full pl-4 pr-11 py-3 rounded-xl border border-brandborder focus:ring-2 focus:ring-saffron focus:border-saffron outline-none transition-all text-maroon"
+            placeholder="••••••••"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-textMuted hover:text-saffron transition-colors"
+          >
+            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">

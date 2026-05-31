@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import useAuthStore from '../../store/useAuthStore';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import Loader from '../common/Loader';
+import { Eye, EyeOff } from 'lucide-react';
 
 const LoginForm = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const { login, isLoading } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
@@ -53,15 +55,24 @@ const LoginForm = () => {
             Forgot password?
           </Link>
         </div>
-        <input 
-          type="password" 
-          name="password"
-          value={formData.password}
-          onChange={handleChange}
-          required
-          className="w-full px-4 py-3 rounded-xl border border-brandborder focus:ring-2 focus:ring-saffron focus:border-saffron outline-none transition-all text-maroon"
-          placeholder="••••••••"
-        />
+        <div className="relative">
+          <input 
+            type={showPassword ? 'text' : 'password'} 
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            required
+            className="w-full pl-4 pr-11 py-3 rounded-xl border border-brandborder focus:ring-2 focus:ring-saffron focus:border-saffron outline-none transition-all text-maroon"
+            placeholder="••••••••"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-textMuted hover:text-saffron transition-colors"
+          >
+            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+          </button>
+        </div>
       </div>
       {/* Agreements Checklist */}
       <div className="mt-4">
