@@ -29,7 +29,9 @@ const GlobalNotificationListener = () => {
 
     // Connect socket — stays alive for the entire session
     const socket = io(SOCKET_URL, {
-      transports: ['websocket'],
+      // 'polling' first ensures iOS networks that block raw WebSocket upgrades still work.
+      // Socket.IO will automatically upgrade to 'websocket' when the network allows it.
+      transports: ['polling', 'websocket'],
       reconnection: true,
       reconnectionAttempts: 10,
       reconnectionDelay: 1000,
