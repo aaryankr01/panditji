@@ -6,7 +6,7 @@ const BASE_URL = import.meta.env.VITE_API_URL || 'https://panditji-1tf8.onrender
 
 const api = axios.create({
   baseURL: BASE_URL,
-  timeout: 30000, // 30s — Render free tier can take time to wake up from sleep
+  timeout: 60000, // 60s — Render free tier can take time to wake up from sleep
   headers: { 'Content-Type': 'application/json' },
 });
 
