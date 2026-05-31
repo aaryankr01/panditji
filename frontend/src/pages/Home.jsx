@@ -304,7 +304,7 @@ const Home = () => {
             <Sparkles size={14} className="animate-pulse" />
             {t('home_badge')}
           </div>
-          <h1 className="text-5xl lg:text-[84px] font-black text-maroon leading-[0.95] tracking-[-0.04em] mb-8 font-serif">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-[84px] font-black text-maroon leading-[0.95] tracking-[-0.04em] mb-8 font-serif">
             {t('home_h1_line1')}<br />
             <span className="text-saffron relative inline-block">
               {t('home_h1_line2')}
@@ -391,24 +391,24 @@ const Home = () => {
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-             <div className="bg-gradient-to-br from-gold-light to-white p-8 rounded-[40px] text-center border border-brandborder">
+             <div className="bg-gradient-to-br from-gold-light to-white p-6 md:p-8 rounded-[32px] md:rounded-[40px] text-center border border-brandborder">
                <p className="text-xs font-black text-gold uppercase tracking-widest mb-2">Verified</p>
-               <p className="text-5xl font-black text-maroon mb-1 font-serif">500+</p>
+               <p className="text-4xl md:text-5xl font-black text-maroon mb-1 font-serif">500+</p>
                <p className="font-bold text-textMid text-sm">Pandits</p>
              </div>
-             <div className="bg-gradient-to-br from-saffron-light to-white p-8 rounded-[40px] text-center border border-brandborder mt-12">
+             <div className="bg-gradient-to-br from-saffron-light to-white p-6 md:p-8 rounded-[32px] md:rounded-[40px] text-center border border-brandborder">
                <p className="text-xs font-black text-saffron uppercase tracking-widest mb-2">Success</p>
-               <p className="text-5xl font-black text-maroon mb-1 font-serif">12k+</p>
+               <p className="text-4xl md:text-5xl font-black text-maroon mb-1 font-serif">12k+</p>
                <p className="font-bold text-textMid text-sm">Sacred Pujas</p>
              </div>
-             <div className="bg-gradient-to-br from-maroon-light to-white p-8 rounded-[40px] text-center border border-brandborder -mt-12">
+             <div className="bg-gradient-to-br from-maroon-light to-white p-6 md:p-8 rounded-[32px] md:rounded-[40px] text-center border border-brandborder">
                <p className="text-xs font-black text-maroon uppercase tracking-widest mb-2">Coverage</p>
-               <p className="text-5xl font-black text-maroon mb-1 font-serif">80+</p>
+               <p className="text-4xl md:text-5xl font-black text-maroon mb-1 font-serif">80+</p>
                <p className="font-bold text-textMid text-sm">Cities</p>
              </div>
-             <div className="bg-gradient-to-br from-purpleTheme-light to-white p-8 rounded-[40px] text-center border border-brandborder">
+             <div className="bg-gradient-to-br from-purpleTheme-light to-white p-6 md:p-8 rounded-[32px] md:rounded-[40px] text-center border border-brandborder">
                <p className="text-xs font-black text-purpleTheme uppercase tracking-widest mb-2">Rating</p>
-               <p className="text-5xl font-black text-maroon mb-1 font-serif">4.9/5</p>
+               <p className="text-4xl md:text-5xl font-black text-maroon mb-1 font-serif">4.9/5</p>
                <p className="font-bold text-textMid text-sm">Happy Users</p>
              </div>
           </div>

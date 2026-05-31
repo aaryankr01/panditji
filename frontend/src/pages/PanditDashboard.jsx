@@ -75,6 +75,7 @@ const PanditDashboard = () => {
   const { user, token, logout, updateUser, isInitialized } = useAuthStore();
   const t = useT();
   const navigate = useNavigate();
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [bookings, setBookings] = useState([]);
   const [activeTab, setActiveTab] = useState('bookings');
   const [selectedChatUser, setSelectedChatUser] = useState(null);
@@ -382,6 +383,16 @@ const PanditDashboard = () => {
   return (
     <div style={{ display: 'flex', height: '100vh', background: C.surface, fontFamily: "'Poppins', sans-serif" }}>
       <style>{G}</style>
+      <style>{`
+        .pd-sidebar { transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); }
+        .pd-mobile-btn { display: none !important; }
+        @media (max-width: 768px) {
+          .pd-sidebar { position: fixed !important; top: 0; bottom: 0; left: 0; z-index: 2000; transform: translateX(-100%); box-shadow: 4px 0 24px rgba(123,29,14,0.15); width: 280px; }
+          .pd-sidebar.open { transform: translateX(0) !important; }
+          .pd-mobile-btn { display: flex !important; }
+          .pd-header { padding: 0 16px !important; }
+        }
+      `}</style>
 
       {/* ═══ CANCELLATION TOAST (devotee cancelled a paid/accepted booking) ═══ */}
       {cancellationToast && (
@@ -470,8 +481,10 @@ const PanditDashboard = () => {
         </div>
       )}
 
+      {isMobileSidebarOpen && <div onClick={() => setIsMobileSidebarOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(44,26,14,0.5)', zIndex: 1999, backdropFilter: 'blur(2px)' }} />}
+
       {/* ═══ SIDEBAR ═══ */}
-      <div style={{ width: 280, background: '#fff', borderRight: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column' }}>
+      <div className={`pd-sidebar${isMobileSidebarOpen ? ' open' : ''}`} style={{ width: 280, background: '#fff', borderRight: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column' }}>
         <div style={{ padding: 32, textAlign: 'center', borderBottom: `1px solid ${C.border}` }}>
           <div style={{ position: 'relative', display: 'inline-block', marginBottom: 16 }}>
             {user?.avatar ? (
@@ -506,7 +519,7 @@ const PanditDashboard = () => {
             { id: 'profile', label: t('dd_my_profile'), icon: User },
             { id: 'support', label: t('dd_support'), icon: Headphones },
           ].map(tab => (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+            <button key={tab.id} onClick={() => { setActiveTab(tab.id); setIsMobileSidebarOpen(false); }}
               style={{
                 display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', borderRadius: 12, border: 'none', cursor: 'pointer', fontFamily: "'Poppins', sans-serif", fontSize: 14, fontWeight: 700, transition: 'all 0.2s', textAlign: 'left',
                 background: activeTab === tab.id ? C.maroon : 'transparent',
@@ -531,7 +544,10 @@ const PanditDashboard = () => {
 
       {/* ═══ MAIN CONTENT ═══ */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <header style={{ height: 80, background: '#fff', borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', padding: '0 32px', justifyContent: 'space-between' }}>
+        <header className="pd-header" style={{ height: 80, background: '#fff', borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', padding: '0 32px', justifyContent: 'space-between' }}>
+          <button className="pd-mobile-btn" onClick={() => setIsMobileSidebarOpen(true)} style={{ alignItems: 'center', justifyContent: 'center', background: '#FAF7F2', border: '1px solid #EAD9CC', borderRadius: 12, padding: '8px 10px', cursor: 'pointer', color: '#7B1D0E', flexShrink: 0 }}>
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M3 5H15" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/><path d="M3 10H17" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/><path d="M3 15H11" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/></svg>
+          </button>
           <h1 style={{ fontFamily: "'Playfair Display',serif", fontSize: 24, fontWeight: 900, color: C.maroon }}>
             {activeTab === 'bookings' ? t('pd_booking_requests') : activeTab === 'chat' ? t('dd_messages') : activeTab === 'profile' ? t('dd_my_profile') : t('dd_support')}
           </h1>

@@ -9,8 +9,20 @@ const Login = () => {
   const registerUrl = redirect ? `/register?redirect=${encodeURIComponent(redirect)}` : '/register';
 
   return (
-    <div className="min-h-screen bg-surface flex font-sans">
-      {/* Left decorative panel */}
+    <div className="min-h-screen bg-surface flex flex-col lg:flex-row font-sans">
+
+      {/* Mobile top brand banner — visible only on small screens */}
+      <div className="lg:hidden bg-gradient-to-r from-maroon to-purpleTheme px-5 py-5 flex items-center gap-3">
+        <div className="bg-white p-1.5 rounded-xl inline-block">
+          <BrandWordmark logoSize={32} textClass="text-xl" />
+        </div>
+        <div>
+          <p className="text-white font-black text-base leading-tight font-serif">Welcome back.</p>
+          <p className="text-white/70 text-xs mt-0.5">Your devotion awaits.</p>
+        </div>
+      </div>
+
+      {/* Left decorative panel — desktop only */}
       <div className="hidden lg:flex w-1/2 bg-gradient-to-br from-maroon to-purpleTheme flex-col justify-center px-16 relative overflow-hidden">
         {/* Background Decorative Blobs */}
         <div className="absolute top-0 -right-20 w-96 h-96 bg-saffron rounded-full blur-3xl opacity-20" />
@@ -30,18 +42,18 @@ const Login = () => {
       </div>
 
       {/* Right form panel */}
-      <div className="flex-1 flex flex-col justify-center py-12 px-6 sm:px-12 lg:px-20 bg-surface">
-        <div className="max-w-md w-full mx-auto bg-white p-8 sm:p-10 rounded-3xl border border-brandborder shadow-xl shadow-saffron/5">
-          <div className="lg:hidden mb-8">
+      <div className="flex-1 flex flex-col justify-center py-8 sm:py-12 px-4 sm:px-8 lg:px-20 bg-surface overflow-y-auto">
+        <div className="max-w-md w-full mx-auto bg-white p-6 sm:p-8 lg:p-10 rounded-3xl border border-brandborder shadow-xl shadow-saffron/5">
+          <div className="lg:hidden mb-6">
             <BrandWordmark />
           </div>
-          <h2 className="text-3xl font-black text-maroon mb-2 font-serif">Sign in</h2>
-          <p className="text-sm text-textMid mb-8">
+          <h2 className="text-2xl sm:text-3xl font-black text-maroon mb-2 font-serif">Sign in</h2>
+          <p className="text-sm text-textMid mb-6">
             Don't have an account?{' '}
             <Link to={registerUrl} className="font-bold text-saffron hover:text-saffron-dark transition-colors">Create one free</Link>
           </p>
           <LoginForm />
-          <p className="text-center text-xs text-textMuted mt-8">
+          <p className="text-center text-xs text-textMuted mt-6">
             By signing in you agree to our{' '}
             <Link to="/terms" className="underline hover:text-maroon">Terms of Service</Link>.
           </p>

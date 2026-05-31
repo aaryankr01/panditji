@@ -146,8 +146,8 @@ const G = `
   @keyframes ddPulse { 0%,100%{opacity:1} 50%{opacity:0.45} }
 `;
 
-const NavItem = ({ icon, label, tab, activeTab, setActiveTab }) => (
-  <button className={`dd-nav-item ${activeTab === tab ? 'active' : ''}`} onClick={() => setActiveTab(tab)}>
+const NavItem = ({ icon, label, tab, activeTab, setActiveTab, onClick }) => (
+  <button className={`dd-nav-item ${activeTab === tab ? 'active' : ''}`} onClick={() => { setActiveTab(tab); if (onClick) onClick(); }}>
     <span className="dd-nav-icon" style={{ color: activeTab === tab ? '#fff' : C.saffron }}>{icon}</span>
     {label}
   </button>
@@ -357,6 +357,7 @@ const DevoteeDashboard = () => {
   const { user, token, logout, updateUser, isInitialized } = useAuthStore();
   const t = useT();
   const navigate = useNavigate();
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [pandits, setPandits] = useState([]);
   const [cropFile, setCropFile] = useState(null);
   const [isLocal, setIsLocal] = useState(true);
@@ -666,6 +667,18 @@ const DevoteeDashboard = () => {
   return (
     <>
       <style>{G}</style>
+      <style>{`
+        .dd-sidebar { transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); }
+        .dd-mobile-btn { display: none !important; }
+        @media (max-width: 768px) {
+          .dd-sidebar { position: fixed; top: 0; bottom: 0; left: 0; z-index: 2000; transform: translateX(-100%); box-shadow: 4px 0 24px rgba(123,29,14,0.15); }
+          .dd-sidebar.open { transform: translateX(0); }
+          .dd-topbar { padding: 0 12px !important; }
+          .dd-topbar-title { font-size: 15px !important; }
+          .dd-mobile-btn { display: flex !important; }
+          .dd-lang-hide { display: none !important; }
+        }
+      `}</style>
       <div className="dd-root">
 
         {/* Confirm cancel modal for UNPAID bookings */}
@@ -825,8 +838,10 @@ const DevoteeDashboard = () => {
           </div>
         )}
 
+        {isMobileSidebarOpen && <div onClick={() => setIsMobileSidebarOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(44,26,14,0.5)', zIndex: 1999, backdropFilter: 'blur(2px)' }} />}
+
         {/* ════ SIDEBAR ════ */}
-        <div className="dd-sidebar">
+        <div className={`dd-sidebar${isMobileSidebarOpen ? ' open' : ''}`}>
           <div className="dd-sidebar-top">
             <div className="dd-brand" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
               <span className="dd-brand-om">🕉</span>
@@ -850,11 +865,11 @@ const DevoteeDashboard = () => {
             </div>
           </div>
           <nav className="dd-nav">
-            <NavItem icon={<User size={16} />} label={t('dd_my_profile')} tab="profile" activeTab={activeTab} setActiveTab={setActiveTab} />
-            <NavItem icon={<Calendar size={16} />} label={t('dd_my_bookings')} tab="bookings" activeTab={activeTab} setActiveTab={setActiveTab} />
-            <NavItem icon={<MessageSquare size={16} />} label={t('dd_messages')} tab="chat" activeTab={activeTab} setActiveTab={setActiveTab} />
-            <NavItem icon={<CheckCircle size={16} />} label={t('dd_bookings_payments')} tab="payments" activeTab={activeTab} setActiveTab={setActiveTab} />
-            <NavItem icon={<Headphones size={16} />} label={t('dd_support')} tab="support" activeTab={activeTab} setActiveTab={setActiveTab} />
+            <NavItem icon={<User size={16} />} label={t('dd_my_profile')} tab="profile" activeTab={activeTab} setActiveTab={setActiveTab} onClick={() => setIsMobileSidebarOpen(false)} />
+            <NavItem icon={<Calendar size={16} />} label={t('dd_my_bookings')} tab="bookings" activeTab={activeTab} setActiveTab={setActiveTab} onClick={() => setIsMobileSidebarOpen(false)} />
+            <NavItem icon={<MessageSquare size={16} />} label={t('dd_messages')} tab="chat" activeTab={activeTab} setActiveTab={setActiveTab} onClick={() => setIsMobileSidebarOpen(false)} />
+            <NavItem icon={<CheckCircle size={16} />} label={t('dd_bookings_payments')} tab="payments" activeTab={activeTab} setActiveTab={setActiveTab} onClick={() => setIsMobileSidebarOpen(false)} />
+            <NavItem icon={<Headphones size={16} />} label={t('dd_support')} tab="support" activeTab={activeTab} setActiveTab={setActiveTab} onClick={() => setIsMobileSidebarOpen(false)} />
           </nav>
           <div className="dd-logout" style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             <button className="dd-nav-item" onClick={() => navigate('/')} style={{ padding: '11px 14px' }}>
@@ -870,6 +885,9 @@ const DevoteeDashboard = () => {
         {/* ════ MAIN ════ */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
           <header className="dd-topbar">
+            <button className="dd-mobile-btn" onClick={() => setIsMobileSidebarOpen(true)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#FAF7F2', border: '1px solid #EAD9CC', borderRadius: 12, padding: '8px 10px', cursor: 'pointer', color: '#7B1D0E', flexShrink: 0 }}>
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M3 5H15" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/><path d="M3 10H17" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/><path d="M3 15H11" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/></svg>
+            </button>
             <div className="dd-topbar-title">
               {activeTab === 'profile' && t('dd_my_profile')}
               {activeTab === 'bookings' && t('dd_my_bookings')}
