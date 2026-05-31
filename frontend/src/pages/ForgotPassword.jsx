@@ -7,6 +7,27 @@ import api from '../utils/api';
 import OtpInput from "../components/auth/OtpInput";
 import { BrandWordmark } from "../components/common/BrandLogo";
 
+// iOS Safari in Private Browsing mode throws a SecurityError on sessionStorage access.
+// This safe wrapper silently falls back to an in-memory map so the app always loads.
+const safeSessionStorage = (() => {
+  try {
+    sessionStorage.setItem('__session_test__', '1');
+    sessionStorage.removeItem('__session_test__');
+    return {
+      getItem: (k) => sessionStorage.getItem(k),
+      setItem: (k, v) => sessionStorage.setItem(k, v),
+      removeItem: (k) => sessionStorage.removeItem(k),
+    };
+  } catch {
+    const mem = {};
+    return {
+      getItem: (k) => mem[k] ?? null,
+      setItem: (k, v) => { mem[k] = v; },
+      removeItem: (k) => { delete mem[k]; },
+    };
+  }
+})();
+
 // ─── Password Eye Toggle ──────────────────────────────────────────────────────
 const PasswordInput = ({ value, onChange, placeholder, id }) => {
   const [show, setShow] = useState(false);
@@ -209,7 +230,7 @@ const ForgotPassword = () => {
       }
 
       if (resetToken) {
-        sessionStorage.setItem("resetToken", resetToken);
+        safeSessionStorage.setItem("resetToken", resetToken);
         setStep(3);
       }
     } catch (err) {
@@ -258,12 +279,12 @@ const ForgotPassword = () => {
     if (newPassword !== confirmPassword) return setError("Passwords do not match.");
     setLoading(true);
     try {
-      const resetToken = sessionStorage.getItem("resetToken");
+      const resetToken = safeSessionStorage.getItem("resetToken");
       await api.post("/auth/reset-password", {
         resetToken,
         newPassword,
       });
-      sessionStorage.removeItem("resetToken");
+      safeSessionStorage.removeItem("resetToken");
       setStep(4);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to reset password.");
