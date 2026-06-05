@@ -46,13 +46,13 @@ const Navbar = () => {
           </Link>
 
           {/* Nav links (Desktop) */}
-          <div className="hidden md:flex items-center gap-8">
+          <div className="hidden lg:flex items-center gap-8">
             <NavLinks />
           </div>
 
           {/* Right: Language Toggle + Auth */}
           <div className="flex items-center gap-3">
-            <div className="hidden md:flex items-center gap-3">
+            <div className="hidden lg:flex items-center gap-3">
               <LanguageToggle />
               {!isAuthenticated ? (
                 <>
@@ -92,7 +92,7 @@ const Navbar = () => {
             
             {/* Hamburger Button */}
             <button 
-              className="md:hidden p-2.5 bg-[#FAF7F2] hover:bg-[#EAD9CC]/40 text-maroon rounded-2xl transition-all flex items-center justify-center border border-brandborder/60 shadow-sm" 
+              className="lg:hidden p-2.5 bg-[#FAF7F2] hover:bg-[#EAD9CC]/40 text-maroon rounded-2xl transition-all flex items-center justify-center border border-brandborder/60 shadow-sm" 
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               aria-label="Toggle menu"
             >
@@ -112,8 +112,23 @@ const Navbar = () => {
 
       {/* Mobile Drawer */}
       {isMobileMenuOpen && (
-        <div className="md:hidden border-t border-brandborder bg-white px-4 py-4 space-y-4">
+        <div className="lg:hidden border-t border-brandborder bg-white px-4 py-4 space-y-4">
           <div className="flex flex-col gap-4">
+            {isAuthenticated && (
+              <Link to={dashboardPath} onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2.5 p-3 rounded-xl bg-[#FAF7F2] border border-brandborder transition-all">
+                <div className="w-8 h-8 rounded-full bg-saffron text-white flex items-center justify-center text-sm font-bold shadow-sm overflow-hidden">
+                  {user?.avatar ? (
+                    <img src={user.avatar} alt="Profile" className="w-full h-full object-cover" />
+                  ) : (
+                    user?.firstName?.charAt(0) || <UserIcon size={14} />
+                  )}
+                </div>
+                <div className="text-left">
+                  <p className="text-sm font-bold text-maroon leading-none">{user?.firstName}</p>
+                  <p className="text-xs text-textMuted capitalize leading-none mt-0.5">{user?.role} Dashboard</p>
+                </div>
+              </Link>
+            )}
             <NavLinks />
             <div className="flex items-center justify-between border-t pt-4">
               <LanguageToggle />
