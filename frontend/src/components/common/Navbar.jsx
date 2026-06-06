@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import useAuthStore from '../../store/useAuthStore';
 import useLanguageStore from '../../store/useLanguageStore';
 import useT from '../../hooks/useT';
@@ -12,6 +12,7 @@ import LanguageToggle from './LanguageToggle';
 const Navbar = () => {
   const { user, isAuthenticated, logout } = useAuthStore();
   const navigate = useNavigate();
+  const location = useLocation();
   const t = useT();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -91,21 +92,23 @@ const Navbar = () => {
             </div>
             
             {/* Hamburger Button */}
-            <button 
-              className="lg:hidden p-2.5 bg-[#FAF7F2] hover:bg-[#EAD9CC]/40 text-maroon rounded-2xl transition-all flex items-center justify-center border border-brandborder/60 shadow-sm" 
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              aria-label="Toggle menu"
-            >
-              {isMobileMenuOpen ? (
-                <X size={20} className="stroke-[2.5]" />
-              ) : (
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M3 5H15" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
-                  <path d="M3 10H17" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
-                  <path d="M3 15H11" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
-                </svg>
-              )}
-            </button>
+            {location.pathname !== '/' && (
+              <button 
+                className="lg:hidden p-2.5 bg-[#FAF7F2] hover:bg-[#EAD9CC]/40 text-maroon rounded-2xl transition-all flex items-center justify-center border border-brandborder/60 shadow-sm" 
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                aria-label="Toggle menu"
+              >
+                {isMobileMenuOpen ? (
+                  <X size={20} className="stroke-[2.5]" />
+                ) : (
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 5H15" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
+                    <path d="M3 10H17" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
+                    <path d="M3 15H11" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
+                  </svg>
+                )}
+              </button>
+            )}
           </div>
         </div>
       </div>

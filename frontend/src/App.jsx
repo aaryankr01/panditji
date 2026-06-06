@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import useAuthStore from './store/useAuthStore';
 import { Toaster } from 'react-hot-toast';
 import GlobalNotificationListener from './components/common/GlobalNotificationListener';
@@ -42,6 +42,18 @@ import Analytics from './admin/Analytics';
 
 function App() {
   const { user, isAuthenticated, checkAuth } = useAuthStore();
+  const location = useLocation();
+
+  useEffect(() => {
+    const viewport = document.querySelector('meta[name="viewport"]');
+    if (viewport) {
+      if (location.pathname.includes('dashboard')) {
+        viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, viewport-fit=cover');
+      } else {
+        viewport.setAttribute('content', 'width=1280');
+      }
+    }
+  }, [location.pathname]);
 
   useEffect(() => {
     checkAuth();
