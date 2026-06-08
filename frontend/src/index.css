@@ -16,7 +16,7 @@
   }
 
   /* Magnify page on mobile screens safely (no viewport hack needed) */
-  @media (max-width: 768px) {
+  @media (max-width: 767px) {
     html {
       font-size: 112%;
     }

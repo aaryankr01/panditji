@@ -294,7 +294,7 @@ const Home = () => {
       <Navbar />
 
       {/* Hero */}
-      <section className="relative overflow-hidden bg-surface pt-24 pb-32 px-4">
+      <section className="relative overflow-hidden bg-surface pt-16 pb-24 md:pt-24 md:pb-32 px-4">
         {/* Background Decorative Blobs */}
         <div className="absolute top-0 -right-20 w-96 h-96 bg-saffron-light rounded-full blur-3xl -z-10" />
         <div className="absolute bottom-0 -left-20 w-96 h-96 bg-gold-light rounded-full blur-3xl -z-10 opacity-70" />
@@ -304,7 +304,7 @@ const Home = () => {
             <Sparkles size={14} className="animate-pulse" />
             {t('home_badge')}
           </div>
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-[84px] font-black text-maroon leading-[0.95] tracking-[-0.04em] mb-8 font-serif">
+          <h1 className="text-4xl sm:text-5xl md:text-5xl lg:text-[84px] font-black text-maroon leading-[0.95] tracking-[-0.04em] mb-8 font-serif">
             {t('home_h1_line1')}<br />
             <span className="text-saffron relative inline-block">
               {t('home_h1_line2')}
@@ -313,19 +313,19 @@ const Home = () => {
               </svg>
             </span>
           </h1>
-          <p className="text-lg sm:text-xl text-textMid mb-12 max-w-2xl mx-auto leading-relaxed font-medium">
+          <p className="text-base sm:text-lg md:text-xl text-textMid mb-8 md:mb-12 max-w-2xl mx-auto leading-relaxed font-medium">
             {t('home_hero_desc')}
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-5">
             <Link
               to="/pujas"
-              className="group relative flex items-center gap-2 bg-saffron hover:bg-saffron-dark text-white text-base font-black py-5 px-10 rounded-2xl transition-all shadow-lg hover:-translate-y-1 active:translate-y-0"
+              className="group relative flex items-center gap-2 bg-saffron hover:bg-saffron-dark text-white text-base font-black py-3.5 px-8 sm:py-5 sm:px-10 rounded-2xl transition-all shadow-lg hover:-translate-y-1 active:translate-y-0"
             >
               {t('home_cta_book')} <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
             </Link>
             <Link
               to="/register?role=pandit"
-              className="flex items-center gap-2 bg-white text-maroon text-base font-bold py-5 px-10 rounded-2xl border border-brandborder hover:border-saffron hover:text-saffron transition-all shadow-sm"
+              className="flex items-center gap-2 bg-white text-maroon text-base font-bold py-3.5 px-8 sm:py-5 sm:px-10 rounded-2xl border border-brandborder hover:border-saffron hover:text-saffron transition-all shadow-sm"
             >
               {t('home_cta_join')}
             </Link>
@@ -346,7 +346,7 @@ const Home = () => {
       </section>
 
       {/* Stats Counter Section */}
-      <section className="py-12 px-4 -mt-20 relative z-10">
+      <section className="py-12 px-4 -mt-12 md:-mt-20 relative z-10">
         <div className="max-w-6xl mx-auto bg-white/80 backdrop-blur-xl p-8 rounded-[32px] border border-brandborder shadow-xl shadow-saffron-light/50 grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-4 text-center">
           <div>
             <p className="text-4xl font-black text-maroon mb-1 font-serif">500+</p>
@@ -391,25 +391,25 @@ const Home = () => {
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-             <div className="bg-gradient-to-br from-gold-light to-white p-6 md:p-8 rounded-[32px] md:rounded-[40px] text-center border border-brandborder">
-               <p className="text-xs font-black text-gold uppercase tracking-widest mb-2">Verified</p>
-               <p className="text-4xl md:text-5xl font-black text-maroon mb-1 font-serif">500+</p>
-               <p className="font-bold text-textMid text-sm">Pandits</p>
+             <div className="bg-gradient-to-br from-gold-light to-white p-4 sm:p-6 md:p-6 lg:p-8 rounded-[24px] sm:rounded-[32px] lg:rounded-[40px] text-center border border-brandborder">
+               <p className="text-[10px] sm:text-xs font-black text-gold uppercase tracking-widest mb-2">Verified</p>
+               <p className="text-3xl sm:text-4xl md:text-4xl lg:text-5xl font-black text-maroon mb-1 font-serif">500+</p>
+               <p className="font-bold text-textMid text-xs sm:text-sm">Pandits</p>
              </div>
-             <div className="bg-gradient-to-br from-saffron-light to-white p-6 md:p-8 rounded-[32px] md:rounded-[40px] text-center border border-brandborder">
-               <p className="text-xs font-black text-saffron uppercase tracking-widest mb-2">Success</p>
-               <p className="text-4xl md:text-5xl font-black text-maroon mb-1 font-serif">12k+</p>
-               <p className="font-bold text-textMid text-sm">Sacred Pujas</p>
+             <div className="bg-gradient-to-br from-saffron-light to-white p-4 sm:p-6 md:p-6 lg:p-8 rounded-[24px] sm:rounded-[32px] lg:rounded-[40px] text-center border border-brandborder">
+               <p className="text-[10px] sm:text-xs font-black text-saffron uppercase tracking-widest mb-2">Success</p>
+               <p className="text-3xl sm:text-4xl md:text-4xl lg:text-5xl font-black text-maroon mb-1 font-serif">12k+</p>
+               <p className="font-bold text-textMid text-xs sm:text-sm">Sacred Pujas</p>
              </div>
-             <div className="bg-gradient-to-br from-maroon-light to-white p-6 md:p-8 rounded-[32px] md:rounded-[40px] text-center border border-brandborder">
-               <p className="text-xs font-black text-maroon uppercase tracking-widest mb-2">Coverage</p>
-               <p className="text-4xl md:text-5xl font-black text-maroon mb-1 font-serif">80+</p>
-               <p className="font-bold text-textMid text-sm">Cities</p>
+             <div className="bg-gradient-to-br from-maroon-light to-white p-4 sm:p-6 md:p-6 lg:p-8 rounded-[24px] sm:rounded-[32px] lg:rounded-[40px] text-center border border-brandborder">
+               <p className="text-[10px] sm:text-xs font-black text-maroon uppercase tracking-widest mb-2">Coverage</p>
+               <p className="text-3xl sm:text-4xl md:text-4xl lg:text-5xl font-black text-maroon mb-1 font-serif">80+</p>
+               <p className="font-bold text-textMid text-xs sm:text-sm">Cities</p>
              </div>
-             <div className="bg-gradient-to-br from-purpleTheme-light to-white p-6 md:p-8 rounded-[32px] md:rounded-[40px] text-center border border-brandborder">
-               <p className="text-xs font-black text-purpleTheme uppercase tracking-widest mb-2">Rating</p>
-               <p className="text-4xl md:text-5xl font-black text-maroon mb-1 font-serif">4.9/5</p>
-               <p className="font-bold text-textMid text-sm">Happy Users</p>
+             <div className="bg-gradient-to-br from-purpleTheme-light to-white p-4 sm:p-6 md:p-6 lg:p-8 rounded-[24px] sm:rounded-[32px] lg:rounded-[40px] text-center border border-brandborder">
+               <p className="text-[10px] sm:text-xs font-black text-purpleTheme uppercase tracking-widest mb-2">Rating</p>
+               <p className="text-3xl sm:text-4xl md:text-4xl lg:text-5xl font-black text-maroon mb-1 font-serif">4.9/5</p>
+               <p className="font-bold text-textMid text-xs sm:text-sm">Happy Users</p>
              </div>
           </div>
         </div>

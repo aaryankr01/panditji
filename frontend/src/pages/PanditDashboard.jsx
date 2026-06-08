@@ -387,7 +387,7 @@ const PanditDashboard = () => {
         .pd-sidebar { transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); }
         .pd-mobile-btn { display: none !important; }
         .pd-close-btn { display: none !important; }
-        @media (max-width: 1024px) {
+        @media (max-width: 767px) {
           .pd-sidebar { position: fixed !important; top: 0; bottom: 0; left: 0; z-index: 2000; transform: translateX(-100%); box-shadow: 4px 0 24px rgba(123,29,14,0.15); width: 280px; }
           .pd-sidebar.open { transform: translateX(0) !important; }
           .pd-mobile-btn { display: flex !important; }
