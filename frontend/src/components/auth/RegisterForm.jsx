@@ -36,6 +36,7 @@ const RegisterForm = () => {
   const [error, setError] = useState('');
   const [selectedStateCode, setSelectedStateCode] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // OTP flow states
   const [step, setStep] = useState(1);
@@ -351,7 +352,7 @@ const RegisterForm = () => {
         <label className="block text-sm font-bold text-textMid mb-1">Confirm Password</label>
         <div className="relative">
           <input
-            type={showPassword ? 'text' : 'password'}
+            type={showConfirmPassword ? 'text' : 'password'}
             name="confirmPassword"
             value={formData.confirmPassword}
             onChange={handleChange}
@@ -360,6 +361,13 @@ const RegisterForm = () => {
             className="w-full pl-4 pr-11 py-3 rounded-xl border border-brandborder focus:ring-2 focus:ring-saffron focus:border-saffron outline-none transition-all text-maroon"
             placeholder="••••••••"
           />
+          <button
+            type="button"
+            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-textMuted hover:text-saffron transition-colors"
+          >
+            {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+          </button>
         </div>
       </div>
 

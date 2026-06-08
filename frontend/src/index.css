@@ -21,4 +21,16 @@
       font-size: 112%;
     }
   }
+
+  /* Hide browser-native password reveal button (Edge / IE / Chrome)
+     so only our custom eye icon toggle is visible */
+  input[type="password"]::-ms-reveal,
+  input[type="password"]::-ms-clear {
+    display: none;
+  }
+  input[type="password"]::-webkit-credentials-auto-fill-button {
+    visibility: hidden;
+    pointer-events: none;
+    position: absolute;
+  }
 }
