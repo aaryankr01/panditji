@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import useAuthStore from '../../store/useAuthStore';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import RoleSelector from './RoleSelector';
-import { State, City } from 'country-state-city';
+import { State, City } from '../../utils/indiaData';
 import OtpInput from './OtpInput';
 import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
 import { auth } from "../../config/firebase";

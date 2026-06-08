@@ -4,7 +4,7 @@ import useAuthStore from '../../store/useAuthStore';
 import axios from 'axios';
 import { io } from 'socket.io-client';
 import { Users, MessageSquare, LayoutDashboard, LogOut, ArrowLeft } from 'lucide-react';
-import { State, City } from 'country-state-city';
+import { State, City } from '../../utils/indiaData';
 import api from '../../utils/api';
 
 const ChatTracker = () => {

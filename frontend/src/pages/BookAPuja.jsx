@@ -6,7 +6,7 @@ import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
 import useAuthStore from '../store/useAuthStore';
 import useT from '../hooks/useT';
-import { State, City } from 'country-state-city';
+import { State, City } from '../utils/indiaData';
 import {
   Star, MapPin, ChevronRight, CheckCircle, AlertCircle, Search, Video, Info, X, Home, ArrowRight, Clock
 } from 'lucide-react';
