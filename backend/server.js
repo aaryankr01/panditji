@@ -78,7 +78,7 @@ const corsOptions = {
   allowedHeaders: ['Content-Type', 'Authorization'],
 };
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions)); // Handle pre-flight for every route
+app.options(/.*/, cors(corsOptions)); // Handle pre-flight for every route
 
 // Security middleware (after CORS so helmet doesn't strip CORS headers)
 app.use(helmet({
