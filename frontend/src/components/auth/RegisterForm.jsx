@@ -24,6 +24,7 @@ const RegisterForm = () => {
     lastName: '',
     email: '',
     password: '',
+    confirmPassword: '',
     phone: '',
     city: '',
     state: '',
@@ -173,6 +174,10 @@ const RegisterForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    if (formData.password !== formData.confirmPassword) {
+      return setError('Passwords do not match.');
+    }
 
     const cleanPhone = formData.phone.replace(/\D/g, "");
     if (!/^\d{10}$/.test(cleanPhone)) {
@@ -339,6 +344,22 @@ const RegisterForm = () => {
           >
             {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
           </button>
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-bold text-textMid mb-1">Confirm Password</label>
+        <div className="relative">
+          <input
+            type={showPassword ? 'text' : 'password'}
+            name="confirmPassword"
+            value={formData.confirmPassword}
+            onChange={handleChange}
+            required
+            minLength="6"
+            className="w-full pl-4 pr-11 py-3 rounded-xl border border-brandborder focus:ring-2 focus:ring-saffron focus:border-saffron outline-none transition-all text-maroon"
+            placeholder="••••••••"
+          />
         </div>
       </div>
 
