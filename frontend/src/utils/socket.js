@@ -6,7 +6,11 @@ let socket = null;
 
 export const getSocket = () => {
   if (!socket) {
-    socket = io(SOCKET_URL, { autoConnect: false });
+    socket = io(SOCKET_URL, {
+      autoConnect: false,
+      // polling first ensures iOS carrier networks that block raw WebSocket still work
+      transports: ['polling', 'websocket'],
+    });
   }
   return socket;
 };

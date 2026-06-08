@@ -7,9 +7,11 @@ export default defineConfig({
   plugins: [
     react(),
     // Generates a legacy ES5 bundle + polyfills for older iOS Safari (13+)
-    // This is the primary fix for "white screen on iPhone" issues
+    // modernPolyfills:true also injects polyfills into the MODERN bundle
+    // so that current iPhones (iOS 14-17) also get missing APIs filled in.
     legacy({
       targets: ['iOS >= 13', 'defaults'],
+      modernPolyfills: true,
     }),
   ],
   server: {
