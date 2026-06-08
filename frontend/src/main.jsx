@@ -34,14 +34,22 @@ class ErrorBoundary extends Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ padding: 32, fontFamily: 'sans-serif', textAlign: 'center' }}>
-          <h2 style={{ color: '#7B1D0E' }}>Something went wrong</h2>
-          <p style={{ color: '#555', fontSize: 14 }}>Please reload the page.</p>
+        <div style={{ padding: 24, fontFamily: 'sans-serif', background: '#FAF7F2', minHeight: '100vh' }}>
+          <h2 style={{ color: '#7B1D0E', marginBottom: 8 }}>Something went wrong</h2>
+          <p style={{ color: '#555', fontSize: 13, marginBottom: 16 }}>Please screenshot this and share with support:</p>
+          <pre style={{
+            background: '#fff', border: '1px solid #EAD9CC', borderRadius: 8,
+            padding: 12, fontSize: 11, overflowX: 'auto', whiteSpace: 'pre-wrap',
+            wordBreak: 'break-all', color: '#333', marginBottom: 16,
+          }}>
+            {this.state.error?.message || 'Unknown error'}{'\n\n'}
+            {this.state.error?.stack || ''}
+          </pre>
           <button
-            onClick={() => window.location.reload()}
-            style={{ marginTop: 16, padding: '10px 24px', background: '#E8710A', color: '#fff', border: 'none', borderRadius: 8, fontSize: 15, cursor: 'pointer' }}
+            onClick={() => window.location.href = '/'}
+            style={{ padding: '10px 24px', background: '#E8710A', color: '#fff', border: 'none', borderRadius: 8, fontSize: 15, cursor: 'pointer' }}
           >
-            Reload
+            Go Home
           </button>
         </div>
       );
