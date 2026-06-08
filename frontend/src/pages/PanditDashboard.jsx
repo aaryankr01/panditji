@@ -100,6 +100,14 @@ const PanditDashboard = () => {
   const [aadharFile, setAadharFile] = useState(null);
   const [verifyingAadhar, setVerifyingAadhar] = useState(false);
 
+  // Switch to device-width viewport so hamburger/drawer works on phones
+  useEffect(() => {
+    const vp = document.querySelector('meta[name="viewport"]');
+    const prev = vp ? vp.getAttribute('content') : null;
+    if (vp) vp.setAttribute('content', 'width=device-width, initial-scale=1.0, viewport-fit=cover');
+    return () => { if (vp && prev) vp.setAttribute('content', prev); };
+  }, []);
+
   useEffect(() => {
     if (!isInitialized) return;
     if (!token || user?.role !== 'pandit') { navigate('/'); return; }
@@ -387,7 +395,7 @@ const PanditDashboard = () => {
         .pd-sidebar { transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); }
         .pd-mobile-btn { display: none !important; }
         .pd-close-btn { display: none !important; }
-        @media (max-width: 767px) {
+        @media (max-width: 1024px) {
           .pd-sidebar { position: fixed !important; top: 0; bottom: 0; left: 0; z-index: 2000; transform: translateX(-100%); box-shadow: 4px 0 24px rgba(123,29,14,0.15); width: 280px; }
           .pd-sidebar.open { transform: translateX(0) !important; }
           .pd-mobile-btn { display: flex !important; }

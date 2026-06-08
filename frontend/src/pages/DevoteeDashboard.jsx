@@ -390,6 +390,14 @@ const DevoteeDashboard = () => {
   const socketRef = useRef(null);
   const [clientType, setClientType] = useState('domestic');
 
+  // Switch to device-width viewport so hamburger/drawer works on phones
+  useEffect(() => {
+    const vp = document.querySelector('meta[name="viewport"]');
+    const prev = vp ? vp.getAttribute('content') : null;
+    if (vp) vp.setAttribute('content', 'width=device-width, initial-scale=1.0, viewport-fit=cover');
+    return () => { if (vp && prev) vp.setAttribute('content', prev); };
+  }, []);
+
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -671,7 +679,7 @@ const DevoteeDashboard = () => {
         .dd-sidebar { transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); }
         .dd-mobile-btn { display: none !important; }
         .dd-close-btn { display: none !important; }
-        @media (max-width: 767px) {
+        @media (max-width: 1024px) {
           .dd-sidebar { position: fixed; top: 0; bottom: 0; left: 0; z-index: 2000; transform: translateX(-100%); box-shadow: 4px 0 24px rgba(123,29,14,0.15); width: 250px !important; }
           .dd-sidebar.open { transform: translateX(0); }
           .dd-topbar { padding: 0 12px !important; }
