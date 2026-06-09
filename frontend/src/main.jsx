@@ -8,6 +8,21 @@ window.onerror = (msg, src, line, col, err) => {
 // Firebase auth, Socket.IO, and async module imports all use Promises.
 window.addEventListener('unhandledrejection', (event) => {
   console.error('[iOS Debug] Unhandled rejection:', event.reason);
+  
+  const reason = event.reason;
+  if (reason && (
+    (reason.message && reason.message.includes('Failed to fetch dynamically imported module')) ||
+    (reason.stack && reason.stack.includes('Failed to fetch dynamically imported module')) ||
+    (reason.message && reason.message.includes('chunk'))
+  )) {
+    const hasReloaded = sessionStorage.getItem('chunk_error_reload');
+    if (!hasReloaded) {
+      sessionStorage.setItem('chunk_error_reload', 'true');
+      window.location.reload();
+      return;
+    }
+  }
+  
   event.preventDefault(); // Prevent the app from crashing silently
 });
 
@@ -30,6 +45,19 @@ class ErrorBoundary extends Component {
   }
   componentDidCatch(error, info) {
     console.error('[iOS Debug] React error:', error, info);
+    
+    // Automatically reload the page if a dynamic import/chunk loading failed
+    if (error && (
+      (error.message && error.message.includes('Failed to fetch dynamically imported module')) ||
+      (error.stack && error.stack.includes('Failed to fetch dynamically imported module')) ||
+      (error.message && error.message.includes('chunk'))
+    )) {
+      const hasReloaded = sessionStorage.getItem('chunk_error_reload');
+      if (!hasReloaded) {
+        sessionStorage.setItem('chunk_error_reload', 'true');
+        window.location.reload();
+      }
+    }
   }
   render() {
     if (this.state.hasError) {
@@ -63,6 +91,8 @@ const Root = () => {
 
   useEffect(() => {
     checkAuth();
+    // Clear chunk error reload flag on successful load
+    sessionStorage.removeItem('chunk_error_reload');
   }, []);
 
   return <App />;
