@@ -374,11 +374,16 @@ const DevoteeDashboard = () => {
   const [bookingModal, setBookingModal] = useState({ isOpen: false, pandit: null });
   const [cancelContactModal, setCancelContactModal] = useState(null);
   const [cancelConfirmModal, setCancelConfirmModal] = useState(null); // unpaid cancel confirm
+  const [searchQuery, setSearchQuery] = useState('');
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const intentCity = searchParams.get('city');
   const intentPuja = searchParams.get('puja');
   const intentMode = searchParams.get('mode');
+
+  const filteredPandits = pandits.filter(p =>
+    `${p.firstName} ${p.lastName}`.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const [bookingForm, setBookingForm] = useState({
     pujaType: intentPuja || 'Satyanarayan Katha',
@@ -398,6 +403,22 @@ const DevoteeDashboard = () => {
     if (vp) vp.setAttribute('content', 'width=device-width, initial-scale=1.0, viewport-fit=cover');
     return () => { if (vp && prev) vp.setAttribute('content', prev); };
   }, []);
+
+  useEffect(() => {
+    if (intentCity || intentPuja) {
+      setActiveTab('find_pandit');
+    }
+  }, [intentCity, intentPuja]);
+
+  useEffect(() => {
+    if (intentPuja) {
+      setBookingForm(prev => ({
+        ...prev,
+        pujaType: intentPuja,
+        pujaMode: intentMode || prev.pujaMode
+      }));
+    }
+  }, [intentPuja, intentMode]);
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -474,9 +495,13 @@ const DevoteeDashboard = () => {
   }, [token]);
 
   useEffect(() => {
+    if (!isInitialized || !token || user?.role !== 'devotee') return;
+    fetchPandits();
+  }, [intentCity, isInitialized, token, user?.city]);
+
+  useEffect(() => {
     if (!isInitialized) return;
     if (!token || user?.role !== 'devotee') { navigate('/'); return; }
-    fetchPandits();
     fetchConversations();
     fetchMyBookings();
     fetchMyPayments();
@@ -912,6 +937,7 @@ const DevoteeDashboard = () => {
             </div>
           </div>
           <nav className="dd-nav">
+            <NavItem icon={<Search size={16} />} label={t('dd_find_pandit') || 'Find Pandit'} tab="find_pandit" activeTab={activeTab} setActiveTab={setActiveTab} onClick={() => setIsMobileSidebarOpen(false)} />
             <NavItem icon={<User size={16} />} label={t('dd_my_profile')} tab="profile" activeTab={activeTab} setActiveTab={setActiveTab} onClick={() => setIsMobileSidebarOpen(false)} />
             <NavItem icon={<Calendar size={16} />} label={t('dd_my_bookings')} tab="bookings" activeTab={activeTab} setActiveTab={setActiveTab} onClick={() => setIsMobileSidebarOpen(false)} />
             <NavItem icon={<MessageSquare size={16} />} label={t('dd_messages')} tab="chat" activeTab={activeTab} setActiveTab={setActiveTab} onClick={() => setIsMobileSidebarOpen(false)} />
@@ -936,6 +962,7 @@ const DevoteeDashboard = () => {
               <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M3 5H15" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" /><path d="M3 10H17" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" /><path d="M3 15H11" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" /></svg>
             </button>
             <div className="dd-topbar-title">
+              {activeTab === 'find_pandit' && (t('dd_find_pandit') || 'Find Pandit')}
               {activeTab === 'profile' && t('dd_my_profile')}
               {activeTab === 'bookings' && t('dd_my_bookings')}
               {activeTab === 'chat' && t('dd_messages')}
@@ -946,6 +973,100 @@ const DevoteeDashboard = () => {
           </header>
 
           <main style={{ flex: 1, overflowY: activeTab === 'chat' ? 'hidden' : 'auto', padding: activeTab === 'chat' ? 0 : 24, display: 'flex', flexDirection: 'column' }}>
+
+            {/* FIND PANDIT */}
+            {activeTab === 'find_pandit' && (
+              <div style={{ maxWidth: 1000, margin: '0 auto', width: '100%' }}>
+                <SectionTitle>{t('dd_available_pandits') || 'Available Pandits'}</SectionTitle>
+                
+                {/* Search Bar / Location Message */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 20 }}>
+                  <div style={{ display: 'flex', gap: 10 }}>
+                    <div style={{ flex: 1, position: 'relative' }}>
+                      <span style={{ position: 'absolute', left: 14, top: 13, color: C.textMuted }}><Search size={18} /></span>
+                      <input 
+                        type="text" 
+                        placeholder={t('dd_search_by_name') || "Search pandits by name..."}
+                        value={searchQuery}
+                        onChange={e => setSearchQuery(e.target.value)}
+                        style={{ ...inp, paddingLeft: 42 }}
+                      />
+                    </div>
+                  </div>
+                  
+                  {locationMessage && (
+                    <div style={{ background: '#E8F5EE', border: `1.5px solid ${C.success}`, color: C.success, padding: '12px 16px', borderRadius: 10, fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <CheckCircle size={18} />
+                      {locationMessage}
+                    </div>
+                  )}
+                </div>
+
+                {loading ? (
+                  <div style={{ display: 'flex', justifyContent: 'center', padding: '60px 0' }}>
+                    <div className="spin" style={{ width: 40, height: 40, border: `4px solid ${C.border}`, borderTopColor: C.saffron, borderRadius: '50%' }} />
+                  </div>
+                ) : filteredPandits.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '60px 20px', background: '#fff', borderRadius: 14, border: `1px solid ${C.border}` }}>
+                    <div style={{ fontSize: 56, marginBottom: 16 }}>🧘</div>
+                    <p style={{ fontWeight: 700, color: C.maroon, fontSize: 16 }}>{t('dd_no_pandits_found') || 'No Pandits Found'}</p>
+                    <p style={{ color: C.textMuted, fontSize: 13, marginTop: 6 }}>{t('dd_no_pandits_sub') || 'Try searching with a different name or location.'}</p>
+                  </div>
+                ) : (
+                  <div className="dd-pandits-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20 }}>
+                    {filteredPandits.map(pandit => (
+                      <div key={pandit._id} className="dd-pandit-card" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 14 }}>
+                          <div style={{ width: 50, height: 50, borderRadius: '50%', background: C.saffronLt, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 18, color: C.saffron, overflow: 'hidden', border: `1.5px solid ${C.border}` }}>
+                            {pandit.avatar ? (
+                              <img src={pandit.avatar} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            ) : (
+                              pandit.firstName?.charAt(0)
+                            )}
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 4, background: C.surface, color: C.maroon, padding: '4px 8px', borderRadius: 8, fontSize: 12, fontWeight: 700, border: `1px solid ${C.border}` }}>
+                            <Star size={12} fill="#C8960C" color="#C8960C" /> 4.8
+                          </div>
+                        </div>
+
+                        <h3 style={{ fontFamily: "'Playfair Display',serif", fontWeight: 900, fontSize: 17, color: C.maroon, marginBottom: 4 }}>
+                          Pt. {pandit.firstName} {pandit.lastName}
+                        </h3>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: C.textMid, marginBottom: 12 }}>
+                          <MapPin size={12} />
+                          {pandit.city || 'Location unavailable'}
+                        </div>
+
+                        <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: '10px 12px', fontSize: 12, color: C.textMid, marginBottom: 16, flex: 1 }}>
+                          <span style={{ fontWeight: 700, color: C.maroon, display: 'block', marginBottom: 2 }}>Specializations:</span>
+                          {Array.isArray(pandit.panditProfile?.specializations) && pandit.panditProfile.specializations.length > 0
+                            ? pandit.panditProfile.specializations.join(', ')
+                            : (pandit.panditProfile?.specialization || 'All Pujas')}
+                        </div>
+
+                        <div style={{ display: 'flex', gap: 8, marginTop: 'auto' }}>
+                          <button 
+                            onClick={() => startChat(pandit)}
+                            className="dd-btn" 
+                            style={{ background: '#f5f0eb', color: C.textMid, fontSize: 12, flex: 1, justifyContent: 'center' }}
+                          >
+                            <MessageSquare size={14} /> Chat
+                          </button>
+                          <button 
+                            onClick={() => handleOpenBookingModal(pandit._id)}
+                            className="dd-btn dd-btn-primary" 
+                            style={{ fontSize: 12, flex: 1, justifyContent: 'center' }}
+                          >
+                            Book Now
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* PROFILE */}
             {activeTab === 'profile' && (

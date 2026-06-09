@@ -6,7 +6,7 @@ const run = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI);
     console.log('MongoDB Connected');
-    const user = await User.findOne({ email: 'aaryan22@gmail.com' });
+    const user = await User.findOne({ email: 'aaryan02kr@gmail.com' });
     if (!user) {
       console.log('Devotee user not found');
       process.exit(1);
