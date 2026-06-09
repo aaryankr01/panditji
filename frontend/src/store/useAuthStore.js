@@ -1,26 +1,7 @@
 import { create } from 'zustand';
 import api from '../utils/api';
 
-// iOS Safari in Private Browsing mode throws a SecurityError on localStorage access.
-// This safe wrapper silently falls back to an in-memory map so the app always loads.
-const safeStorage = (() => {
-  try {
-    localStorage.setItem('__test__', '1');
-    localStorage.removeItem('__test__');
-    return {
-      get: (k) => localStorage.getItem(k),
-      set: (k, v) => localStorage.setItem(k, v),
-      remove: (k) => localStorage.removeItem(k),
-    };
-  } catch {
-    const mem = {};
-    return {
-      get: (k) => mem[k] ?? null,
-      set: (k, v) => { mem[k] = v; },
-      remove: (k) => { delete mem[k]; },
-    };
-  }
-})();
+import { storage as safeStorage } from '../utils/storage';
 
 const useAuthStore = create((set) => ({
   user: null,
@@ -35,6 +16,7 @@ const useAuthStore = create((set) => ({
     try {
       const res = await api.post('/auth/login', { email, password });
       safeStorage.set('token', res.data.token);
+      safeStorage.set('loginTime', Date.now().toString());
       set({ user: res.data.user, token: res.data.token, isAuthenticated: true, isLoading: false });
       return { success: true, user: res.data.user };
     } catch (err) {
@@ -49,6 +31,7 @@ const useAuthStore = create((set) => ({
     try {
       const res = await api.post('/auth/register', formData);
       safeStorage.set('token', res.data.token);
+      safeStorage.set('loginTime', Date.now().toString());
       set({ user: res.data.user, token: res.data.token, isAuthenticated: true, isLoading: false });
       return { success: true, user: res.data.user };
     } catch (err) {
@@ -63,6 +46,7 @@ const useAuthStore = create((set) => ({
     try {
       const res = await api.post('/auth/admin/login', { email, password });
       safeStorage.set('token', res.data.token);
+      safeStorage.set('loginTime', Date.now().toString());
       set({ user: { ...res.data.admin, role: 'admin' }, token: res.data.token, isAuthenticated: true, isLoading: false });
       return { success: true };
     } catch (err) {
@@ -74,6 +58,7 @@ const useAuthStore = create((set) => ({
 
   logout: () => {
     safeStorage.remove('token');
+    safeStorage.remove('loginTime');
     set({ user: null, token: null, isAuthenticated: false });
   },
 
@@ -83,11 +68,30 @@ const useAuthStore = create((set) => ({
       set({ isAuthenticated: false, isInitialized: true });
       return;
     }
+
+    const loginTimeStr = safeStorage.get('loginTime');
+    let loginTime = loginTimeStr ? parseInt(loginTimeStr, 10) : null;
+    
+    // Smooth transition for already logged in users who don't have a loginTime yet
+    if (!loginTime) {
+      loginTime = Date.now();
+      safeStorage.set('loginTime', loginTime.toString());
+    }
+
+    const FIVE_DAYS = 5 * 24 * 60 * 60 * 1000;
+    if (Date.now() - loginTime > FIVE_DAYS) {
+      safeStorage.remove('token');
+      safeStorage.remove('loginTime');
+      set({ user: null, token: null, isAuthenticated: false, isInitialized: true });
+      return;
+    }
+
     try {
       const res = await api.get('/auth/me');
       set({ user: res.data.data, isAuthenticated: true, isInitialized: true });
     } catch (err) {
       safeStorage.remove('token');
+      safeStorage.remove('loginTime');
       set({ user: null, token: null, isAuthenticated: false, isInitialized: true });
     }
   },

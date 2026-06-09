@@ -4,12 +4,15 @@ import axios from 'axios';
 // VITE_API_URL = https://panditji-1tf8.onrender.com/api
 const BASE_URL = import.meta.env.VITE_API_URL || 'https://panditji-1tf8.onrender.com/api';
 
-// iOS Safari Private Browsing blocks localStorage — use a safe accessor
+import { storage as safeStorage } from './storage';
+
+// iOS Safari Private Browsing fallback cookie support
 const getToken = () => {
-  try { return localStorage.getItem('token'); } catch { return null; }
+  return safeStorage.get('token');
 };
 const removeToken = () => {
-  try { localStorage.removeItem('token'); } catch { /* ignore */ }
+  safeStorage.remove('token');
+  safeStorage.remove('loginTime');
 };
 
 const api = axios.create({
