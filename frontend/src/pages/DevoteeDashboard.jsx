@@ -366,6 +366,7 @@ const DevoteeDashboard = () => {
   const [payments, setPayments] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [selectedChatUser, setSelectedChatUser] = useState(null);
+  const [mobileChatView, setMobileChatView] = useState('list'); // 'list' | 'chat'
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [waitingBooking, setWaitingBooking] = useState(null);
@@ -679,6 +680,7 @@ const DevoteeDashboard = () => {
         .dd-sidebar { transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); }
         .dd-mobile-btn { display: none !important; }
         .dd-close-btn { display: none !important; }
+        .dd-chat-back { display: none !important; }
         @media (max-width: 1024px) {
           .dd-sidebar { position: fixed; top: 0; bottom: 0; left: 0; z-index: 2000; transform: translateX(-100%); box-shadow: 4px 0 24px rgba(123,29,14,0.15); width: 250px !important; }
           .dd-sidebar.open { transform: translateX(0); }
@@ -687,6 +689,11 @@ const DevoteeDashboard = () => {
           .dd-mobile-btn { display: flex !important; }
           .dd-close-btn { display: block !important; }
           .dd-lang-hide { display: none !important; }
+          .dd-chat-back { display: flex !important; }
+          .dd-chat-list-panel { flex-shrink: 0; }
+          .dd-chat-list-panel.mobile-hidden { display: none !important; }
+          .dd-chat-window-panel { flex: 1; }
+          .dd-chat-window-panel.mobile-hidden { display: none !important; }
         }
       `}</style>
       <div className="dd-root">
@@ -1103,7 +1110,12 @@ const DevoteeDashboard = () => {
             {/* CHAT */}
             {activeTab === 'chat' && (
               <div style={{ display: 'flex', height: 'calc(100vh - 106px)', gap: 16 }}>
-                <div style={{ width: 240, background: '#fff', borderRadius: 14, border: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+
+                {/* ── Conversation list panel ── */}
+                <div
+                  className={`dd-chat-list-panel${mobileChatView === 'chat' ? ' mobile-hidden' : ''}`}
+                  style={{ width: 240, background: '#fff', borderRadius: 14, border: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', overflow: 'hidden', flexShrink: 0 }}
+                >
                   <div style={{ padding: '14px 16px', fontWeight: 700, fontSize: 14, color: C.maroon, borderBottom: `1px solid ${C.border}`, background: C.saffronLt, display: 'flex', alignItems: 'center', gap: 6 }}>
                     🕉 {t('dd_recent_chats') || 'Recent Chats'}
                   </div>
@@ -1113,8 +1125,10 @@ const DevoteeDashboard = () => {
                         {t('dd_no_conversations') || 'No conversations yet. Find a Pandit to start!'}
                       </div>
                     ) : conversations.map(c => (
-                      <div key={c._id} onClick={() => setSelectedChatUser(c)}
-                        style={{ padding: '12px 16px', borderBottom: `1px solid ${C.surface}`, cursor: 'pointer', transition: 'background 0.12s', background: selectedChatUser?._id === c._id ? C.saffronLt : '#fff', borderLeft: selectedChatUser?._id === c._id ? `3px solid ${C.saffron}` : '3px solid transparent' }}>
+                      <div key={c._id}
+                        onClick={() => { setSelectedChatUser(c); setMobileChatView('chat'); }}
+                        style={{ padding: '12px 16px', borderBottom: `1px solid ${C.surface}`, cursor: 'pointer', transition: 'background 0.12s', background: selectedChatUser?._id === c._id ? C.saffronLt : '#fff', borderLeft: selectedChatUser?._id === c._id ? `3px solid ${C.saffron}` : '3px solid transparent' }}
+                      >
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                           <div style={{ width: 36, height: 36, borderRadius: '50%', background: `linear-gradient(135deg,${C.saffron},${C.gold})`, color: '#fff', fontWeight: 800, fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                             {c.firstName?.charAt(0)}
@@ -1128,9 +1142,31 @@ const DevoteeDashboard = () => {
                     ))}
                   </div>
                 </div>
-                <div style={{ flex: 1, background: '#fff', borderRadius: 14, border: `1px solid ${C.border}`, overflow: 'hidden', display: 'flex' }}>
-                  <ChatInterface otherUser={selectedChatUser} socket={socketRef.current} />
+
+                {/* ── Chat window panel ── */}
+                <div
+                  className={`dd-chat-window-panel${mobileChatView === 'list' ? ' mobile-hidden' : ''}`}
+                  style={{ flex: 1, background: '#fff', borderRadius: 14, border: `1px solid ${C.border}`, overflow: 'hidden', display: 'flex', flexDirection: 'column', minWidth: 0 }}
+                >
+                  {/* Back button – only visible on mobile */}
+                  <div className="dd-chat-back" style={{ alignItems: 'center', gap: 8, padding: '10px 14px', background: C.saffronLt, borderBottom: `1px solid ${C.border}` }}>
+                    <button
+                      onClick={() => setMobileChatView('list')}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.maroon, display: 'flex', alignItems: 'center', gap: 6, fontWeight: 700, fontSize: 13, padding: 0 }}
+                    >
+                      ← {t('dd_back_to_chats') || 'Back to Conversations'}
+                    </button>
+                    {selectedChatUser && (
+                      <span style={{ fontWeight: 600, color: C.maroon, fontSize: 14, marginLeft: 8 }}>
+                        {selectedChatUser.firstName} {selectedChatUser.lastName}
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ flex: 1, overflow: 'hidden', display: 'flex' }}>
+                    <ChatInterface otherUser={selectedChatUser} socket={socketRef.current} />
+                  </div>
                 </div>
+
               </div>
             )}
 

@@ -79,6 +79,7 @@ const PanditDashboard = () => {
   const [bookings, setBookings] = useState([]);
   const [activeTab, setActiveTab] = useState('bookings');
   const [selectedChatUser, setSelectedChatUser] = useState(null);
+  const [mobileChatView, setMobileChatView] = useState('list'); // 'list' | 'chat'
   const [conversations, setConversations] = useState([]);
   const [totalEarnings, setTotalEarnings] = useState(0);
   const [incomingRequest, setIncomingRequest] = useState(null);
@@ -395,12 +396,18 @@ const PanditDashboard = () => {
         .pd-sidebar { transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); }
         .pd-mobile-btn { display: none !important; }
         .pd-close-btn { display: none !important; }
+        .pd-chat-back { display: none !important; }
         @media (max-width: 1024px) {
           .pd-sidebar { position: fixed !important; top: 0; bottom: 0; left: 0; z-index: 2000; transform: translateX(-100%); box-shadow: 4px 0 24px rgba(123,29,14,0.15); width: 280px; }
           .pd-sidebar.open { transform: translateX(0) !important; }
           .pd-mobile-btn { display: flex !important; }
           .pd-close-btn { display: block !important; }
           .pd-header { padding: 0 16px !important; }
+          .pd-chat-back { display: flex !important; }
+          .pd-chat-list-panel { flex-shrink: 0; }
+          .pd-chat-list-panel.mobile-hidden { display: none !important; }
+          .pd-chat-window-panel { flex: 1; }
+          .pd-chat-window-panel.mobile-hidden { display: none !important; }
         }
         @media (max-width: 600px) {
           .pd-booking-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
@@ -715,7 +722,12 @@ const PanditDashboard = () => {
 
           {activeTab === 'chat' && (
             <div style={{ display: 'flex', height: '100%', gap: 24, maxWidth: 1200, margin: '0 auto' }}>
-              <div style={{ width: 340, background: '#fff', borderRadius: 24, border: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+
+              {/* ── Conversation list panel ── */}
+              <div
+                className={`pd-chat-list-panel${mobileChatView === 'chat' ? ' mobile-hidden' : ''}`}
+                style={{ width: 340, background: '#fff', borderRadius: 24, border: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', overflow: 'hidden', flexShrink: 0 }}
+              >
                 <div style={{ padding: '20px 24px', borderBottom: `1px solid ${C.border}`, fontFamily: "'Playfair Display',serif", fontSize: 18, fontWeight: 800, color: C.maroon }}>
                   {t('pd_conversations') || 'Conversations'}
                 </div>
@@ -724,8 +736,10 @@ const PanditDashboard = () => {
                     <div style={{ padding: 32, textAlign: 'center', fontSize: 14, color: C.textMuted }}>{t('pd_no_conversations') || 'No conversations yet. Accept a booking to start chatting!'}</div>
                   ) : (
                     conversations.map(c => (
-                      <div key={c._id} onClick={() => setSelectedChatUser(c)}
-                        style={{ padding: '16px 24px', borderBottom: `1px solid ${C.surface}`, cursor: 'pointer', transition: 'all 0.2s', background: selectedChatUser?._id === c._id ? C.saffronLt : '#fff', borderLeft: `4px solid ${selectedChatUser?._id === c._id ? C.saffron : 'transparent'}` }}>
+                      <div key={c._id}
+                        onClick={() => { setSelectedChatUser(c); setMobileChatView('chat'); }}
+                        style={{ padding: '16px 24px', borderBottom: `1px solid ${C.surface}`, cursor: 'pointer', transition: 'all 0.2s', background: selectedChatUser?._id === c._id ? C.saffronLt : '#fff', borderLeft: `4px solid ${selectedChatUser?._id === c._id ? C.saffron : 'transparent'}` }}
+                      >
                         <div style={{ fontWeight: 800, fontSize: 15, color: C.maroon }}>{c.firstName} {c.lastName}</div>
                         <div style={{ fontSize: 11, color: C.saffron, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', marginTop: 4 }}>{c.role}</div>
                       </div>
@@ -733,9 +747,31 @@ const PanditDashboard = () => {
                   )}
                 </div>
               </div>
-              <div style={{ flex: 1, background: '#fff', borderRadius: 24, border: `1px solid ${C.border}`, overflow: 'hidden', boxShadow: '0 8px 30px rgba(0,0,0,0.04)' }}>
-                <ChatInterface otherUser={selectedChatUser} socket={socketRef.current} />
+
+              {/* ── Chat window panel ── */}
+              <div
+                className={`pd-chat-window-panel${mobileChatView === 'list' ? ' mobile-hidden' : ''}`}
+                style={{ flex: 1, background: '#fff', borderRadius: 24, border: `1px solid ${C.border}`, overflow: 'hidden', boxShadow: '0 8px 30px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column' }}
+              >
+                {/* Back button – only visible on mobile */}
+                <div className="pd-chat-back" style={{ alignItems: 'center', gap: 8, padding: '12px 20px', background: C.saffronLt, borderBottom: `1px solid ${C.border}` }}>
+                  <button
+                    onClick={() => setMobileChatView('list')}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.maroon, display: 'flex', alignItems: 'center', gap: 6, fontWeight: 700, fontSize: 13, padding: 0 }}
+                  >
+                    ← Back to Conversations
+                  </button>
+                  {selectedChatUser && (
+                    <span style={{ fontWeight: 600, color: C.maroon, fontSize: 14, marginLeft: 8 }}>
+                      {selectedChatUser.firstName} {selectedChatUser.lastName}
+                    </span>
+                  )}
+                </div>
+                <div style={{ flex: 1, overflow: 'hidden' }}>
+                  <ChatInterface otherUser={selectedChatUser} socket={socketRef.current} />
+                </div>
               </div>
+
             </div>
           )}
 
