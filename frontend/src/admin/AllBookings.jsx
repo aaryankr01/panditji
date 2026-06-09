@@ -6,17 +6,17 @@ import AdminDashboardLayout from './AdminDashboard';
 import { Search, ChevronDown, ChevronUp, Video, MapPin, Clock, IndianRupee, User, X } from 'lucide-react';
 
 const statusConfig = {
-  pending:    { label: 'Pending',     cls: 'bg-yellow-100 text-yellow-700' },
-  confirmed:  { label: 'Confirmed',   cls: 'bg-green-100 text-green-700' },
+  pending: { label: 'Pending', cls: 'bg-yellow-100 text-yellow-700' },
+  confirmed: { label: 'Confirmed', cls: 'bg-green-100 text-green-700' },
   'in-progress': { label: 'In Progress', cls: 'bg-blue-100 text-blue-700' },
-  completed:  { label: 'Completed',   cls: 'bg-indigo-100 text-indigo-700' },
-  cancelled:  { label: 'Cancelled',   cls: 'bg-gray-100 text-gray-600' },
-  rejected:   { label: 'Rejected',    cls: 'bg-red-100 text-red-700' },
+  completed: { label: 'Completed', cls: 'bg-indigo-100 text-indigo-700' },
+  cancelled: { label: 'Cancelled', cls: 'bg-gray-100 text-gray-600' },
+  rejected: { label: 'Rejected', cls: 'bg-red-100 text-red-700' },
 };
 
 const paymentConfig = {
-  pending:  'bg-yellow-100 text-yellow-700',
-  paid:     'bg-green-100 text-green-700',
+  pending: 'bg-yellow-100 text-yellow-700',
+  paid: 'bg-green-100 text-green-700',
   refunded: 'bg-purple-100 text-purple-700',
 };
 
@@ -140,7 +140,7 @@ const AllBookings = () => {
             <tbody>
               {filtered.map(b => (
                 <tr key={b._id} className="border-b border-gray-50 hover:bg-orange-50/30 cursor-pointer transition-colors text-sm"
-                    onClick={() => setSelectedBooking(b)}>
+                  onClick={() => setSelectedBooking(b)}>
                   <td className="p-4 font-medium text-gray-800">{b.devotee?.firstName} {b.devotee?.lastName}</td>
                   <td className="p-4 text-gray-600">{b.pandit ? `Pt. ${b.pandit.firstName} ${b.pandit.lastName}` : <span className="text-gray-400 italic">Unassigned</span>}</td>
                   <td className="p-4 text-gray-700 font-medium">{b.pujaType}</td>

@@ -80,7 +80,7 @@ const translations = {
     about_p2: 'We have curated a network of thousands of Pandits who are not just experts in their craft, but also deeply committed to the sanctity of the rituals they perform.',
     about_pan_india: 'Pan India Service',
     about_cities: 'Currently serving in 80+ major cities',
- 
+
     // Puja Types
     puja_section_label: 'Service Portfolio',
     puja_section_h2_line1: 'Sacred Pujas for',
@@ -103,7 +103,7 @@ const translations = {
     puja_ganesh_desc: 'Invoking the remover of obstacles for any new beginning.',
     puja_lakshmi: 'Lakshmi Puja',
     puja_lakshmi_desc: 'Prayer for wealth, light, and abundance in your life.',
- 
+
     // Features
     feat_h2: 'Why Choose पंडितजी?',
     feat_desc: 'We take the guesswork out of finding the right Pandit for your most important moments.',
@@ -113,7 +113,7 @@ const translations = {
     feat2_desc: 'Real reviews from real devotees help you choose the right Pandit with complete confidence.',
     feat3_title: 'All Ceremonies',
     feat3_desc: 'From Griha Pravesh to Vivah Sanskar — find experts for every sacred occasion.',
- 
+
     // CTA Banner
     cta_h2: 'Ready to Book Your Puja?',
     cta_desc: 'Join thousands of devotees who trust पंडितजी for their most sacred celebrations.',

@@ -861,7 +861,7 @@ const DevoteeDashboard = () => {
                   <div className="dd-brand-sub">Sacred Services</div>
                 </div>
               </div>
-              <button 
+              <button
                 onClick={(e) => { e.stopPropagation(); setIsMobileSidebarOpen(false); }}
                 className="dd-close-btn"
                 style={{ background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: '50%', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#fff', marginRight: '16px' }}
@@ -905,7 +905,7 @@ const DevoteeDashboard = () => {
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
           <header className="dd-topbar">
             <button className="dd-mobile-btn" onClick={() => setIsMobileSidebarOpen(true)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#FAF7F2', border: '1px solid #EAD9CC', borderRadius: 12, padding: '8px 10px', cursor: 'pointer', color: '#7B1D0E', flexShrink: 0 }}>
-              <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M3 5H15" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/><path d="M3 10H17" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/><path d="M3 15H11" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/></svg>
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M3 5H15" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" /><path d="M3 10H17" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" /><path d="M3 15H11" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" /></svg>
             </button>
             <div className="dd-topbar-title">
               {activeTab === 'profile' && t('dd_my_profile')}

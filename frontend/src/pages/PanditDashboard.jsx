@@ -499,7 +499,7 @@ const PanditDashboard = () => {
       {/* ═══ SIDEBAR ═══ */}
       <div className={`pd-sidebar${isMobileSidebarOpen ? ' open' : ''}`} style={{ width: 280, background: '#fff', borderRight: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column' }}>
         <div style={{ padding: 32, textAlign: 'center', borderBottom: `1px solid ${C.border}`, position: 'relative' }}>
-          <button 
+          <button
             onClick={() => setIsMobileSidebarOpen(false)}
             className="pd-close-btn"
             style={{ position: 'absolute', top: 12, right: 12, background: C.saffronLt, border: 'none', borderRadius: '50%', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: C.maroon }}
@@ -566,7 +566,7 @@ const PanditDashboard = () => {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <header className="pd-header" style={{ height: 80, background: '#fff', borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', padding: '0 32px', justifyContent: 'space-between' }}>
           <button className="pd-mobile-btn" onClick={() => setIsMobileSidebarOpen(true)} style={{ alignItems: 'center', justifyContent: 'center', background: '#FAF7F2', border: '1px solid #EAD9CC', borderRadius: 12, padding: '8px 10px', cursor: 'pointer', color: '#7B1D0E', flexShrink: 0 }}>
-            <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M3 5H15" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/><path d="M3 10H17" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/><path d="M3 15H11" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/></svg>
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M3 5H15" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" /><path d="M3 10H17" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" /><path d="M3 15H11" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" /></svg>
           </button>
           <h1 style={{ fontFamily: "'Playfair Display',serif", fontSize: 24, fontWeight: 900, color: C.maroon }}>
             {activeTab === 'bookings' ? t('pd_booking_requests') : activeTab === 'chat' ? t('dd_messages') : activeTab === 'profile' ? t('dd_my_profile') : t('dd_support')}
