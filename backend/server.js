@@ -30,6 +30,7 @@ const pujaRoutes = require('./routes/pujas');
 connectDB();
 
 const app = express();
+app.set('trust proxy', true); // Trust reverse proxy headers (Vercel, Render, Cloudflare, etc.) to get correct client IPs
 const server = http.createServer(app);
 
 // Socket.io setup
@@ -83,12 +84,12 @@ app.options(/.*/, cors(corsOptions)); // Handle pre-flight for every route
 // Security middleware (after CORS so helmet doesn't strip CORS headers)
 app.use(helmet({
   crossOriginResourcePolicy: false, // allow cross-origin responses
-}));
+ }));
 
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: 1000, // Increased from 100 to 1000 to prevent blocking active users
   message: { success: false, message: 'Too many requests, please try again later.' },
 });
 app.use('/api/', limiter);
@@ -96,7 +97,7 @@ app.use('/api/', limiter);
 // Auth rate limit (stricter)
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 20,
+  max: 200, // Increased from 20 to 200 to prevent blocking developers/users
   message: { success: false, message: 'Too many auth attempts, please try again later.' },
 });
 app.use('/api/auth', authLimiter);
