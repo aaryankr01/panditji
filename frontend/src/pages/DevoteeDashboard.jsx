@@ -695,6 +695,27 @@ const DevoteeDashboard = () => {
           .dd-chat-window-panel { flex: 1; }
           .dd-chat-window-panel.mobile-hidden { display: none !important; }
         }
+        @media (max-width: 640px) {
+          /* Profile form grids → single column */
+          .dd-form-grid { grid-template-columns: 1fr !important; }
+          /* Booking card: stack info + actions vertically */
+          .dd-booking-row { flex-direction: column !important; align-items: stretch !important; }
+          /* Booking detail info grid → single column */
+          .dd-booking-info-grid { grid-template-columns: 1fr !important; }
+          /* Action buttons → horizontal row at bottom */
+          .dd-booking-actions { flex-direction: row !important; flex-wrap: wrap !important; min-width: unset !important; }
+          .dd-booking-actions .dd-btn { flex: 1 !important; min-width: 120px !important; }
+          /* Payment active card → stack */
+          .dd-payment-active-card { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; }
+          .dd-payment-active-card > div:last-child { width: 100% !important; text-align: left !important; }
+          .dd-payment-active-card .dd-btn { width: 100% !important; justify-content: center !important; }
+          /* Payment history card → stack */
+          .dd-payment-hist-card { flex-direction: column !important; align-items: flex-start !important; gap: 8px !important; }
+          /* Pandit finder cards → reduce padding */
+          .dd-pandit-card { padding: 14px !important; }
+          /* Main content padding reduction */
+          main { padding: 12px !important; }
+        }
       `}</style>
       <div className="dd-root">
 
@@ -924,7 +945,7 @@ const DevoteeDashboard = () => {
             <LanguageToggle />
           </header>
 
-          <main style={{ flex: 1, overflowY: 'auto', padding: 24 }}>
+          <main style={{ flex: 1, overflowY: activeTab === 'chat' ? 'hidden' : 'auto', padding: activeTab === 'chat' ? 0 : 24, display: 'flex', flexDirection: 'column' }}>
 
             {/* PROFILE */}
             {activeTab === 'profile' && (
@@ -940,15 +961,15 @@ const DevoteeDashboard = () => {
                     alert('Profile updated successfully!');
                   } catch { alert('Failed to update profile'); }
                 }} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                  <div className="dd-form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                     <div><label style={lbl}>{t('dd_first_name')}</label><input name="firstName" defaultValue={user?.firstName} required style={inp} /></div>
                     <div><label style={lbl}>{t('dd_last_name')}</label><input name="lastName" defaultValue={user?.lastName} required style={inp} /></div>
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                  <div className="dd-form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                     <div><label style={lbl}>{t('dd_primary_phone')}</label><input name="phone" defaultValue={user?.phone} required style={inp} /></div>
                     <div><label style={lbl}>{t('dd_alt_phone')}</label><input name="alternatePhone" defaultValue={user?.alternatePhone} placeholder="Optional" style={inp} /></div>
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                  <div className="dd-form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                     <div><label style={lbl}>{t('dd_city')}</label><input name="city" defaultValue={user?.city} required style={inp} /></div>
                     <div><label style={lbl}>{t('dd_state')}</label><input name="state" defaultValue={user?.state} style={inp} /></div>
                   </div>
@@ -973,7 +994,7 @@ const DevoteeDashboard = () => {
                 ) : bookings.map(booking => (
                   <div key={booking._id} className="dd-booking-card">
                     <div style={{ height: 4, background: booking.status === 'pending' ? C.gold : booking.status === 'confirmed' ? C.success : booking.status === 'completed' ? C.purple : C.red }} />
-                    <div style={{ padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14 }}>
+                    <div className="dd-booking-row" style={{ padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14 }}>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10, flexWrap: 'wrap' }}>
                           <h3 style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: 17, color: C.maroon }}>
@@ -984,7 +1005,7 @@ const DevoteeDashboard = () => {
                             <span className="dd-badge" style={{ background: C.purpleLt, color: C.purple }}>{t('dd_online')}</span>
                           )}
                         </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 24px', fontSize: 13, color: C.textMid }}>
+                        <div className="dd-booking-info-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 24px', fontSize: 13, color: C.textMid }}>
                           <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                             <Clock size={13} color={C.saffron} />
                             {booking.scheduledDate ? new Date(booking.scheduledDate).toLocaleDateString('en-IN') : '-'}
@@ -1023,7 +1044,7 @@ const DevoteeDashboard = () => {
                       </div>
 
                       {/* ── ACTION BUTTONS ── */}
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0, minWidth: 124, alignItems: 'stretch' }}>
+                      <div className="dd-booking-actions" style={{ display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0, minWidth: 124, alignItems: 'stretch' }}>
 
                         {/* CASE 1: confirmed + UNPAID */}
                         {booking.status === 'confirmed' && booking.paymentStatus === 'pending' && (
@@ -1109,7 +1130,7 @@ const DevoteeDashboard = () => {
 
             {/* CHAT */}
             {activeTab === 'chat' && (
-              <div style={{ display: 'flex', height: 'calc(100vh - 106px)', gap: 16 }}>
+              <div style={{ display: 'flex', height: '100%', gap: 16, padding: 16, boxSizing: 'border-box' }}>
 
                 {/* ── Conversation list panel ── */}
                 <div
@@ -1185,7 +1206,7 @@ const DevoteeDashboard = () => {
                   {bookings.filter(b => b.status === 'confirmed' && b.paymentStatus === 'pending').length === 0 ? (
                     <p style={{ color: C.textMuted, fontSize: 14 }}>{t('dd_no_pending_payments') || 'No pending payments for active bookings.'}</p>
                   ) : bookings.filter(b => b.status === 'confirmed' && b.paymentStatus === 'pending').map(booking => (
-                    <div key={booking._id} style={{ background: C.saffronLt, border: `1.5px solid ${C.saffron}`, borderRadius: 14, padding: '20px 22px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                    <div key={booking._id} className="dd-payment-active-card" style={{ background: C.saffronLt, border: `1.5px solid ${C.saffron}`, borderRadius: 14, padding: '20px 22px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
                       <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                           <AlertCircle size={17} color={C.saffron} />
@@ -1215,7 +1236,7 @@ const DevoteeDashboard = () => {
                       <p style={{ color: C.textMuted, fontSize: 14 }}>{t('dd_no_payment_history') || 'No payment history found.'}</p>
                     </div>
                   ) : payments.map(payment => (
-                    <div key={payment._id} style={{ background: '#fff', borderRadius: 12, border: `1px solid ${C.border}`, padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, boxShadow: '0 1px 4px rgba(123,29,14,0.05)' }}>
+                    <div key={payment._id} className="dd-payment-hist-card" style={{ background: '#fff', borderRadius: 12, border: `1px solid ${C.border}`, padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, boxShadow: '0 1px 4px rgba(123,29,14,0.05)' }}>
                       <div>
                         <div style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, color: C.maroon, fontSize: 16, marginBottom: 4 }}>
                           Pt. {payment.pandit?.firstName} {payment.pandit?.lastName}

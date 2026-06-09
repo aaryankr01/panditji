@@ -409,8 +409,23 @@ const PanditDashboard = () => {
           .pd-chat-window-panel { flex: 1; }
           .pd-chat-window-panel.mobile-hidden { display: none !important; }
         }
-        @media (max-width: 600px) {
+        @media (max-width: 640px) {
+          /* Booking detail grid → single column */
           .pd-booking-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
+          /* Subscription banners → stack text + button */
+          .pd-sub-banner { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; }
+          .pd-sub-banner .dd-btn { width: 100% !important; justify-content: center !important; }
+          /* Booking card header → stack name/badge + actions */
+          .pd-booking-header { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; }
+          /* Booking actions → wrap horizontally */
+          .pd-booking-actions { flex-wrap: wrap !important; }
+          .pd-booking-actions .dd-btn { flex: 1 !important; min-width: 100px !important; justify-content: center !important; }
+          /* Profile form grid → single column */
+          .pd-form-grid { grid-template-columns: 1fr !important; }
+          /* Reduce main padding */
+          main { padding: 16px !important; }
+          /* Booking card less padding */
+          .pd-booking-card-wrap { padding: 16px !important; }
         }
       `}</style>
 
@@ -588,11 +603,11 @@ const PanditDashboard = () => {
           </div>
         </header>
 
-        <main style={{ flex: 1, overflowY: 'auto', padding: 32 }}>
+        <main style={{ flex: 1, overflowY: activeTab === 'chat' ? 'hidden' : 'auto', padding: activeTab === 'chat' ? 0 : 32, display: 'flex', flexDirection: 'column' }}>
 
           {/* SUBSCRIPTION ALERTS */}
           {subscriptionStatus === 'inactive' && (
-            <div style={{ background: C.redLt, border: `1px solid rgba(192,57,43,0.2)`, borderRadius: 16, padding: 24, marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 4px 12px rgba(192,57,43,0.05)' }}>
+            <div className="pd-sub-banner" style={{ background: C.redLt, border: `1px solid rgba(192,57,43,0.2)`, borderRadius: 16, padding: 24, marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 4px 12px rgba(192,57,43,0.05)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                 <div style={{ width: 48, height: 48, background: 'rgba(192,57,43,0.1)', color: C.red, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <AlertCircle size={24} />
@@ -609,7 +624,7 @@ const PanditDashboard = () => {
           )}
 
           {subscriptionStatus === 'warning' && (
-            <div style={{ background: C.goldLt, border: `1px solid rgba(200,150,12,0.2)`, borderRadius: 16, padding: 24, marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 4px 12px rgba(200,150,12,0.05)' }}>
+            <div className="pd-sub-banner" style={{ background: C.goldLt, border: `1px solid rgba(200,150,12,0.2)`, borderRadius: 16, padding: 24, marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 4px 12px rgba(200,150,12,0.05)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                 <div style={{ width: 48, height: 48, background: 'rgba(200,150,12,0.1)', color: '#A67C00', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <AlertCircle size={24} />
@@ -635,8 +650,8 @@ const PanditDashboard = () => {
                 </div>
               ) : (
                 bookings.map(booking => (
-                  <div key={booking._id} style={{ background: '#fff', borderRadius: 20, padding: 24, border: `1px solid ${C.border}`, boxShadow: '0 4px 12px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column', gap: 16 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div key={booking._id} className="pd-booking-card-wrap" style={{ background: '#fff', borderRadius: 20, padding: 24, border: `1px solid ${C.border}`, boxShadow: '0 4px 12px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column', gap: 16 }}>
+                    <div className="pd-booking-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                         <div style={{ width: 56, height: 56, background: C.saffronLt, color: C.saffron, borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 800 }}>
                           {booking.devotee?.firstName?.charAt(0)}
@@ -648,7 +663,7 @@ const PanditDashboard = () => {
                           {renderBadge(booking.status)}
                         </div>
                       </div>
-                      <div style={{ display: 'flex', gap: 8 }}>
+                      <div className="pd-booking-actions" style={{ display: 'flex', gap: 8 }}>
                         {booking.paymentStatus === 'paid' && (
                           <button className="dd-btn dd-btn-ghost" onClick={() => { setSelectedChatUser(booking.devotee); setActiveTab('chat'); }}>
                             <MessageSquare size={16} /> {t('dd_chat')}
@@ -721,7 +736,7 @@ const PanditDashboard = () => {
           )}
 
           {activeTab === 'chat' && (
-            <div style={{ display: 'flex', height: '100%', gap: 24, maxWidth: 1200, margin: '0 auto' }}>
+            <div style={{ display: 'flex', height: '100%', gap: 24, padding: 24, boxSizing: 'border-box' }}>
 
               {/* ── Conversation list panel ── */}
               <div
@@ -827,7 +842,7 @@ const PanditDashboard = () => {
               <div style={{ background: '#fff', padding: 24, borderRadius: 24, border: `1px solid ${C.border}`, boxShadow: '0 4px 12px rgba(0,0,0,0.02)' }}>
                 <h2 style={{ fontFamily: "'Playfair Display',serif", fontSize: 20, fontWeight: 700, color: C.maroon, marginBottom: 20 }}>{t('pd_profile_details_title') || 'Personal & Professional Details'}</h2>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+                <div className="pd-form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <label style={{ fontSize: 13, fontWeight: 700, color: C.textMid }}>{t('dd_first_name')}</label>
                     <input type="text" value={editForm.firstName} onChange={e => setEditForm({ ...editForm, firstName: e.target.value })} style={{ padding: 12, borderRadius: 8, border: `1px solid ${C.border}`, outline: 'none' }} />
