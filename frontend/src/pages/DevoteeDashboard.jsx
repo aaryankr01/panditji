@@ -995,8 +995,19 @@ const DevoteeDashboard = () => {
                   </div>
                   
                   {locationMessage && (
-                    <div style={{ background: '#E8F5EE', border: `1.5px solid ${C.success}`, color: C.success, padding: '12px 16px', borderRadius: 10, fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <CheckCircle size={18} />
+                    <div style={{
+                      background: isLocal ? '#E8F5EE' : '#FFF9E0',
+                      border: `1.5px solid ${isLocal ? C.success : C.gold}`,
+                      color: isLocal ? C.success : '#856404',
+                      padding: '12px 16px',
+                      borderRadius: 10,
+                      fontSize: 13,
+                      fontWeight: 600,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8
+                    }}>
+                      {isLocal ? <CheckCircle size={18} /> : <AlertCircle size={18} />}
                       {locationMessage}
                     </div>
                   )}
