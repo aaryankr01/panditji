@@ -8,8 +8,16 @@ import useAuthStore from '../store/useAuthStore';
 import useT from '../hooks/useT';
 import { State, City } from '../utils/indiaData';
 import {
-  Star, MapPin, ChevronRight, CheckCircle, AlertCircle, Search, Video, Info, X, Home, ArrowRight, Clock
+  Star, MapPin, ChevronRight, CheckCircle, AlertCircle, Search, Video, Info, X, Home, ArrowRight, Clock, Loader
 } from 'lucide-react';
+
+const PUJA_PRICES = {
+  'Rudrabhishek': 3100, 'Sunderkand Path': 3500, 'Griha Pravesh': 5100, 'Vivah Ceremony': 11000,
+  'Satyanarayan Katha': 2100, 'Mundan Ceremony': 2100, 'Navratri Puja': 3100, 'Durga Puja': 5100,
+  'Havan & Yagya': 3100, 'Naamkaran': 2100, 'Ganesh Puja': 2100, 'Lakshmi Puja': 2100,
+  'Surya Puja': 2100, 'Kaal Sarp Dosh': 5500, 'Vastu Shanti': 6100, 'Maha Mrityunjaya': 3100,
+  'Annaprashan': 1500, 'Navagraha Puja': 3500, 'Lakshmi Narayan': 2500, 'Janmashtami Puja': 3100, 'Other': 1500,
+};
 
 const pujas = [
   { id: 1, name: 'Rudrabhishek', image: '/pictures/rudrabhisek.jpg', rating: 4.8, conducted: 875, isPopular: true, desc: 'Lord Shiva abhisheka for peace and prosperity.', longDesc: 'Rudrabhishek is a highly auspicious puja dedicated to Lord Shiva. It involves bathing the Shiva Lingam with sacred items like milk, honey, and gangajal while chanting powerful mantras. This brings peace, prosperity, and removes negative energies.', duration: '2-3 hrs', price: '₹3,100', category: 'Devotional' },
@@ -36,7 +44,7 @@ const pujas = [
 
 const BookAPuja = () => {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, token, user } = useAuthStore();
   const t = useT();
 
   const categories = [t('bap_cat_all'), t('bap_cat_home'), t('bap_cat_wedding'), t('bap_cat_devotional'), t('bap_cat_festival'), t('bap_cat_ritual'), t('bap_cat_remedial'), t('bap_cat_life_events')];
@@ -57,11 +65,16 @@ const BookAPuja = () => {
   const [checkingLocation, setCheckingLocation] = useState(false);
   const [locationStatus, setLocationStatus] = useState(null);
 
+  // Booking details
+  const [bookingDate, setBookingDate] = useState(new Date().toISOString().split('T')[0]);
+  const [bookingTime, setBookingTime] = useState('10:00');
+  const [bookingAddress, setBookingAddress] = useState('');
+  const [bookingNotes, setBookingNotes] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
   const indianStates = State.getStatesOfCountry('IN');
   const citiesOfState = stateCode ? City.getCitiesOfState('IN', stateCode) : [];
 
-  // Create a mapping or fallback for category filtering if needed, but since we rely on the English strings for the data, we might need a mapping.
-  // Actually, pujas data has english category names.
   const catMap = {
     [t('bap_cat_all')]: 'All',
     [t('bap_cat_home')]: 'Home',
@@ -82,7 +95,7 @@ const BookAPuja = () => {
     setLocationStatus(null);
     try {
       const res = await api.get(`/pandits?city=${encodeURIComponent(city)}`);
-      if (res.data.isLocal && res.data.count > 0) {
+      if (res.data.count > 0) {
         setLocationStatus('available');
       } else {
         setLocationStatus('unavailable');
@@ -103,20 +116,40 @@ const BookAPuja = () => {
     setSelectedPuja(puja);
     setShowDetailsModal(false);
     setBookingType('doorstep');
-    setStep(2); // Go directly to Step 2
+    setStep(2);
   };
 
-  const proceedToDashboard = () => {
-    const queryParams = new URLSearchParams({
-      city: city,
-      puja: selectedPuja.name,
-      mode: 'in-person'
-    }).toString();
-
-    if (isAuthenticated) {
-      navigate(`/devotee-dashboard?${queryParams}`);
-    } else {
+  // OLA-STYLE: Create booking (no panditId) → broadcast to all pandits in city
+  const proceedToDashboard = async () => {
+    if (!isAuthenticated) {
+      const queryParams = new URLSearchParams({ city, puja: selectedPuja.name, mode: 'in-person' }).toString();
       navigate(`/login?redirect=${encodeURIComponent(`/devotee-dashboard?${queryParams}`)}`);
+      return;
+    }
+    if (!bookingDate || !bookingAddress.trim()) {
+      alert('Please fill in the date and address before booking.');
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const fee = PUJA_PRICES[selectedPuja.name] || 1500;
+      await api.post('/bookings', {
+        pujaType: selectedPuja.name,
+        date: bookingDate,
+        time: bookingTime,
+        address: bookingAddress,
+        city: city,
+        notes: bookingNotes,
+        fee: fee,
+        pujaMode: 'in-person',
+        // NO panditId — broadcasts to all pandits in this city (Ola-style)
+      }, { headers: { Authorization: `Bearer ${token}` } });
+      // Redirect to dashboard — the 'waitingBooking' socket overlay will trigger automatically
+      navigate('/devotee-dashboard');
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to create booking. Please try again.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -270,13 +303,72 @@ const BookAPuja = () => {
               </div>
 
               {locationStatus === 'available' && (
-                <div className="mt-5 p-4 bg-[#E8F5EE] border border-[#1E7D3C] rounded-xl flex items-start gap-3">
-                  <CheckCircle size={20} className="text-[#1E7D3C] mt-0.5 shrink-0" />
-                  <div className="flex-1">
-                    <p className="font-bold text-[#1E7D3C]">{t('bap_avail_in')} {city}!</p>
-                    <button onClick={proceedToDashboard} className="mt-3 w-full py-3 bg-[#1E7D3C] text-white font-bold rounded-xl shadow-md flex items-center justify-center gap-2 hover:bg-[#15612e] transition-colors">
-                      {t('bap_btn_view_book')} <ArrowRight size={18} />
+                <div className="mt-5 p-4 bg-[#E8F5EE] border border-[#1E7D3C] rounded-xl">
+                  <div className="flex items-center gap-2 mb-3">
+                    <CheckCircle size={20} className="text-[#1E7D3C] shrink-0" />
+                    <p className="font-bold text-[#1E7D3C]">Pandits available in {city}! Fill in details to book:</p>
+                  </div>
+
+                  <div className="space-y-3 mt-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-bold text-textMid mb-1">Date *</label>
+                        <input
+                          type="date"
+                          value={bookingDate}
+                          min={new Date().toISOString().split('T')[0]}
+                          onChange={e => setBookingDate(e.target.value)}
+                          className="w-full px-3 py-2.5 rounded-xl border border-brandborder focus:ring-2 focus:ring-saffron outline-none bg-white text-maroon text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-textMid mb-1">Time *</label>
+                        <input
+                          type="time"
+                          value={bookingTime}
+                          onChange={e => setBookingTime(e.target.value)}
+                          className="w-full px-3 py-2.5 rounded-xl border border-brandborder focus:ring-2 focus:ring-saffron outline-none bg-white text-maroon text-sm"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-textMid mb-1">Full Address *</label>
+                      <input
+                        type="text"
+                        placeholder="House No, Street, Area..."
+                        value={bookingAddress}
+                        onChange={e => setBookingAddress(e.target.value)}
+                        className="w-full px-3 py-2.5 rounded-xl border border-brandborder focus:ring-2 focus:ring-saffron outline-none bg-white text-maroon text-sm"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-textMid mb-1">Notes (optional)</label>
+                      <textarea
+                        placeholder="Any special requirements..."
+                        value={bookingNotes}
+                        onChange={e => setBookingNotes(e.target.value)}
+                        rows={2}
+                        className="w-full px-3 py-2.5 rounded-xl border border-brandborder focus:ring-2 focus:ring-saffron outline-none bg-white text-maroon text-sm resize-none"
+                      />
+                    </div>
+
+                    <div className="bg-white rounded-xl border border-brandborder p-3 flex justify-between items-center">
+                      <span className="text-sm font-bold text-textMid">Puja Fee</span>
+                      <span className="text-saffron font-bold text-lg">₹{(PUJA_PRICES[selectedPuja?.name] || 1500).toLocaleString('en-IN')}</span>
+                    </div>
+
+                    <button
+                      onClick={proceedToDashboard}
+                      disabled={submitting || !bookingAddress.trim()}
+                      className="w-full py-3 bg-[#1E7D3C] text-white font-bold rounded-xl shadow-md flex items-center justify-center gap-2 hover:bg-[#15612e] transition-colors disabled:opacity-60"
+                    >
+                      {submitting
+                        ? <><span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> Sending to Pandits...</>
+                        : <><ArrowRight size={18} /> Broadcast to Pandits in {city}</>}
                     </button>
+                    <p className="text-xs text-textMuted text-center">Your request will be sent to all available pandits in {city}. First to accept gets your booking!</p>
                   </div>
                 </div>
               )}
