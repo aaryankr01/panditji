@@ -404,11 +404,7 @@ const DevoteeDashboard = () => {
     return () => { if (vp && prev) vp.setAttribute('content', prev); };
   }, []);
 
-  useEffect(() => {
-    if (intentCity || intentPuja) {
-      setActiveTab('find_pandit');
-    }
-  }, [intentCity, intentPuja]);
+
 
   useEffect(() => {
     if (intentPuja) {
@@ -937,7 +933,6 @@ const DevoteeDashboard = () => {
             </div>
           </div>
           <nav className="dd-nav">
-            <NavItem icon={<Search size={16} />} label={t('dd_find_pandit') || 'Find Pandit'} tab="find_pandit" activeTab={activeTab} setActiveTab={setActiveTab} onClick={() => setIsMobileSidebarOpen(false)} />
             <NavItem icon={<User size={16} />} label={t('dd_my_profile')} tab="profile" activeTab={activeTab} setActiveTab={setActiveTab} onClick={() => setIsMobileSidebarOpen(false)} />
             <NavItem icon={<Calendar size={16} />} label={t('dd_my_bookings')} tab="bookings" activeTab={activeTab} setActiveTab={setActiveTab} onClick={() => setIsMobileSidebarOpen(false)} />
             <NavItem icon={<MessageSquare size={16} />} label={t('dd_messages')} tab="chat" activeTab={activeTab} setActiveTab={setActiveTab} onClick={() => setIsMobileSidebarOpen(false)} />
@@ -962,7 +957,6 @@ const DevoteeDashboard = () => {
               <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M3 5H15" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" /><path d="M3 10H17" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" /><path d="M3 15H11" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" /></svg>
             </button>
             <div className="dd-topbar-title">
-              {activeTab === 'find_pandit' && (t('dd_find_pandit') || 'Find Pandit')}
               {activeTab === 'profile' && t('dd_my_profile')}
               {activeTab === 'bookings' && t('dd_my_bookings')}
               {activeTab === 'chat' && t('dd_messages')}
@@ -975,7 +969,7 @@ const DevoteeDashboard = () => {
           <main style={{ flex: 1, overflowY: activeTab === 'chat' ? 'hidden' : 'auto', padding: activeTab === 'chat' ? 0 : 24, display: 'flex', flexDirection: 'column' }}>
 
             {/* FIND PANDIT */}
-            {activeTab === 'find_pandit' && (
+            {false && (
               <div style={{ maxWidth: 1000, margin: '0 auto', width: '100%' }}>
                 <SectionTitle>{t('dd_available_pandits') || 'Available Pandits'}</SectionTitle>
                 
