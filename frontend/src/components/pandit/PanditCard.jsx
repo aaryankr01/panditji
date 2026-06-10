@@ -66,7 +66,7 @@ const PanditCard = ({ pandit }) => {
       <div className="flex items-center gap-1 text-textMid text-sm mb-4">
         <MapPin size={14} /> 
         {pandit.city || t('card_location_unavail')} 
-        {pandit.distance !== undefined && (
+        {pandit.distance !== undefined && pandit.distance < 2000 && (
           <span className="ml-1 text-[#1E7D3C] font-bold bg-[#E8F5EE] px-2 py-0.5 rounded-md">
             {pandit.distance < 1 ? '< 1' : Math.round(pandit.distance)} {t('card_away')}
           </span>

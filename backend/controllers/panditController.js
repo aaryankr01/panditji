@@ -39,8 +39,10 @@ exports.getPandits = async (req, res, next) => {
       const formattedPandits = pandits.map(p => {
         const user = p.userDetails;
         delete p.userDetails;
-        // attach distance to the pandit object so UI can use it
-        return { ...user, distance: p.distance, panditProfile: p };
+        // Only attach distance if the pandit has real GPS coordinates (not the default [0,0])
+        const coords = p.location?.coordinates;
+        const hasRealLocation = coords && !(coords[0] === 0 && coords[1] === 0);
+        return { ...user, ...(hasRealLocation ? { distance: p.distance } : {}), panditProfile: p };
       });
 
       return res.status(200).json({
