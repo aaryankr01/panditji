@@ -29,17 +29,20 @@ exports.register = async (req, res, next) => {
 
     if (role === 'pandit') {
       try {
+        const { geocodeCity } = require('../utils/geocoder');
+        const coords = await geocodeCity(city, state || '');
         const panditProfile = await Pandit.create({
           user: user._id,
-          city: city, 
+          city: city,
           state: state || '',
-          specializations: ['All Pujas'], 
-          bio: `Specializes in: ${panditSpecialization || 'Vedic Rituals'}`, 
+          specializations: ['All Pujas'],
+          bio: `Specializes in: ${panditSpecialization || 'Vedic Rituals'}`,
           experience: parseInt(panditExperience) || 0,
           feePerPuja: 1500, // Explicitly pass the default
-          subscription: { isActive: false }
+          subscription: { isActive: false },
+          location: { type: 'Point', coordinates: coords }
         });
-        
+
         // Link back to user
         user.panditProfile = panditProfile._id;
         await user.save();
@@ -48,9 +51,9 @@ exports.register = async (req, res, next) => {
         console.error('Pandit Profile Creation Error:', profileErr);
         // Delete the user so they can try again
         await User.findByIdAndDelete(user._id);
-        return res.status(400).json({ 
-          success: false, 
-          message: profileErr.message || 'Failed to create pandit profile. Please check all fields.' 
+        return res.status(400).json({
+          success: false,
+          message: profileErr.message || 'Failed to create pandit profile. Please check all fields.'
         });
       }
     }
@@ -172,7 +175,7 @@ exports.getMe = async (req, res, next) => {
       const admin = await Admin.findById(req.user.id);
       return res.status(200).json({ success: true, data: admin });
     }
-    
+
     const user = await User.findById(req.user.id).populate('panditProfile');
     res.status(200).json({ success: true, data: user });
   } catch (err) {

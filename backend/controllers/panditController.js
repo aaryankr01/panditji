@@ -186,6 +186,12 @@ exports.updateProfile = async (req, res, next) => {
       if (experience !== undefined) panditUpdates.experience = experience;
       if (bio) panditUpdates.bio = bio;
       if (feePerPuja !== undefined) panditUpdates.feePerPuja = feePerPuja;
+      if (city) {
+        panditUpdates.city = city;
+        const { geocodeCity } = require('../utils/geocoder');
+        const coords = await geocodeCity(city, user.state || '');
+        panditUpdates.location = { type: 'Point', coordinates: coords };
+      }
 
       await Pandit.findByIdAndUpdate(user.panditProfile, panditUpdates, { new: true, runValidators: true });
     }
