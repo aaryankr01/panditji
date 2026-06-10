@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
@@ -577,23 +577,45 @@ export default function EPujaPage() {
 
       {/* Location status banner */}
       <div style={{
-        background: clientType === "international" ? "#1565c0" : "#388e3c",
+        background: clientType === "international"
+          ? "linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%)"
+          : "linear-gradient(135deg, #1b4332 0%, #0c2a1c 100%)",
         color: "#fff",
-        padding: "10px 24px",
-        fontSize: 13,
-        fontWeight: 500,
+        padding: "14px 24px",
+        fontSize: "13.5px",
+        fontWeight: "500",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        gap: 8,
-        borderBottom: "1px solid rgba(0,0,0,0.08)",
+        gap: "12px",
+        borderBottom: "2.5px solid #d4af37", // Auspicious gold border
+        boxShadow: "0 4px 15px rgba(0,0,0,0.08)",
+        textAlign: "center",
       }}>
-        <MapPin size={14} />
-        {clientType === "international" ? (
-          <span><strong>{t('ep_intl_client') || 'International'}</strong> — {t('ep_intl_desc') || 'International rates apply to your booking.'}</span>
-        ) : (
-          <span><strong>{t('ep_dom_client') || 'India'}</strong> — {t('ep_dom_desc') || 'Special discounted rates available for you.'}</span>
-        )}
+        <span style={{ fontSize: "18px", display: "inline-flex", alignItems: "center" }}>
+          {clientType === "international" ? "🌐" : "🪔"}
+        </span>
+        <div style={{ display: "flex", flexDirection: "column", gap: "2px", alignItems: "center" }}>
+          {clientType === "international" ? (
+            <>
+              <span style={{ fontWeight: 700, color: "#fde047", letterSpacing: "0.3px" }}>
+                {t('ep_intl_client') || 'International Access Activated'}
+              </span>
+              <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.85)" }}>
+                {t('ep_intl_desc') || 'Location outside India detected. International pricing has been applied.'}
+              </span>
+            </>
+          ) : (
+            <>
+              <span style={{ fontWeight: 700, color: "#fde047", letterSpacing: "0.3px" }}>
+                {t('ep_dom_client') || 'Blessed Indian Region — 30% Local Discount Applied'}
+              </span>
+              <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.85)" }}>
+                {t('ep_dom_desc') || 'We detected your location in India. Enjoy special local rates for your auspicious E-Puja.'}
+              </span>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Success toast */}

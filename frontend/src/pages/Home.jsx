@@ -472,10 +472,10 @@ const Home = () => {
       </section>
 
       {/* CTA Banner */}
-      <section className="min-h-[100dvh] flex flex-col justify-center py-12 px-4 bg-maroon text-white text-center border-b-[8px] border-saffron">
-        <h2 className="text-3xl font-black mb-4 font-serif">{t('cta_h2')}</h2>
-        <p className="text-maroon-light mb-8 max-w-xl mx-auto">{t('cta_desc')}</p>
-        <Link to="/pujas" className="inline-flex items-center gap-2 bg-saffron text-white font-bold py-3.5 px-8 rounded-xl hover:bg-saffron-dark transition-colors shadow-lg shadow-saffron/20">
+      <section className="flex flex-col items-center justify-center py-20 md:py-28 px-4 bg-maroon text-white text-center border-b-[8px] border-saffron">
+        <h2 className="text-3xl md:text-4xl font-black mb-4 font-serif">{t('cta_h2')}</h2>
+        <p className="text-maroon-light mb-8 max-w-xl mx-auto text-base md:text-lg">{t('cta_desc')}</p>
+        <Link to="/pujas" className="inline-flex items-center gap-2 bg-saffron text-white font-bold py-3.5 px-8 rounded-xl hover:bg-saffron-dark transition-colors shadow-lg shadow-saffron/20 w-fit">
           {t('cta_btn')} <ArrowRight size={18} />
         </Link>
       </section>
