@@ -95,7 +95,9 @@ const BookAPuja = () => {
     setLocationStatus(null);
     try {
       const res = await api.get(`/pandits?city=${encodeURIComponent(city)}`);
-      if (res.data.count > 0) {
+      // isLocal=true means the backend found actual pandits in this city
+      // isLocal=false means it fell back to pandits from other cities — NOT available here
+      if (res.data.isLocal === true && res.data.count > 0) {
         setLocationStatus('available');
       } else {
         setLocationStatus('unavailable');
