@@ -113,7 +113,7 @@ const HinduCalendar = () => {
   const isSelected = (d) => d === selected.getDate() && month === selected.getMonth() && year === selected.getFullYear();
 
   return (
-    <section id="panchang" className="py-24 px-4 bg-surface relative overflow-hidden">
+    <section id="panchang" className="min-h-[100dvh] flex flex-col justify-center py-12 px-4 bg-surface relative overflow-hidden">
       <div className="absolute top-0 left-0 w-64 h-64 bg-gold-light rounded-full blur-3xl opacity-40 -z-10" />
       <div className="absolute bottom-0 right-0 w-80 h-80 bg-saffron-light rounded-full blur-3xl opacity-30 -z-10" />
 
@@ -294,7 +294,7 @@ const Home = () => {
       <Navbar />
 
       {/* Hero */}
-      <section className="relative overflow-hidden bg-surface pt-16 pb-24 md:pt-24 md:pb-32 px-4">
+      <section className="relative overflow-hidden bg-surface min-h-[100dvh] flex flex-col justify-center py-12 px-4">
         {/* Background Decorative Blobs */}
         <div className="absolute top-0 -right-20 w-96 h-96 bg-saffron-light rounded-full blur-3xl -z-10" />
         <div className="absolute bottom-0 -left-20 w-96 h-96 bg-gold-light rounded-full blur-3xl -z-10 opacity-70" />
@@ -368,7 +368,7 @@ const Home = () => {
       </section>
 
       {/* About Us Section */}
-      <section id="about" className="py-24 px-4 bg-white relative">
+      <section id="about" className="min-h-[100dvh] flex flex-col justify-center py-12 px-4 bg-white relative">
         <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
           <div className="relative">
             <div className="absolute -top-10 -left-10 w-40 h-40 bg-saffron-light rounded-full blur-3xl" />
@@ -419,7 +419,7 @@ const Home = () => {
       <HinduCalendar />
 
       {/* Puja Categories Section */}
-      <section className="py-24 px-4 bg-surface overflow-hidden relative">
+      <section className="min-h-[100dvh] flex flex-col justify-center py-12 px-4 bg-surface overflow-hidden relative">
         <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-saffron-light rounded-full blur-[120px] -z-10 translate-x-1/2 -translate-y-1/2 opacity-60" />
         
         <div className="max-w-6xl mx-auto">
@@ -451,7 +451,7 @@ const Home = () => {
       </section>
 
       {/* Features */}
-      <section className="py-24 px-4 bg-white">
+      <section className="min-h-[100dvh] flex flex-col justify-center py-12 px-4 bg-white">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
             <h2 className="text-3xl font-black text-maroon font-serif">{t('feat_h2')}</h2>
@@ -472,7 +472,7 @@ const Home = () => {
       </section>
 
       {/* CTA Banner */}
-      <section className="bg-maroon text-white py-16 px-4 text-center border-b-[8px] border-saffron">
+      <section className="min-h-[100dvh] flex flex-col justify-center py-12 px-4 bg-maroon text-white text-center border-b-[8px] border-saffron">
         <h2 className="text-3xl font-black mb-4 font-serif">{t('cta_h2')}</h2>
         <p className="text-maroon-light mb-8 max-w-xl mx-auto">{t('cta_desc')}</p>
         <Link to="/pujas" className="inline-flex items-center gap-2 bg-saffron text-white font-bold py-3.5 px-8 rounded-xl hover:bg-saffron-dark transition-colors shadow-lg shadow-saffron/20">
