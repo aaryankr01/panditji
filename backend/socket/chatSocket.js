@@ -1,4 +1,5 @@
 const { Message, Conversation } = require('../models/Message');
+const { createAndEmitNotification } = require('../controllers/notificationController');
 
 module.exports = (io, socket, activeUsers) => {
   socket.on('adminJoin', () => {
@@ -60,6 +61,14 @@ module.exports = (io, socket, activeUsers) => {
       if (receiverSocketId) {
         io.to(receiverSocketId).emit('newMessage', message);
       }
+
+      // Persist chat notification for receiver (badge + bell history)
+      await createAndEmitNotification(receiverId, {
+        senderId,
+        type: 'chat',
+        title: '💬 New Message',
+        message: (text || '').slice(0, 80) || '📎 Attachment',
+      });
 
       // Emit back to sender
       socket.emit('messageSent', message);

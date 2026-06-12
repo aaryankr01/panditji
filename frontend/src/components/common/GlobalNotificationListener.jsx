@@ -3,11 +3,20 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import toast from 'react-hot-toast';
 import useAuthStore from '../../store/useAuthStore';
+import useNotificationStore from '../../store/useNotificationStore';
+import {
+  unlockAudio,
+  playBookingRing,
+  stopBookingRing,
+  playAcceptDing,
+  playChatDing,
+} from '../../utils/notificationSound';
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'https://panditji-1tf8.onrender.com';
 
 const GlobalNotificationListener = () => {
   const { user, token } = useAuthStore();
+  const { addNotification, fetchNotifications } = useNotificationStore();
   const location = useLocation();
   const navigate = useNavigate();
   const socketRef = useRef(null);
@@ -18,9 +27,23 @@ const GlobalNotificationListener = () => {
     locationRef.current = location.pathname;
   }, [location.pathname]);
 
+  // Unlock iOS audio on first user interaction
+  useEffect(() => {
+    const unlock = () => unlockAudio();
+    document.addEventListener('click', unlock, { once: true });
+    document.addEventListener('touchstart', unlock, { once: true });
+    return () => {
+      document.removeEventListener('click', unlock);
+      document.removeEventListener('touchstart', unlock);
+    };
+  }, []);
+
   useEffect(() => {
     // Only connect if user is authenticated
     if (!token || !user) return;
+
+    // Fetch persisted notifications once so bell badge is correct on load
+    fetchNotifications();
 
     // Disconnect any existing socket before creating a new one
     if (socketRef.current) {
@@ -47,7 +70,59 @@ const GlobalNotificationListener = () => {
       console.log('🔌 Socket disconnected:', reason);
     });
 
-    // 1. Listen for new chat messages
+    // ── NEW: Persistent notification event from backend ─────────────────────
+    socket.on('notification', (data) => {
+      addNotification(data); // bump bell count + prepend to list
+
+      if (data.type === 'booking_request') {
+        playBookingRing();
+        toast(
+          (t) => (
+            <div
+              className="flex flex-col gap-1 cursor-pointer"
+              onClick={() => { toast.dismiss(t.id); navigate('/pandit-dashboard'); }}
+            >
+              <span className="font-bold text-orange-600 text-sm">🔔 New Puja Request!</span>
+              <span className="text-gray-600 text-sm">{data.message}</span>
+              <span className="text-xs text-gray-500 font-semibold mt-1">Click to view</span>
+            </div>
+          ),
+          { duration: 7000, position: 'top-right', icon: null }
+        );
+
+      } else if (data.type === 'booking_accepted') {
+        stopBookingRing();
+        playAcceptDing();
+        toast.success(data.message, { duration: 5000, position: 'top-right' });
+
+      } else if (data.type === 'booking_rejected' || data.type === 'booking_cancelled') {
+        stopBookingRing();
+        toast(data.message, { duration: 5000, position: 'top-right', icon: '❌' });
+
+      } else if (data.type === 'chat') {
+        const onChat = locationRef.current === '/chat' || locationRef.current === '/pandit-dashboard';
+        if (!onChat) {
+          playChatDing();
+          toast(
+            (t) => (
+              <div
+                className="flex flex-col gap-1 cursor-pointer"
+                onClick={() => { toast.dismiss(t.id); navigate('/chat'); }}
+              >
+                <span className="font-bold text-gray-800 text-sm">💬 New Message</span>
+                <span className="text-gray-600 text-sm truncate max-w-[200px]">{data.message}</span>
+                <span className="text-xs text-orange-600 font-semibold mt-1">Click to view</span>
+              </div>
+            ),
+            { duration: 4000, position: 'top-right', style: { borderLeft: '4px solid #ea580c' }, icon: null }
+          );
+        }
+      }
+    });
+
+    // ── Legacy events (kept for backward compatibility) ──────────────────────
+
+    // 1. Listen for new chat messages (legacy — triggers when notification isn't used)
     socket.on('newMessage', (msg) => {
       if (locationRef.current !== '/chat' && locationRef.current !== '/pandit-dashboard') {
         toast((t) => (
@@ -65,7 +140,7 @@ const GlobalNotificationListener = () => {
       }
     });
 
-    // 2. Listen for Booking Accepted (for Devotee)
+    // 2. Listen for Booking Accepted (for Devotee) — legacy
     socket.on('bookingAccepted', (booking) => {
       toast.success(
         `Your booking for ${booking.pujaType} was accepted by Pt. ${booking.pandit?.firstName}!`,
@@ -73,7 +148,7 @@ const GlobalNotificationListener = () => {
       );
     });
 
-    // 3. Listen for Booking Status Updated (for Devotee)
+    // 3. Listen for Booking Status Updated (for Devotee) — legacy
     socket.on('bookingStatusUpdated', ({ bookingId, status }) => {
       let icon = '🔔';
       if (status === 'completed') icon = '✅';
@@ -85,7 +160,7 @@ const GlobalNotificationListener = () => {
       });
     });
 
-    // 4. Listen for New Booking Request (for Pandit)
+    // 4. Listen for New Booking Request (for Pandit) — legacy
     socket.on('newBookingRequest', (booking) => {
       if (locationRef.current !== '/pandit-dashboard') {
         toast((t) => (

@@ -12,6 +12,7 @@ import ChatInterface from '../components/ChatInterface';
 import SupportCare from '../components/SupportCare';
 import LanguageToggle from '../components/common/LanguageToggle';
 import api from '../utils/api';
+import { stopBookingRing } from '../utils/notificationSound';
 
 
 /* ─── Design tokens from DevoteeDashboard ─── */
@@ -206,6 +207,7 @@ const PanditDashboard = () => {
       alert('You cannot accept bookings while your subscription is inactive.');
       return;
     }
+    stopBookingRing(); // stop ring tone immediately
     setAccepting(true);
     try {
       const res = await api.patch(`/bookings/${bookingId}/accept`);
@@ -231,6 +233,7 @@ const PanditDashboard = () => {
   };
 
   const handleReject = async (bookingId) => {
+    stopBookingRing(); // stop ring tone on reject too
     try {
       await api.patch(`/bookings/${bookingId}/status`, { status: 'rejected' });
       setBookings(prev => prev.map(b => b._id === bookingId ? { ...b, status: 'rejected' } : b));

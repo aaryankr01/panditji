@@ -1,5 +1,6 @@
 const Booking = require('../models/Booking');
 const User = require('../models/User');
+const { createAndEmitNotification } = require('./notificationController');
 
 // Global io reference set from server.js
 let _io = null;
@@ -48,13 +49,18 @@ exports.createBooking = async (req, res, next) => {
           _io.to(panditSocketId).emit('newBookingRequest', populatedBooking);
         } else {
           console.log(`📡 Broadcast: Target Pandit ${pId} is offline. Falling back to city/all rooms.`);
-          // If the specific pandit is offline, still broadcast to the city/all so others see it? 
-          // Actually, if it's a DIRECT booking, we might want to just wait. 
-          // But for now, let's fallback to ensure visibility.
           const cityRoom = `city_${(city || '').toLowerCase().replace(/\s/g, '_')}`;
           _io.to(cityRoom).emit('newBookingRequest', populatedBooking);
           _io.to('all_pandits').emit('newBookingRequest', populatedBooking);
         }
+        // Save persistent notification for specific pandit
+        await createAndEmitNotification(pId, {
+          senderId: devoteeId,
+          type: 'booking_request',
+          title: '🔔 New Puja Booking',
+          message: `A devotee has requested ${pujaType || 'a puja'} in ${city || 'your city'}.`,
+          bookingId: booking._id,
+        });
       } else if (pujaMode === 'online') {
         console.log(`📡 Broadcast: Online puja - notifying all pandits`);
         _io.to('all_pandits').emit('newBookingRequest', populatedBooking);
@@ -106,6 +112,15 @@ exports.acceptBooking = async (req, res, next) => {
       // Tell all other pandits this booking is gone
       _io.to('all_pandits').emit('bookingTaken', { bookingId: booking._id.toString() });
     }
+
+    // Persist notification for devotee
+    await createAndEmitNotification(booking.devotee.toString(), {
+      senderId: panditId,
+      type: 'booking_accepted',
+      title: '✅ Booking Accepted',
+      message: `Pt. ${populated.pandit?.firstName} has accepted your ${booking.pujaType} booking.`,
+      bookingId: booking._id,
+    });
 
     res.status(200).json({ success: true, data: populated });
   } catch (err) {
@@ -190,6 +205,16 @@ exports.updateBookingStatus = async (req, res, next) => {
       if (devoteeSocketId) _io.to(devoteeSocketId).emit('bookingStatusUpdated', { bookingId: booking._id, status });
     }
 
+    // Persist notification
+    const notifType = status === 'rejected' ? 'booking_rejected' : status === 'cancelled' ? 'booking_cancelled' : 'booking_accepted';
+    const notifTitle = status === 'rejected' ? '❌ Booking Rejected' : status === 'completed' ? '✅ Puja Completed' : `🔔 Booking ${status}`;
+    await createAndEmitNotification(booking.devotee._id.toString(), {
+      type: notifType,
+      title: notifTitle,
+      message: `Your ${booking.pujaType} booking status has been updated to: ${status}.`,
+      bookingId: booking._id,
+    });
+
     res.status(200).json({ success: true, data: booking });
   } catch (err) {
     next(err);
@@ -261,6 +286,14 @@ exports.cancelBooking = async (req, res, next) => {
           devotee: `${booking.devotee.firstName} ${booking.devotee.lastName}`,
         });
       }
+      // Persist notification for pandit
+      await createAndEmitNotification(booking.pandit._id.toString(), {
+        senderId: devoteeId,
+        type: 'booking_cancelled',
+        title: '❌ Booking Cancelled',
+        message: `${booking.devotee.firstName} ${booking.devotee.lastName} cancelled their ${booking.pujaType} booking.`,
+        bookingId: booking._id,
+      });
     }
 
     // Also broadcast to all pandits so it disappears from their queue

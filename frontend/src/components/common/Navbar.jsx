@@ -5,6 +5,7 @@ import useT from '../../hooks/useT';
 import { LogOut, User as UserIcon, ChevronDown, X } from 'lucide-react';
 import { BrandWordmark } from './BrandLogo';
 import LanguageToggle from './LanguageToggle';
+import NotificationBell from './NotificationBell';
 
 // ── Navbar ────────────────────────────────────────────────────────────────────
 const Navbar = () => {
@@ -104,6 +105,7 @@ const Navbar = () => {
             {/* Desktop auth */}
             <div className="hidden lg:flex items-center gap-3">
               <LanguageToggle />
+              {isAuthenticated && <NotificationBell userId={user?._id} />}
               <AuthButtons />
             </div>
 
@@ -111,6 +113,7 @@ const Navbar = () => {
             {isHomePage && (
               <div className="flex lg:hidden items-center gap-1">
                 <LanguageToggle />
+                {isAuthenticated && <NotificationBell userId={user?._id} />}
                 <AuthButtons compact />
               </div>
             )}
