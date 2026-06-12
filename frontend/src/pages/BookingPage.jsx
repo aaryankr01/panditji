@@ -100,7 +100,7 @@ const BookingPage = () => {
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 font-sans">
       <Navbar />
-      <div className="flex-1 flex items-center justify-center p-6">
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-6">
         <div className="bg-white w-full max-w-2xl rounded-3xl shadow-xl border border-gray-200 overflow-hidden">
           <div className="bg-orange-600 text-white p-6 text-center">
             <h1 className="text-2xl font-bold font-serif">Book Your Puja</h1>
@@ -118,8 +118,8 @@ const BookingPage = () => {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="p-8 space-y-6">
-            <div className="bg-orange-50 p-4 rounded-2xl border border-orange-100 flex items-center justify-between mb-4">
+          <form onSubmit={handleSubmit} className="p-4 sm:p-8 space-y-6">
+            <div className="bg-orange-50 p-4 rounded-2xl border border-orange-100 flex flex-col sm:flex-row gap-4 sm:items-center justify-between mb-4">
               <div>
                 <p className="text-xs font-black text-orange-600 uppercase tracking-widest mb-1">Select Puja Mode</p>
                 <div className="flex bg-white p-1 rounded-xl border border-orange-200">
@@ -139,9 +139,9 @@ const BookingPage = () => {
                   </button>
                 </div>
               </div>
-              <div className="text-right">
+              <div className="text-left sm:text-right">
                 <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Booking Fee</p>
-                <div className="flex items-center gap-2 justify-end">
+                <div className="flex items-center gap-2 justify-start sm:justify-end">
                   {formData.pujaMode === 'online' && (
                     <span className="text-gray-400 line-through text-sm">₹{baseFee}</span>
                   )}
