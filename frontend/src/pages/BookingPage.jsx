@@ -126,14 +126,14 @@ const BookingPage = () => {
                   <button
                     type="button"
                     onClick={() => setFormData({ ...formData, pujaMode: 'in-person' })}
-                    className={`flex-1 md:flex-none text-center justify-center px-4 py-2 rounded-lg text-sm font-bold transition-all ${formData.pujaMode === 'in-person' ? 'bg-orange-600 text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}
+                    className={`flex items-center justify-center w-1/2 md:w-auto px-4 py-2 rounded-lg text-sm font-bold transition-all ${formData.pujaMode === 'in-person' ? 'bg-orange-600 text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}
                   >
                     In-Person
                   </button>
                   <button
                     type="button"
                     onClick={() => setFormData({ ...formData, pujaMode: 'online' })}
-                    className={`flex-1 md:flex-none text-center justify-center px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2 ${formData.pujaMode === 'online' ? 'bg-orange-600 text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}
+                    className={`flex items-center justify-center w-1/2 md:w-auto px-4 py-2 rounded-lg text-sm font-bold transition-all gap-2 ${formData.pujaMode === 'online' ? 'bg-orange-600 text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}
                   >
                     Online <span className="bg-green-100 text-green-700 text-[10px] px-1.5 py-0.5 rounded uppercase">-30%</span>
                   </button>
