@@ -25,6 +25,9 @@ const GlobalNotificationListener = () => {
   // Keep locationRef in sync without triggering socket reconnects
   useEffect(() => {
     locationRef.current = location.pathname;
+    if (location.pathname !== '/pandit-dashboard') {
+      stopBookingRing();
+    }
   }, [location.pathname]);
 
   // Unlock iOS audio on first user interaction
@@ -74,34 +77,43 @@ const GlobalNotificationListener = () => {
     socket.on('notification', (data) => {
       addNotification(data); // bump bell count + prepend to list
 
+      const allowedPaths = ['/pandit-dashboard', '/devotee-dashboard', '/chat'];
+      const isAllowedPath = allowedPaths.includes(locationRef.current);
+
       if (data.type === 'booking_request') {
-        playBookingRing();
-        toast(
-          (t) => (
-            <div
-              className="flex flex-col gap-1 cursor-pointer"
-              onClick={() => { toast.dismiss(t.id); navigate('/pandit-dashboard'); }}
-            >
-              <span className="font-bold text-orange-600 text-sm">🔔 New Puja Request!</span>
-              <span className="text-gray-600 text-sm">{data.message}</span>
-              <span className="text-xs text-gray-500 font-semibold mt-1">Click to view</span>
-            </div>
-          ),
-          { duration: 7000, position: 'top-right', icon: null }
-        );
+        if (isAllowedPath) {
+          playBookingRing();
+          toast(
+            (t) => (
+              <div
+                className="flex flex-col gap-1 cursor-pointer"
+                onClick={() => { toast.dismiss(t.id); navigate('/pandit-dashboard'); }}
+              >
+                <span className="font-bold text-orange-600 text-sm">🔔 New Puja Request!</span>
+                <span className="text-gray-600 text-sm">{data.message}</span>
+                <span className="text-xs text-gray-500 font-semibold mt-1">Click to view</span>
+              </div>
+            ),
+            { duration: 7000, position: 'top-right', icon: null }
+          );
+        }
 
       } else if (data.type === 'booking_accepted') {
         stopBookingRing();
-        playAcceptDing();
-        toast.success(data.message, { duration: 5000, position: 'top-right' });
+        if (isAllowedPath) {
+          playAcceptDing();
+          toast.success(data.message, { duration: 5000, position: 'top-right' });
+        }
 
       } else if (data.type === 'booking_rejected' || data.type === 'booking_cancelled') {
         stopBookingRing();
-        toast(data.message, { duration: 5000, position: 'top-right', icon: '❌' });
+        if (isAllowedPath) {
+          toast(data.message, { duration: 5000, position: 'top-right', icon: '❌' });
+        }
 
       } else if (data.type === 'chat') {
         const onChat = locationRef.current === '/chat' || locationRef.current === '/pandit-dashboard';
-        if (!onChat) {
+        if (!onChat && isAllowedPath) {
           playChatDing();
           toast(
             (t) => (
@@ -122,9 +134,12 @@ const GlobalNotificationListener = () => {
 
     // ── Legacy events (kept for backward compatibility) ──────────────────────
 
-    // 1. Listen for new chat messages (legacy — triggers when notification isn't used)
+    // 1. Listen for new chat messages (legacy)
     socket.on('newMessage', (msg) => {
-      if (locationRef.current !== '/chat' && locationRef.current !== '/pandit-dashboard') {
+      const allowedPaths = ['/pandit-dashboard', '/devotee-dashboard', '/chat'];
+      const isAllowedPath = allowedPaths.includes(locationRef.current);
+
+      if (isAllowedPath && locationRef.current !== '/chat' && locationRef.current !== '/pandit-dashboard') {
         toast((t) => (
           <div className="flex flex-col gap-1 cursor-pointer" onClick={() => { toast.dismiss(t.id); navigate('/chat'); }}>
             <span className="font-bold text-gray-800 text-sm">New Message</span>
@@ -142,27 +157,40 @@ const GlobalNotificationListener = () => {
 
     // 2. Listen for Booking Accepted (for Devotee) — legacy
     socket.on('bookingAccepted', (booking) => {
-      toast.success(
-        `Your booking for ${booking.pujaType} was accepted by Pt. ${booking.pandit?.firstName}!`,
-        { duration: 5000, position: 'top-right' }
-      );
+      const allowedPaths = ['/pandit-dashboard', '/devotee-dashboard', '/chat'];
+      const isAllowedPath = allowedPaths.includes(locationRef.current);
+
+      if (isAllowedPath) {
+        toast.success(
+          `Your booking for ${booking.pujaType} was accepted by Pt. ${booking.pandit?.firstName}!`,
+          { duration: 5000, position: 'top-right' }
+        );
+      }
     });
 
     // 3. Listen for Booking Status Updated (for Devotee) — legacy
     socket.on('bookingStatusUpdated', ({ bookingId, status }) => {
-      let icon = '🔔';
-      if (status === 'completed') icon = '✅';
-      if (status === 'cancelled') icon = '❌';
-      toast(`Your booking status was updated to: ${status}`, {
-        duration: 5000,
-        position: 'top-right',
-        icon,
-      });
+      const allowedPaths = ['/pandit-dashboard', '/devotee-dashboard', '/chat'];
+      const isAllowedPath = allowedPaths.includes(locationRef.current);
+
+      if (isAllowedPath) {
+        let icon = '🔔';
+        if (status === 'completed') icon = '✅';
+        if (status === 'cancelled') icon = '❌';
+        toast(`Your booking status was updated to: ${status}`, {
+          duration: 5000,
+          position: 'top-right',
+          icon,
+        });
+      }
     });
 
     // 4. Listen for New Booking Request (for Pandit) — legacy
     socket.on('newBookingRequest', (booking) => {
-      if (locationRef.current !== '/pandit-dashboard') {
+      const allowedPaths = ['/pandit-dashboard', '/devotee-dashboard', '/chat'];
+      const isAllowedPath = allowedPaths.includes(locationRef.current);
+
+      if (isAllowedPath && locationRef.current !== '/pandit-dashboard') {
         toast((t) => (
           <div className="flex flex-col gap-1 cursor-pointer" onClick={() => { toast.dismiss(t.id); navigate('/pandit-dashboard'); }}>
             <span className="font-bold text-orange-600 text-sm">New Puja Request!</span>
@@ -177,27 +205,32 @@ const GlobalNotificationListener = () => {
       }
     });
 
-    // 5. Listen for Admin Broadcast Notifications — shown to ALL users regardless of page
+    // 5. Listen for Admin Broadcast Notifications
     socket.on('adminBroadcast', (data) => {
-      toast((t) => (
-        <div className="flex flex-col gap-1.5 p-0.5 text-left">
-          <span className="font-bold text-red-700 text-sm flex items-center gap-1.5">
-            📢 Announcement
-          </span>
-          <span className="text-gray-800 text-sm font-semibold">{data.title}</span>
-          <span className="text-gray-600 text-xs leading-relaxed">{data.message}</span>
-        </div>
-      ), {
-        duration: 8000,
-        position: 'top-right',
-        style: {
-          borderLeft: '5px solid #dc2626',
-          backgroundColor: '#FFF5F5',
-          color: '#7F1D1D',
-          borderRadius: '12px',
-          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
-        },
-      });
+      const allowedPaths = ['/pandit-dashboard', '/devotee-dashboard', '/chat'];
+      const isAllowedPath = allowedPaths.includes(locationRef.current);
+
+      if (isAllowedPath) {
+        toast((t) => (
+          <div className="flex flex-col gap-1.5 p-0.5 text-left">
+            <span className="font-bold text-red-700 text-sm flex items-center gap-1.5">
+              📢 Announcement
+            </span>
+            <span className="text-gray-800 text-sm font-semibold">{data.title}</span>
+            <span className="text-gray-600 text-xs leading-relaxed">{data.message}</span>
+          </div>
+        ), {
+          duration: 8000,
+          position: 'top-right',
+          style: {
+            borderLeft: '5px solid #dc2626',
+            backgroundColor: '#FFF5F5',
+            color: '#7F1D1D',
+            borderRadius: '12px',
+            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
+          },
+        });
+      }
     });
 
     return () => {

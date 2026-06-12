@@ -775,18 +775,18 @@ const PanditDashboard = () => {
                 <div className="pd-widget-card">
                   <div className="pd-widget-header">
                     <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, fontWeight: 800, color: C.maroon, display: 'flex', alignItems: 'center', gap: 8, margin: 0 }}>
-                      <CalendarCheck size={20} color={C.saffron} /> Upcoming Pujas Schedule
+                      <CalendarCheck size={20} color={C.saffron} /> {t('pd_upcoming_schedule') || 'Upcoming Pujas Schedule'}
                     </h3>
                     <button onClick={() => setActiveTab('bookings')} style={{ background: 'none', border: 'none', color: C.saffron, fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: "'Poppins', sans-serif" }}>
-                      View All
+                      {t('pd_view_all') || 'View All'}
                     </button>
                   </div>
 
                   {bookings.filter(b => b.status === 'confirmed').length === 0 ? (
                     <div style={{ textAlign: 'center', padding: '40px 16px', background: C.surface, borderRadius: 16 }}>
                       <Calendar size={36} color={C.textMuted} style={{ marginBottom: 12, opacity: 0.6 }} />
-                      <p style={{ fontSize: 14, fontWeight: 700, color: C.textMid, margin: 0 }}>No upcoming pujas scheduled.</p>
-                      <p style={{ fontSize: 12, color: C.textMuted, marginTop: 4, margin: 0 }}>Confirmed devotee bookings will show up here.</p>
+                      <p style={{ fontSize: 14, fontWeight: 700, color: C.textMid, margin: 0 }}>{t('pd_no_upcoming') || 'No upcoming pujas scheduled.'}</p>
+                      <p style={{ fontSize: 12, color: C.textMuted, marginTop: 4, margin: 0 }}>{t('pd_confirmed_devotees_show') || 'Confirmed devotee bookings will show up here.'}</p>
                     </div>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -797,7 +797,7 @@ const PanditDashboard = () => {
                           </div>
                           <div style={{ flex: 1 }}>
                             <h4 style={{ fontSize: 15, fontWeight: 800, color: C.text, margin: 0 }}>{booking.pujaType}</h4>
-                            <p style={{ fontSize: 13, color: C.textMid, margin: '2px 0 0' }}>Devotee: {booking.devotee?.firstName} {booking.devotee?.lastName}</p>
+                            <p style={{ fontSize: 13, color: C.textMid, margin: '2px 0 0' }}>{t('pd_devotee') || 'Devotee'}: {booking.devotee?.firstName} {booking.devotee?.lastName}</p>
                             <div style={{ display: 'flex', gap: 12, marginTop: 6, fontSize: 11, color: C.textMuted }}>
                               <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Clock size={12} /> {booking.scheduledDate ? new Date(booking.scheduledDate).toLocaleDateString() : '-'} ({booking.scheduledTime})</span>
                               <span style={{ display: 'flex', alignItems: 'center', gap: 4, textTransform: 'capitalize', color: booking.pujaMode === 'online' ? C.purple : C.saffron, fontWeight: 700 }}>
@@ -806,7 +806,7 @@ const PanditDashboard = () => {
                             </div>
                           </div>
                           <button onClick={() => { setSelectedChatUser(booking.devotee); setActiveTab('chat'); }} style={{ padding: '8px 12px', background: C.maroon, color: '#fff', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <MessageSquare size={14} /> Chat
+                            <MessageSquare size={14} /> {t('dd_chat') || 'Chat'}
                           </button>
                         </div>
                       ))}
@@ -818,15 +818,15 @@ const PanditDashboard = () => {
                 <div className="pd-widget-card">
                   <div className="pd-widget-header">
                     <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, fontWeight: 800, color: C.maroon, display: 'flex', alignItems: 'center', gap: 8, margin: 0 }}>
-                      <Bell size={20} color={C.saffron} /> Pending Requests
+                      <Bell size={20} color={C.saffron} /> {t('pd_pending_requests') || 'Pending Requests'}
                     </h3>
                   </div>
 
                   {bookings.filter(b => b.status === 'pending').length === 0 ? (
                     <div style={{ textAlign: 'center', padding: '40px 16px', background: C.surface, borderRadius: 16 }}>
                       <ShieldCheck size={36} color={C.success} style={{ marginBottom: 12, opacity: 0.6 }} />
-                      <p style={{ fontSize: 14, fontWeight: 700, color: C.textMid, margin: 0 }}>All caught up!</p>
-                      <p style={{ fontSize: 12, color: C.textMuted, marginTop: 4, margin: 0 }}>No new booking requests at the moment.</p>
+                      <p style={{ fontSize: 14, fontWeight: 700, color: C.textMid, margin: 0 }}>{t('pd_all_caught_up') || 'All caught up!'}</p>
+                      <p style={{ fontSize: 12, color: C.textMuted, marginTop: 4, margin: 0 }}>{t('pd_no_new_requests') || 'No new booking requests at the moment.'}</p>
                     </div>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -837,14 +837,14 @@ const PanditDashboard = () => {
                               <h4 style={{ fontSize: 15, fontWeight: 800, color: C.maroon, margin: 0 }}>{booking.pujaType}</h4>
                               <span style={{ fontSize: 11, background: C.saffron, color: '#fff', padding: '2px 8px', borderRadius: 10, fontWeight: 700 }}>₹{booking.price}</span>
                             </div>
-                            <p style={{ fontSize: 12, color: C.textMid, margin: '4px 0 0' }}>By: {booking.devotee?.firstName} {booking.devotee?.lastName}</p>
+                            <p style={{ fontSize: 12, color: C.textMid, margin: '4px 0 0' }}>{t('pd_by') || 'By'}: {booking.devotee?.firstName} {booking.devotee?.lastName}</p>
                           </div>
                           <div style={{ display: 'flex', gap: 8 }}>
                             <button onClick={() => handleReject(booking._id)} style={{ flex: 1, padding: '8px', background: '#fff', border: `1px solid ${C.border}`, borderRadius: 8, color: C.textMid, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
-                              Decline
+                              {t('pd_decline') || 'Decline'}
                             </button>
                             <button onClick={() => handleAccept(booking._id)} style={{ flex: 1, padding: '8px', background: C.success, border: 'none', borderRadius: 8, color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
-                              Accept
+                              {t('pd_accept') || 'Accept'}
                             </button>
                           </div>
                         </div>
