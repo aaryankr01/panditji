@@ -120,28 +120,28 @@ const BookingPage = () => {
 
           <form onSubmit={handleSubmit} className="p-4 md:p-8 space-y-6">
             <div className="bg-orange-50 p-4 rounded-2xl border border-orange-100 flex flex-col md:flex-row gap-4 md:items-center justify-between mb-4">
-              <div>
+              <div className="flex flex-col items-center md:items-start w-full md:w-auto">
                 <p className="text-xs font-black text-orange-600 uppercase tracking-widest mb-1">Select Puja Mode</p>
-                <div className="flex bg-white p-1 rounded-xl border border-orange-200">
+                <div className="flex w-full md:w-auto bg-white p-1 rounded-xl border border-orange-200">
                   <button
                     type="button"
                     onClick={() => setFormData({ ...formData, pujaMode: 'in-person' })}
-                    className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${formData.pujaMode === 'in-person' ? 'bg-orange-600 text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}
+                    className={`flex-1 md:flex-none text-center justify-center px-4 py-2 rounded-lg text-sm font-bold transition-all ${formData.pujaMode === 'in-person' ? 'bg-orange-600 text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}
                   >
                     In-Person
                   </button>
                   <button
                     type="button"
                     onClick={() => setFormData({ ...formData, pujaMode: 'online' })}
-                    className={`px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${formData.pujaMode === 'online' ? 'bg-orange-600 text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}
+                    className={`flex-1 md:flex-none text-center justify-center px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2 ${formData.pujaMode === 'online' ? 'bg-orange-600 text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}
                   >
                     Online <span className="bg-green-100 text-green-700 text-[10px] px-1.5 py-0.5 rounded uppercase">-30%</span>
                   </button>
                 </div>
               </div>
-              <div className="text-left md:text-right">
+              <div className="text-center md:text-right w-full md:w-auto">
                 <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Booking Fee</p>
-                <div className="flex items-center gap-2 justify-start md:justify-end">
+                <div className="flex items-center gap-2 justify-center md:justify-end">
                   {formData.pujaMode === 'online' && (
                     <span className="text-gray-400 line-through text-sm">₹{baseFee}</span>
                   )}
