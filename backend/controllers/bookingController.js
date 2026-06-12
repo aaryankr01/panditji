@@ -43,16 +43,13 @@ exports.createBooking = async (req, res, next) => {
       console.log(`📡 Broadcast: Attempting to notify pandits for booking ${booking._id}`);
       if (panditId) {
         const pId = panditId.toString();
-        const panditSocketId = global.activeUsers?.get(pId);
-        if (panditSocketId) {
-          console.log(`📡 Broadcast: Sending direct request to Pandit ${pId} on socket ${panditSocketId}`);
-          _io.to(panditSocketId).emit('newBookingRequest', populatedBooking);
-        } else {
-          console.log(`📡 Broadcast: Target Pandit ${pId} is offline. Falling back to city/all rooms.`);
-          const cityRoom = `city_${(city || '').toLowerCase().replace(/\s/g, '_')}`;
-          _io.to(cityRoom).emit('newBookingRequest', populatedBooking);
-          _io.to('all_pandits').emit('newBookingRequest', populatedBooking);
-        }
+        // Notify all sockets of this targeted Pandit
+        _io.to(`user_${pId}`).emit('newBookingRequest', populatedBooking);
+        console.log(`📡 Broadcast: Target Pandit ${pId} notified or room broadcasted.`);
+        const cityRoom = `city_${(city || '').toLowerCase().replace(/\s/g, '_')}`;
+        _io.to(cityRoom).emit('newBookingRequest', populatedBooking);
+        _io.to('all_pandits').emit('newBookingRequest', populatedBooking);
+
         // Save persistent notification for specific pandit
         await createAndEmitNotification(pId, {
           senderId: devoteeId,
@@ -105,10 +102,7 @@ exports.acceptBooking = async (req, res, next) => {
 
     // Notify devotee their pandit is confirmed
     if (_io) {
-      const devoteeSocketId = global.activeUsers?.get(booking.devotee.toString());
-      if (devoteeSocketId) {
-        _io.to(devoteeSocketId).emit('bookingAccepted', populated);
-      }
+      _io.to(`user_${booking.devotee.toString()}`).emit('bookingAccepted', populated);
       // Tell all other pandits this booking is gone
       _io.to('all_pandits').emit('bookingTaken', { bookingId: booking._id.toString() });
     }
@@ -201,8 +195,7 @@ exports.updateBookingStatus = async (req, res, next) => {
 
     // Notify devotee of status change
     if (_io) {
-      const devoteeSocketId = global.activeUsers?.get(booking.devotee._id.toString());
-      if (devoteeSocketId) _io.to(devoteeSocketId).emit('bookingStatusUpdated', { bookingId: booking._id, status });
+      _io.to(`user_${booking.devotee._id.toString()}`).emit('bookingStatusUpdated', { bookingId: booking._id, status });
     }
 
     // Persist notification
@@ -278,14 +271,12 @@ exports.cancelBooking = async (req, res, next) => {
 
     // Notify the assigned pandit (if any) via socket
     if (_io && booking.pandit) {
-      const panditSocketId = global.activeUsers?.get(booking.pandit._id.toString());
-      if (panditSocketId) {
-        _io.to(panditSocketId).emit('bookingCancelledByDevotee', {
-          bookingId: booking._id,
-          pujaType: booking.pujaType,
-          devotee: `${booking.devotee.firstName} ${booking.devotee.lastName}`,
-        });
-      }
+      // Use user room so ALL sockets of the pandit receive this (dashboard + listener)
+      _io.to(`user_${booking.pandit._id.toString()}`).emit('bookingCancelledByDevotee', {
+        bookingId: booking._id,
+        pujaType: booking.pujaType,
+        devotee: `${booking.devotee.firstName} ${booking.devotee.lastName}`,
+      });
       // Persist notification for pandit
       await createAndEmitNotification(booking.pandit._id.toString(), {
         senderId: devoteeId,
@@ -435,8 +426,7 @@ exports.updateBookingLink = async (req, res, next) => {
 
     // Notify devotee of new link
     if (_io) {
-      const devoteeSocketId = global.activeUsers?.get(booking.devotee.toString());
-      if (devoteeSocketId) _io.to(devoteeSocketId).emit('bookingLinkUpdated', { bookingId: booking._id, videoLink });
+      _io.to(`user_${booking.devotee.toString()}`).emit('bookingLinkUpdated', { bookingId: booking._id, videoLink });
     }
 
     res.status(200).json({ success: true, data: booking });

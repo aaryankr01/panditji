@@ -15,7 +15,10 @@ const initSocket = (io) => {
       const uId = userId?.toString();
       if (uId) {
         activeUsers.set(uId, socket.id);
-        console.log(`📡 Socket: User ${uId} (${role}) joined on socket ${socket.id}`);
+        // Every socket for this user joins a personal room so ALL their tabs/components
+        // receive targeted events (fixes: two sockets open → notification only on one)
+        socket.join(`user_${uId}`);
+        console.log(`📡 Socket: User ${uId} (${role}) joined on socket ${socket.id} + room user_${uId}`);
       }
       
       // All pandits join a shared room for broadcast

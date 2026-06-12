@@ -15,12 +15,10 @@ const createAndEmitNotification = async (receiverId, { senderId = null, type, ti
       bookingId,
     });
 
-    // Emit in real-time if the receiver is connected
-    if (global.io && global.activeUsers) {
-      const receiverSocketId = global.activeUsers.get(receiverId.toString());
-      if (receiverSocketId) {
-        global.io.to(receiverSocketId).emit('notification', notification);
-      }
+    // Emit in real-time to the user's personal room (covers ALL sockets they have open,
+    // e.g. GlobalNotificationListener + PanditDashboard both connected simultaneously)
+    if (global.io) {
+      global.io.to(`user_${receiverId.toString()}`).emit('notification', notification);
     }
 
     return notification;

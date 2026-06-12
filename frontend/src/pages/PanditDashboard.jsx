@@ -6,7 +6,8 @@ import axios from 'axios';
 import { io } from 'socket.io-client';
 import {
   LogOut, Calendar, MessageSquare, CheckCircle, XCircle,
-  MapPin, Clock, Bell, Phone, User, AlertCircle, Trash2, Headphones, Video, ShieldCheck, Save
+  MapPin, Clock, Bell, Phone, User, AlertCircle, Trash2, Headphones, Video, ShieldCheck, Save,
+  LayoutDashboard, Coins, TrendingUp, CheckCircle2, CalendarCheck
 } from 'lucide-react';
 import ChatInterface from '../components/ChatInterface';
 import SupportCare from '../components/SupportCare';
@@ -78,7 +79,7 @@ const PanditDashboard = () => {
   const navigate = useNavigate();
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [bookings, setBookings] = useState([]);
-  const [activeTab, setActiveTab] = useState('bookings');
+  const [activeTab, setActiveTab] = useState('overview');
   const [selectedChatUser, setSelectedChatUser] = useState(null);
   const [mobileChatView, setMobileChatView] = useState('list'); // 'list' | 'chat'
   const [conversations, setConversations] = useState([]);
@@ -171,7 +172,14 @@ const PanditDashboard = () => {
     });
 
     socket.on('bookingTaken', ({ bookingId }) => {
+      // Close the incoming popup
       setIncomingRequest(prev => prev?._id === bookingId ? null : prev);
+      // Remove from the bookings list — booking is either:
+      //   (a) Cancelled by devotee (status = cancelled)
+      //   (b) Accepted by another pandit (still pending for us)
+      // In both cases this pandit should no longer see it as actionable.
+      // We only keep it if WE accepted it (status will be 'confirmed').
+      setBookings(prev => prev.filter(b => b._id !== bookingId || b.status === 'confirmed'));
     });
 
     socket.on('paymentConfirmed', ({ bookingId }) => {
@@ -430,6 +438,74 @@ const PanditDashboard = () => {
           /* Booking card less padding */
           .pd-booking-card-wrap { padding: 16px !important; }
         }
+        
+        .pd-stats-grid {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 20px;
+          margin-bottom: 28px;
+        }
+        @media (max-width: 1024px) {
+          .pd-stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
+        }
+        @media (max-width: 640px) {
+          .pd-stats-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+        .pd-stat-card {
+          background: #fff;
+          border: 1px solid ${C.border};
+          border-radius: 20px;
+          padding: 20px;
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          box-shadow: 0 4px 12px rgba(44,26,14,0.01);
+          transition: all 0.2s ease;
+        }
+        .pd-stat-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 20px rgba(44,26,14,0.04);
+          border-color: ${C.saffron};
+        }
+        .pd-stat-card-icon {
+          width: 52px;
+          height: 52px;
+          border-radius: 16px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+        .pd-dashboard-split {
+          display: grid;
+          grid-template-columns: 1.2fr 0.8fr;
+          gap: 24px;
+          margin-top: 8px;
+        }
+        @media (max-width: 1024px) {
+          .pd-dashboard-split {
+            grid-template-columns: 1fr;
+          }
+        }
+        .pd-widget-card {
+          background: #fff;
+          border: 1px solid ${C.border};
+          border-radius: 20px;
+          padding: 24px;
+          box-shadow: 0 4px 12px rgba(44,26,14,0.01);
+        }
+        .pd-widget-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 20px;
+          padding-bottom: 12px;
+          border-bottom: 1px solid ${C.border};
+        }
       `}</style>
 
       {/* ═══ CANCELLATION TOAST (devotee cancelled a paid/accepted booking) ═══ */}
@@ -559,10 +635,11 @@ const PanditDashboard = () => {
 
         <nav style={{ flex: 1, padding: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
           {[
-            { id: 'bookings', label: t('pd_booking_requests'), icon: Calendar },
-            { id: 'chat', label: t('dd_messages'), icon: MessageSquare },
-            { id: 'profile', label: t('dd_my_profile'), icon: User },
-            { id: 'support', label: t('dd_support'), icon: Headphones },
+            { id: 'overview', label: t('pd_overview') || 'Overview', icon: LayoutDashboard },
+            { id: 'bookings', label: t('pd_booking_requests') || 'Pujas & Requests', icon: Calendar },
+            { id: 'chat', label: t('dd_messages') || 'Messages', icon: MessageSquare },
+            { id: 'profile', label: t('dd_my_profile') || 'My Profile', icon: User },
+            { id: 'support', label: t('dd_support') || 'Support & Care', icon: Headphones },
           ].map(tab => (
             <button key={tab.id} onClick={() => { setActiveTab(tab.id); setIsMobileSidebarOpen(false); }}
               style={{
@@ -594,7 +671,7 @@ const PanditDashboard = () => {
             <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M3 5H15" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" /><path d="M3 10H17" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" /><path d="M3 15H11" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" /></svg>
           </button>
           <h1 style={{ fontFamily: "'Playfair Display',serif", fontSize: 24, fontWeight: 900, color: C.maroon }}>
-            {activeTab === 'bookings' ? t('pd_booking_requests') : activeTab === 'chat' ? t('dd_messages') : activeTab === 'profile' ? t('dd_my_profile') : t('dd_support')}
+            {activeTab === 'overview' ? (t('pd_overview') || 'Overview') : activeTab === 'bookings' ? (t('pd_booking_requests') || 'Pujas & Requests') : activeTab === 'chat' ? t('dd_messages') : activeTab === 'profile' ? t('dd_my_profile') : t('dd_support')}
           </h1>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: 13, fontWeight: 700 }}>
             {subscriptionStatus === 'inactive' ? (
@@ -640,6 +717,142 @@ const PanditDashboard = () => {
               <button className="dd-btn" style={{ background: '#A67C00', color: '#fff' }} onClick={handleSubscriptionPayment}>
                 {t('pd_sub_renew_btn') || 'Renew for ₹500'}
               </button>
+            </div>
+          )}
+
+          {activeTab === 'overview' && (
+            <div style={{ maxWidth: 1200, margin: '0 auto', width: '100%' }}>
+              {/* Stats Grid */}
+              <div className="pd-stats-grid">
+                {/* Earnings Card */}
+                <div className="pd-stat-card">
+                  <div className="pd-stat-card-icon" style={{ background: C.successLt, color: C.success }}>
+                    <Coins size={24} />
+                  </div>
+                  <div>
+                    <p className="dd-stat-lbl">{t('pd_total_earnings') || 'Total Earnings'}</p>
+                    <p className="dd-stat" style={{ color: C.success }}>₹{totalEarnings.toLocaleString()}</p>
+                  </div>
+                </div>
+
+                {/* Total Bookings Card */}
+                <div className="pd-stat-card">
+                  <div className="pd-stat-card-icon" style={{ background: C.saffronLt, color: C.saffron }}>
+                    <Calendar size={24} />
+                  </div>
+                  <div>
+                    <p className="dd-stat-lbl">{t('pd_total_bookings') || 'Total Bookings'}</p>
+                    <p className="dd-stat">{bookings.length}</p>
+                  </div>
+                </div>
+
+                {/* Completed Pujas Card */}
+                <div className="pd-stat-card">
+                  <div className="pd-stat-card-icon" style={{ background: C.purpleLt, color: C.purple }}>
+                    <CheckCircle2 size={24} />
+                  </div>
+                  <div>
+                    <p className="dd-stat-lbl">{t('pd_pujas_completed') || 'Completed Pujas'}</p>
+                    <p className="dd-stat" style={{ color: C.purple }}>{bookings.filter(b => b.status === 'completed').length}</p>
+                  </div>
+                </div>
+
+                {/* Active/Confirmed Card */}
+                <div className="pd-stat-card">
+                  <div className="pd-stat-card-icon" style={{ background: C.goldLt, color: C.gold }}>
+                    <TrendingUp size={24} />
+                  </div>
+                  <div>
+                    <p className="dd-stat-lbl">{t('pd_active_confirmed') || 'Confirmed Pujas'}</p>
+                    <p className="dd-stat" style={{ color: C.gold }}>{bookings.filter(b => b.status === 'confirmed').length}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Split Dashboard Content */}
+              <div className="pd-dashboard-split">
+                {/* Upcoming Confirmed Pujas Widget */}
+                <div className="pd-widget-card">
+                  <div className="pd-widget-header">
+                    <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, fontWeight: 800, color: C.maroon, display: 'flex', alignItems: 'center', gap: 8, margin: 0 }}>
+                      <CalendarCheck size={20} color={C.saffron} /> Upcoming Pujas Schedule
+                    </h3>
+                    <button onClick={() => setActiveTab('bookings')} style={{ background: 'none', border: 'none', color: C.saffron, fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: "'Poppins', sans-serif" }}>
+                      View All
+                    </button>
+                  </div>
+
+                  {bookings.filter(b => b.status === 'confirmed').length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '40px 16px', background: C.surface, borderRadius: 16 }}>
+                      <Calendar size={36} color={C.textMuted} style={{ marginBottom: 12, opacity: 0.6 }} />
+                      <p style={{ fontSize: 14, fontWeight: 700, color: C.textMid, margin: 0 }}>No upcoming pujas scheduled.</p>
+                      <p style={{ fontSize: 12, color: C.textMuted, marginTop: 4, margin: 0 }}>Confirmed devotee bookings will show up here.</p>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                      {bookings.filter(b => b.status === 'confirmed').slice(0, 3).map(booking => (
+                        <div key={booking._id} style={{ display: 'flex', gap: 16, padding: 16, background: C.surface, borderRadius: 16, border: `1px solid ${C.border}`, alignItems: 'center', transition: 'all 0.2s' }}>
+                          <div style={{ width: 44, height: 44, borderRadius: 12, background: C.maroonLt, color: C.maroon, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 800 }}>
+                            {booking.devotee?.firstName?.charAt(0)}
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <h4 style={{ fontSize: 15, fontWeight: 800, color: C.text, margin: 0 }}>{booking.pujaType}</h4>
+                            <p style={{ fontSize: 13, color: C.textMid, margin: '2px 0 0' }}>Devotee: {booking.devotee?.firstName} {booking.devotee?.lastName}</p>
+                            <div style={{ display: 'flex', gap: 12, marginTop: 6, fontSize: 11, color: C.textMuted }}>
+                              <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Clock size={12} /> {booking.scheduledDate ? new Date(booking.scheduledDate).toLocaleDateString() : '-'} ({booking.scheduledTime})</span>
+                              <span style={{ display: 'flex', alignItems: 'center', gap: 4, textTransform: 'capitalize', color: booking.pujaMode === 'online' ? C.purple : C.saffron, fontWeight: 700 }}>
+                                <Video size={12} /> {booking.pujaMode}
+                              </span>
+                            </div>
+                          </div>
+                          <button onClick={() => { setSelectedChatUser(booking.devotee); setActiveTab('chat'); }} style={{ padding: '8px 12px', background: C.maroon, color: '#fff', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <MessageSquare size={14} /> Chat
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Booking Requests Queue Widget */}
+                <div className="pd-widget-card">
+                  <div className="pd-widget-header">
+                    <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, fontWeight: 800, color: C.maroon, display: 'flex', alignItems: 'center', gap: 8, margin: 0 }}>
+                      <Bell size={20} color={C.saffron} /> Pending Requests
+                    </h3>
+                  </div>
+
+                  {bookings.filter(b => b.status === 'pending').length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '40px 16px', background: C.surface, borderRadius: 16 }}>
+                      <ShieldCheck size={36} color={C.success} style={{ marginBottom: 12, opacity: 0.6 }} />
+                      <p style={{ fontSize: 14, fontWeight: 700, color: C.textMid, margin: 0 }}>All caught up!</p>
+                      <p style={{ fontSize: 12, color: C.textMuted, marginTop: 4, margin: 0 }}>No new booking requests at the moment.</p>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                      {bookings.filter(b => b.status === 'pending').slice(0, 3).map(booking => (
+                        <div key={booking._id} style={{ padding: 16, background: C.saffronLt, borderRadius: 16, border: `1px solid rgba(232,113,10,0.15)`, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                          <div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <h4 style={{ fontSize: 15, fontWeight: 800, color: C.maroon, margin: 0 }}>{booking.pujaType}</h4>
+                              <span style={{ fontSize: 11, background: C.saffron, color: '#fff', padding: '2px 8px', borderRadius: 10, fontWeight: 700 }}>₹{booking.price}</span>
+                            </div>
+                            <p style={{ fontSize: 12, color: C.textMid, margin: '4px 0 0' }}>By: {booking.devotee?.firstName} {booking.devotee?.lastName}</p>
+                          </div>
+                          <div style={{ display: 'flex', gap: 8 }}>
+                            <button onClick={() => handleReject(booking._id)} style={{ flex: 1, padding: '8px', background: '#fff', border: `1px solid ${C.border}`, borderRadius: 8, color: C.textMid, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                              Decline
+                            </button>
+                            <button onClick={() => handleAccept(booking._id)} style={{ flex: 1, padding: '8px', background: C.success, border: 'none', borderRadius: 8, color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                              Accept
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           )}
 
