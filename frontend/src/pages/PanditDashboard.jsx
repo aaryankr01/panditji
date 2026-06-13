@@ -598,42 +598,59 @@ const PanditDashboard = () => {
       {isMobileSidebarOpen && <div onClick={() => setIsMobileSidebarOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(44,26,14,0.5)', zIndex: 1999, backdropFilter: 'blur(2px)' }} />}
 
       {/* ═══ SIDEBAR ═══ */}
-      <div className={`pd-sidebar${isMobileSidebarOpen ? ' open' : ''}`} style={{ width: 280, background: '#fff', borderRight: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column' }}>
-        <div style={{ padding: 32, textAlign: 'center', borderBottom: `1px solid ${C.border}`, position: 'relative' }}>
+      <div className={`pd-sidebar${isMobileSidebarOpen ? ' open' : ''}`} style={{ width: 280, background: '#fff', borderRight: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ padding: 32, textAlign: 'center', borderBottom: `1px solid ${C.border}`, position: 'relative', background: C.maroon, color: '#fff' }}>
           <button
             onClick={() => setIsMobileSidebarOpen(false)}
             className="pd-close-btn"
-            style={{ position: 'absolute', top: 12, right: 12, background: C.saffronLt, border: 'none', borderRadius: '50%', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: C.maroon }}
+            style={{ position: 'absolute', top: 12, right: 12, background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: '50%', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#fff' }}
           >
             <XCircle size={16} />
           </button>
           <div style={{ position: 'relative', display: 'inline-block', marginBottom: 16 }}>
             {user?.avatar ? (
-              <img src={user.avatar} alt="Profile" style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover', border: `3px solid ${C.saffronLt}` }} />
+              <img src={user.avatar} alt="Profile" style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover', border: `3px solid rgba(255,255,255,0.2)` }} />
             ) : (
-              <div style={{ width: 80, height: 80, background: C.saffron, color: '#fff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32, fontWeight: 800, border: `3px solid ${C.saffronLt}` }}>
+              <div style={{ width: 80, height: 80, background: C.saffron, color: '#fff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32, fontWeight: 800, border: `3px solid rgba(255,255,255,0.2)` }}>
                 {user?.firstName?.charAt(0)}
               </div>
             )}
-            <button onClick={() => document.getElementById('avatar-upload').click()} style={{ position: 'absolute', bottom: 0, right: 0, background: C.maroon, color: '#fff', width: 28, height: 28, borderRadius: '50%', border: '2px solid #fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+            <button onClick={() => document.getElementById('avatar-upload').click()} style={{ position: 'absolute', bottom: 0, right: 0, background: '#fff', color: C.maroon, width: 28, height: 28, borderRadius: '50%', border: '2px solid #fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
             </button>
             <input type="file" id="avatar-upload" style={{ display: 'none' }} accept="image/*" onChange={handleAvatarUpload} />
           </div>
-          <h2 style={{ fontFamily: "'Playfair Display',serif", fontSize: 20, fontWeight: 900, color: C.maroon }}>Pt. {user?.firstName} {user?.lastName}</h2>
-          <p style={{ fontSize: 11, color: C.saffron, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px', background: C.saffronLt, padding: '4px 12px', borderRadius: 20, display: 'inline-block', marginTop: 8 }}>{user?.role}</p>
+          <h2 style={{ fontFamily: "'Playfair Display',serif", fontSize: 20, fontWeight: 900, color: '#fff', margin: 0 }}>Pt. {user?.firstName} {user?.lastName}</h2>
+          <p style={{ fontSize: 11, color: '#fff', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px', background: C.saffron, padding: '4px 12px', borderRadius: 20, display: 'inline-block', marginTop: 8 }}>{user?.role}</p>
           {user?.city && (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 8, fontSize: 13, color: C.textMid }}>
-              <MapPin size={14} color={C.saffron} /> {user.city}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 8, fontSize: 13, color: 'rgba(255,255,255,0.8)' }}>
+              <MapPin size={14} color={C.gold} /> {user.city}
             </div>
           )}
-          <div style={{ marginTop: 24, paddingTop: 24, borderTop: `1px dashed ${C.border}` }}>
-            <p className="dd-stat-lbl">{t('pd_total_earnings')}</p>
-            <p className="dd-stat" style={{ color: C.success }}>₹{totalEarnings.toLocaleString()}</p>
+          <div style={{ marginTop: 24, paddingTop: 24, borderTop: '1px dashed rgba(255,255,255,0.2)' }}>
+            <p className="dd-stat-lbl" style={{ color: 'rgba(255,255,255,0.6)' }}>{t('pd_total_earnings')}</p>
+            <p className="dd-stat" style={{ color: '#fff' }}>₹{totalEarnings.toLocaleString()}</p>
           </div>
         </div>
 
-        <nav style={{ flex: 1, padding: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {/* Decorative Peacock Watermark */}
+        <div style={{ position: 'absolute', bottom: 80, left: -20, width: 220, height: 220, pointerEvents: 'none', opacity: 0.05, zIndex: 0, color: C.maroon }}>
+          <svg viewBox="0 0 100 100" width="100%" height="100%" fill="none" stroke="currentColor" strokeWidth="1">
+            <path d="M50 30 C 47 20, 53 20, 50 30 Z" />
+            <path d="M48 30 C 42 21, 47 19, 48 30 Z" />
+            <path d="M52 30 C 58 21, 53 19, 52 30 Z" />
+            <path d="M50 30 C 45 35, 45 42, 50 45 C 55 42, 55 35, 50 30" />
+            <path d="M50 45 C 40 48, 38 60, 42 70 C 46 80, 54 80, 58 70 C 62 60, 60 48, 50 45" />
+            <path d="M50 30 L 48 33 L 52 33 Z" fill="currentColor" />
+            <path d="M42 70 C 30 75, 20 65, 15 50 C 10 35, 25 25, 40 38" />
+            <path d="M58 70 C 70 75, 80 65, 85 50 C 90 35, 75 25, 60 38" />
+            <path d="M45 75 C 35 85, 25 80, 20 90 C 15 100, 35 100, 48 80" />
+            <path d="M55 75 C 65 85, 75 80, 80 90 C 85 100, 65 100, 52 80" />
+            <path d="M50 78 C 50 92, 45 98, 50 100 C 55 98, 50 92, 50 78" />
+          </svg>
+        </div>
+
+        <nav style={{ flex: 1, padding: 16, display: 'flex', flexDirection: 'column', gap: 8, zIndex: 1, position: 'relative' }}>
           {[
             { id: 'overview', label: t('pd_overview') || 'Overview', icon: LayoutDashboard },
             { id: 'bookings', label: t('pd_booking_requests') || 'Pujas & Requests', icon: Calendar },
@@ -644,10 +661,10 @@ const PanditDashboard = () => {
             <button key={tab.id} onClick={() => { setActiveTab(tab.id); setIsMobileSidebarOpen(false); }}
               style={{
                 display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', borderRadius: 12, border: 'none', cursor: 'pointer', fontFamily: "'Poppins', sans-serif", fontSize: 14, fontWeight: 700, transition: 'all 0.2s', textAlign: 'left',
-                background: activeTab === tab.id ? C.maroon : 'transparent',
-                color: activeTab === tab.id ? '#fff' : C.textMid,
+                background: activeTab === tab.id ? C.maroonLt : 'transparent',
+                color: activeTab === tab.id ? C.maroon : C.textMid,
               }}>
-              <tab.icon size={20} color={activeTab === tab.id ? C.gold : C.textMuted} /> {tab.label}
+              <tab.icon size={20} color={activeTab === tab.id ? C.maroon : C.textMuted} /> {tab.label}
               {tab.id === 'bookings' && bookings.filter(b => b.status === 'pending').length > 0 && (
                 <span style={{ marginLeft: 'auto', background: C.gold, color: C.maroon, fontSize: 11, fontWeight: 800, width: 24, height: 24, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   {bookings.filter(b => b.status === 'pending').length}
@@ -657,7 +674,7 @@ const PanditDashboard = () => {
           ))}
         </nav>
 
-        <div style={{ padding: 24, borderTop: `1px solid ${C.border}` }}>
+        <div style={{ padding: 24, borderTop: `1px solid ${C.border}`, zIndex: 1, position: 'relative' }}>
           <button onClick={handleLogout} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: 14, background: C.redLt, color: C.red, border: 'none', borderRadius: 12, cursor: 'pointer', fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: 14, transition: 'all 0.2s' }}>
             <LogOut size={20} /> {t('dd_logout')}
           </button>
@@ -721,56 +738,79 @@ const PanditDashboard = () => {
           )}
 
           {activeTab === 'overview' && (
-            <div style={{ maxWidth: 1200, margin: '0 auto', width: '100%' }}>
+            <div style={{ maxWidth: 1200, margin: '0 auto', width: '100%', position: 'relative' }}>
+              {/* Decorative Mandala Watermark */}
+              <div style={{ position: 'absolute', bottom: -50, right: -50, width: 350, height: 350, pointerEvents: 'none', opacity: 0.04, zIndex: 0, color: C.maroon }}>
+                <svg viewBox="0 0 100 100" width="100%" height="100%" fill="none" stroke="currentColor" strokeWidth="1">
+                  <circle cx="50" cy="50" r="45" />
+                  <circle cx="50" cy="50" r="35" />
+                  <circle cx="50" cy="50" r="25" />
+                  <circle cx="50" cy="50" r="15" />
+                  {Array.from({ length: 16 }).map((_, i) => {
+                    const angle = (i * 360) / 16;
+                    return (
+                      <g key={i} transform={`rotate(${angle} 50 50)`}>
+                        <line x1="50" y1="5" x2="50" y2="15" />
+                        <path d="M47 15 C 47 5, 53 5, 53 15 Z" />
+                        <path d="M45 25 C 45 15, 55 15, 55 25 Z" />
+                      </g>
+                    );
+                  })}
+                </svg>
+              </div>
+
               {/* Stats Grid */}
-              <div className="pd-stats-grid">
+              <div className="pd-stats-grid" style={{ position: 'relative', zIndex: 1 }}>
                 {/* Earnings Card */}
-                <div className="pd-stat-card">
-                  <div className="pd-stat-card-icon" style={{ background: C.successLt, color: C.success }}>
+                <div className="pd-stat-card" style={{ background: 'linear-gradient(135deg, #E8F5EE 0%, #C2E7D9 100%)', border: 'none' }}>
+                  <div className="pd-stat-card-icon" style={{ background: '#fff', color: C.success }}>
                     <Coins size={24} />
                   </div>
                   <div>
-                    <p className="dd-stat-lbl">{t('pd_total_earnings') || 'Total Earnings'}</p>
+                    <p className="dd-stat-lbl" style={{ color: 'rgba(30,125,60,0.6)' }}>{t('pd_total_earnings') || 'Total Earnings'}</p>
                     <p className="dd-stat" style={{ color: C.success }}>₹{totalEarnings.toLocaleString()}</p>
                   </div>
                 </div>
 
                 {/* Total Bookings Card */}
-                <div className="pd-stat-card">
-                  <div className="pd-stat-card-icon" style={{ background: C.saffronLt, color: C.saffron }}>
+                <div className="pd-stat-card" style={{ background: 'linear-gradient(135deg, #FCECE7 0%, #F7DCD3 100%)', border: 'none' }}>
+                  <div className="pd-stat-card-icon" style={{ background: '#fff', color: C.maroon }}>
                     <Calendar size={24} />
                   </div>
                   <div>
-                    <p className="dd-stat-lbl">{t('pd_total_bookings') || 'Total Bookings'}</p>
-                    <p className="dd-stat">{bookings.length}</p>
+                    <p className="dd-stat-lbl" style={{ color: 'rgba(123,29,14,0.6)' }}>{t('pd_total_bookings') || 'Total Bookings'}</p>
+                    <p className="dd-stat" style={{ color: C.maroon }}>{bookings.length}</p>
                   </div>
                 </div>
 
                 {/* Completed Pujas Card */}
-                <div className="pd-stat-card">
-                  <div className="pd-stat-card-icon" style={{ background: C.purpleLt, color: C.purple }}>
-                    <CheckCircle2 size={24} />
+                <div className="pd-stat-card" style={{ background: 'linear-gradient(135deg, #FDF6E2 0%, #FAECD1 100%)', border: 'none' }}>
+                  <div className="pd-stat-card-icon" style={{ background: '#fff', color: C.gold }}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 2c0 2-2 4-2 6 0 2.2 1.8 4 4 4s4-1.8 4-6c0-2-2-4-2-6z" fill="currentColor" />
+                      <path d="M2 15c0 3 4.5 5 10 5s10-2 10-5H2z" fill="currentColor" />
+                    </svg>
                   </div>
                   <div>
-                    <p className="dd-stat-lbl">{t('pd_pujas_completed') || 'Completed Pujas'}</p>
-                    <p className="dd-stat" style={{ color: C.purple }}>{bookings.filter(b => b.status === 'completed').length}</p>
+                    <p className="dd-stat-lbl" style={{ color: 'rgba(200,150,12,0.6)' }}>{t('pd_pujas_completed') || 'Completed Pujas'}</p>
+                    <p className="dd-stat" style={{ color: C.gold }}>{bookings.filter(b => b.status === 'completed').length}</p>
                   </div>
                 </div>
 
                 {/* Active/Confirmed Card */}
-                <div className="pd-stat-card">
-                  <div className="pd-stat-card-icon" style={{ background: C.goldLt, color: C.gold }}>
+                <div className="pd-stat-card" style={{ background: 'linear-gradient(135deg, #FFFDF0 0%, #FFF5D0 100%)', border: 'none' }}>
+                  <div className="pd-stat-card-icon" style={{ background: '#fff', color: C.gold }}>
                     <TrendingUp size={24} />
                   </div>
                   <div>
-                    <p className="dd-stat-lbl">{t('pd_active_confirmed') || 'Confirmed Pujas'}</p>
+                    <p className="dd-stat-lbl" style={{ color: 'rgba(200,150,12,0.6)' }}>{t('pd_active_confirmed') || 'Confirmed Pujas'}</p>
                     <p className="dd-stat" style={{ color: C.gold }}>{bookings.filter(b => b.status === 'confirmed').length}</p>
                   </div>
                 </div>
               </div>
 
               {/* Split Dashboard Content */}
-              <div className="pd-dashboard-split">
+              <div className="pd-dashboard-split" style={{ position: 'relative', zIndex: 1 }}>
                 {/* Upcoming Confirmed Pujas Widget */}
                 <div className="pd-widget-card">
                   <div className="pd-widget-header">
@@ -783,10 +823,8 @@ const PanditDashboard = () => {
                   </div>
 
                   {bookings.filter(b => b.status === 'confirmed').length === 0 ? (
-                    <div style={{ textAlign: 'center', padding: '40px 16px', background: C.surface, borderRadius: 16 }}>
-                      <Calendar size={36} color={C.textMuted} style={{ marginBottom: 12, opacity: 0.6 }} />
-                      <p style={{ fontSize: 14, fontWeight: 700, color: C.textMid, margin: 0 }}>{t('pd_no_upcoming') || 'No upcoming pujas scheduled.'}</p>
-                      <p style={{ fontSize: 12, color: C.textMuted, marginTop: 4, margin: 0 }}>{t('pd_confirmed_devotees_show') || 'Confirmed devotee bookings will show up here.'}</p>
+                    <div style={{ borderRadius: 16, overflow: 'hidden' }}>
+                      <img src="/pictures/upcoming_empty.png" alt="No upcoming pujas" style={{ width: '100%', display: 'block' }} />
                     </div>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -823,10 +861,8 @@ const PanditDashboard = () => {
                   </div>
 
                   {bookings.filter(b => b.status === 'pending').length === 0 ? (
-                    <div style={{ textAlign: 'center', padding: '40px 16px', background: C.surface, borderRadius: 16 }}>
-                      <ShieldCheck size={36} color={C.success} style={{ marginBottom: 12, opacity: 0.6 }} />
-                      <p style={{ fontSize: 14, fontWeight: 700, color: C.textMid, margin: 0 }}>{t('pd_all_caught_up') || 'All caught up!'}</p>
-                      <p style={{ fontSize: 12, color: C.textMuted, marginTop: 4, margin: 0 }}>{t('pd_no_new_requests') || 'No new booking requests at the moment.'}</p>
+                    <div style={{ borderRadius: 16, overflow: 'hidden' }}>
+                      <img src="/pictures/requests_empty.png" alt="No pending requests" style={{ width: '100%', display: 'block' }} />
                     </div>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
