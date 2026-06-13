@@ -1303,7 +1303,7 @@ const DevoteeDashboard = () => {
                       onClick={() => setMobileChatView('list')}
                       style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.maroon, display: 'flex', alignItems: 'center', gap: 6, fontWeight: 700, fontSize: 13, padding: 0 }}
                     >
-                      ← {t('dd_back_to_chats') || 'Back to Conversations'}
+                      ← {t('dd_back_to_chats') || 'Back to Chat'}
                     </button>
                     {selectedChatUser && (
                       <span style={{ fontWeight: 600, color: C.maroon, fontSize: 14, marginLeft: 8 }}>

@@ -365,7 +365,7 @@ const ChatInterface = ({ otherUser, socket }) => {
         ) : (
           <div className="flex gap-2 items-center">
             <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept="image/*,video/*,audio/*" />
-            <button type="button" onClick={() => fileInputRef.current?.click()} className="p-2 text-gray-500 hover:text-orange-600 rounded-full"><Paperclip size={20} /></button>
+            <button type="button" onClick={() => fileInputRef.current?.click()} className="p-2 text-gray-500 hover:text-orange-600 rounded-full shrink-0"><Paperclip size={20} /></button>
             {audioPreviewUrl ? (
               <div className="flex-1 flex items-center justify-between bg-gray-50 rounded-full px-4 py-2 border">
                 <audio src={audioPreviewUrl} controls className="h-8 w-full max-w-[200px]" />
@@ -383,12 +383,12 @@ const ChatInterface = ({ otherUser, socket }) => {
                 </div>
               </div>
             ) : (
-              <form onSubmit={handleSend} className="flex-1 flex gap-2">
-                <input type="text" value={inputText} onChange={(e) => setInputText(e.target.value)} placeholder="Type your message..." className="flex-1 px-4 py-2 border rounded-full focus:ring-1 focus:ring-orange-500" />
+              <form onSubmit={handleSend} className="flex-1 flex gap-2 min-w-0">
+                <input type="text" value={inputText} onChange={(e) => setInputText(e.target.value)} placeholder="Type your message..." className="flex-1 min-w-0 px-4 py-2 border rounded-full focus:ring-1 focus:ring-orange-500" />
                 {inputText.trim() ? (
-                  <button type="submit" className="p-2 bg-orange-600 text-white rounded-full"><Send size={20} /></button>
+                  <button type="submit" className="p-2 bg-orange-600 text-white rounded-full shrink-0"><Send size={20} /></button>
                 ) : (
-                  <button type="button" onClick={startRecording} className="p-2 text-gray-500 hover:text-orange-600 rounded-full"><Mic size={20} /></button>
+                  <button type="button" onClick={startRecording} className="p-2 text-gray-500 hover:text-orange-600 rounded-full shrink-0"><Mic size={20} /></button>
                 )}
               </form>
             )}
