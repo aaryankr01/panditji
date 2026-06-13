@@ -443,7 +443,8 @@ exports.requestCompletion = async (req, res, next) => {
     const booking = await Booking.findById(req.params.id);
 
     if (!booking) return res.status(404).json({ success: false, message: 'Booking not found' });
-    if (booking.pandit.toString() !== req.user.id) {
+    const bookingPanditId = booking.pandit?._id ? booking.pandit._id.toString() : booking.pandit?.toString();
+    if (bookingPanditId !== req.user.id) {
       return res.status(401).json({ success: false, message: 'Not authorized' });
     }
     if (booking.status !== 'confirmed') {
@@ -484,7 +485,8 @@ exports.verifyCompletion = async (req, res, next) => {
       .populate('pandit', 'firstName lastName phone city');
 
     if (!booking) return res.status(404).json({ success: false, message: 'Booking not found' });
-    if (booking.pandit.toString() !== req.user.id) {
+    const bookingPanditId = booking.pandit?._id ? booking.pandit._id.toString() : booking.pandit?.toString();
+    if (bookingPanditId !== req.user.id) {
       return res.status(401).json({ success: false, message: 'Not authorized' });
     }
     if (booking.status !== 'confirmed') {
