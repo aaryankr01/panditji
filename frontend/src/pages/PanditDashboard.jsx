@@ -779,7 +779,7 @@ const PanditDashboard = () => {
               {/* Split Dashboard Content */}
               <div className="pd-dashboard-split" style={{ position: 'relative', zIndex: 1 }}>
                 {/* Upcoming Confirmed Pujas Widget */}
-                <div className="pd-widget-card">
+                <div className="pd-widget-card" style={{ display: 'flex', flexDirection: 'column' }}>
                   <div className="pd-widget-header">
                     <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, fontWeight: 800, color: C.maroon, display: 'flex', alignItems: 'center', gap: 8, margin: 0 }}>
                       <CalendarCheck size={20} color={C.saffron} /> {t('pd_upcoming_schedule') || 'Upcoming Pujas Schedule'}
@@ -790,8 +790,8 @@ const PanditDashboard = () => {
                   </div>
 
                   {bookings.filter(b => b.status === 'confirmed').length === 0 ? (
-                    <div style={{ borderRadius: 16, overflow: 'hidden' }}>
-                      <img src="/pictures/upcoming_empty.jpg" alt="No upcoming pujas" style={{ width: '100%', display: 'block' }} />
+                    <div style={{ borderRadius: 16, overflow: 'hidden', flex: 1, display: 'flex' }}>
+                      <img src="/pictures/upcoming_empty.jpg" alt="No upcoming pujas" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                     </div>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -820,7 +820,7 @@ const PanditDashboard = () => {
                 </div>
 
                 {/* Booking Requests Queue Widget */}
-                <div className="pd-widget-card">
+                <div className="pd-widget-card" style={{ display: 'flex', flexDirection: 'column' }}>
                   <div className="pd-widget-header">
                     <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, fontWeight: 800, color: C.maroon, display: 'flex', alignItems: 'center', gap: 8, margin: 0 }}>
                       <Bell size={20} color={C.saffron} /> {t('pd_pending_requests') || 'Pending Requests'}
@@ -828,8 +828,8 @@ const PanditDashboard = () => {
                   </div>
 
                   {bookings.filter(b => b.status === 'pending').length === 0 ? (
-                    <div style={{ borderRadius: 16, overflow: 'hidden' }}>
-                      <img src="/pictures/requests_empty.png" alt="No pending requests" style={{ width: '100%', display: 'block' }} />
+                    <div style={{ borderRadius: 16, overflow: 'hidden', flex: 1, display: 'flex' }}>
+                      <img src="/pictures/requests_empty.png" alt="No pending requests" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                     </div>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
