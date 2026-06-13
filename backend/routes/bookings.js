@@ -8,6 +8,8 @@ const {
   updateBookingLink,
   cancelBooking,
   requestCancelBooking,
+  requestCompletion,
+  verifyCompletion,
 } = require('../controllers/bookingController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
@@ -26,6 +28,8 @@ router.patch('/:id/request-cancel', authorize('devotee'), requestCancelBooking);
 router.patch('/:id/accept', authorize('pandit'), acceptBooking);
 router.patch('/:id/status', authorize('pandit'), updateBookingStatus);
 router.patch('/:id/link', authorize('pandit'), updateBookingLink);
+router.post('/:id/request-completion', authorize('pandit'), requestCompletion);
+router.post('/:id/verify-completion', authorize('pandit'), verifyCompletion);
 
 router.delete('/:id', deleteBooking);
 

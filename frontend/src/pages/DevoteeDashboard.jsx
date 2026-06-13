@@ -522,6 +522,9 @@ const DevoteeDashboard = () => {
     socket.on('bookingLinkUpdated', ({ bookingId, videoLink }) => {
       setBookings(prev => prev.map(b => b._id === bookingId ? { ...b, videoLink } : b));
     });
+    socket.on('bookingCompletionOtpGenerated', ({ bookingId, completionOtp }) => {
+      setBookings(prev => prev.map(b => b._id === bookingId ? { ...b, completionOtp } : b));
+    });
     return () => socket.disconnect();
   }, [token, user, isInitialized, navigate, fetchConversations, fetchMyBookings, fetchMyPayments]);
 
@@ -1167,6 +1170,11 @@ const DevoteeDashboard = () => {
                               style={{ background: C.purple, color: '#fff', padding: '4px 12px', borderRadius: 6, fontSize: 11, fontWeight: 800, textDecoration: 'none' }}>
                               {t('dd_join_now')}
                             </a>
+                          </div>
+                        )}
+                        {booking.status === 'confirmed' && booking.completionOtp && (
+                          <div style={{ marginTop: 10, background: C.goldLt, border: `1.5px dashed ${C.gold}`, borderRadius: 8, padding: '8px 12px', color: C.maroon, fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6, width: 'fit-content' }}>
+                            🔑 Completion OTP: <span style={{ color: C.saffron, fontSize: 15, fontFamily: 'monospace', letterSpacing: 1, fontWeight: 800 }}>{booking.completionOtp}</span>
                           </div>
                         )}
                       </div>

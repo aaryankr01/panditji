@@ -93,6 +93,10 @@ const PanditDashboard = () => {
   const timerRef = useRef(null);
   const [countdown, setCountdown] = useState(30);
   const [cancellationToast, setCancellationToast] = useState(null); // { pujaType, devotee }
+  const [completionModal, setCompletionModal] = useState(null); // booking
+  const [otpInput, setOtpInput] = useState('');
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
+  const [requestingOtp, setRequestingOtp] = useState(false);
 
   // Profile Edit State
   const [editForm, setEditForm] = useState({ firstName: '', lastName: '', phone: '', city: '', bio: '', experience: 0, feePerPuja: 1500, specializations: [] });
@@ -276,6 +280,41 @@ const PanditDashboard = () => {
       await api.patch(`/bookings/${bookingId}/status`, { status });
       setBookings(bookings.map(b => b._id === bookingId ? { ...b, status } : b));
     } catch { alert('Failed to update status'); }
+  };
+
+  const handleCompleteRequestClick = async (booking) => {
+    setCompletionModal(booking);
+    setRequestingOtp(true);
+    setOtpInput('');
+    try {
+      await api.post(`/bookings/${booking._id}/request-completion`);
+      setRequestingOtp(false);
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to request completion OTP');
+      setRequestingOtp(false);
+      setCompletionModal(null);
+    }
+  };
+
+  const handleCompleteVerifySubmit = async (e) => {
+    if (e) e.preventDefault();
+    if (otpInput.length !== 4) {
+      alert('Please enter a 4-digit OTP');
+      return;
+    }
+    setVerifyingOtp(true);
+    try {
+      const res = await api.post(`/bookings/${completionModal._id}/verify-completion`, { otp: otpInput });
+      if (res.data.success) {
+        setBookings(prev => prev.map(b => b._id === completionModal._id ? res.data.data : b));
+        alert('Puja completed and verified successfully!');
+        setCompletionModal(null);
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Verification failed. Please try again.');
+    } finally {
+      setVerifyingOtp(false);
+    }
   };
 
   const handleAddMeetingLink = async (bookingId) => {
@@ -595,6 +634,53 @@ const PanditDashboard = () => {
         </div>
       )}
 
+      {/* ═══ OTP COMPLETION VERIFICATION MODAL ═══ */}
+      {completionModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(44,26,14,0.6)', zIndex: 2100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, backdropFilter: 'blur(4px)' }}>
+          <div style={{ background: '#fff', borderRadius: 24, width: '100%', maxWidth: 400, overflow: 'hidden', boxShadow: '0 20px 40px rgba(0,0,0,0.25)', border: `1px solid ${C.border}` }}>
+            <div style={{ background: `linear-gradient(135deg, ${C.saffron} 0%, ${C.saffronDk} 100%)`, color: '#fff', padding: 24, textAlign: 'center' }}>
+              <ShieldCheck size={36} style={{ margin: '0 auto 12px' }} />
+              <h2 style={{ fontFamily: "'Playfair Display',serif", fontSize: 22, fontWeight: 900, marginBottom: 4 }}>Verify Completion</h2>
+              <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)', margin: 0 }}>Pt. Shashwat, verify the 4-digit code shared by the devotee</p>
+            </div>
+            
+            <form onSubmit={handleCompleteVerifySubmit} style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 20, alignItems: 'center' }}>
+              {requestingOtp ? (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, padding: '20px 0' }}>
+                  <span className="spin" style={{ width: 32, height: 32, border: `3px solid ${C.saffronLt}`, borderTopColor: C.saffron, borderRadius: '50%', display: 'inline-block' }} />
+                  <span style={{ fontSize: 14, color: C.textMid, fontWeight: 600 }}>Requesting completion code...</span>
+                </div>
+              ) : (
+                <>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '100%', alignItems: 'center' }}>
+                    <label style={{ fontSize: 13, fontWeight: 700, color: C.textMid, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Enter 4-Digit OTP</label>
+                    <input
+                      type="text"
+                      maxLength={4}
+                      placeholder="• • • •"
+                      value={otpInput}
+                      onChange={e => setOtpInput(e.target.value.replace(/\D/g, ''))}
+                      style={{ fontSize: 28, letterSpacing: 10, textAlign: 'center', width: 160, padding: '12px 8px', borderRadius: 12, border: `2px solid ${C.border}`, outline: 'none', fontFamily: 'monospace', color: C.maroon }}
+                      disabled={verifyingOtp}
+                      autoFocus
+                    />
+                  </div>
+                  
+                  <div style={{ display: 'flex', gap: 12, width: '100%', marginTop: 8 }}>
+                    <button type="button" onClick={() => setCompletionModal(null)} disabled={verifyingOtp} style={{ flex: 1, padding: 14, background: C.surface, color: C.textMid, fontWeight: 700, borderRadius: 14, border: 'none', cursor: 'pointer', fontSize: 14 }}>
+                      Cancel
+                    </button>
+                    <button type="submit" disabled={verifyingOtp || otpInput.length !== 4} style={{ flex: 1, padding: 14, background: C.success, color: '#fff', fontWeight: 700, borderRadius: 14, border: 'none', cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, boxShadow: otpInput.length === 4 ? '0 4px 12px rgba(30,125,60,0.2)' : 'none', opacity: otpInput.length === 4 ? 1 : 0.6 }}>
+                      {verifyingOtp ? <span className="spin" style={{ width: 18, height: 18, border: '2px solid rgba(255,255,255,0.4)', borderTopColor: '#fff', borderRadius: '50%', display: 'inline-block' }} /> : <>Verify & Complete</>}
+                    </button>
+                  </div>
+                </>
+              )}
+            </form>
+          </div>
+        </div>
+      )}
+
       {isMobileSidebarOpen && <div onClick={() => setIsMobileSidebarOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(44,26,14,0.5)', zIndex: 1999, backdropFilter: 'blur(2px)' }} />}
 
       {/* ═══ SIDEBAR ═══ */}
@@ -907,7 +993,7 @@ const PanditDashboard = () => {
                                 <Video size={16} /> {booking.videoLink ? (t('pd_edit_link') || 'Edit Link') : (t('pd_add_link') || 'Add Link')}
                               </button>
                             )}
-                            <button className="dd-btn dd-btn-green" onClick={() => updateBookingStatus(booking._id, 'completed')}>
+                            <button className="dd-btn dd-btn-green" onClick={() => handleCompleteRequestClick(booking)}>
                               <CheckCircle size={16} /> {t('pd_complete') || 'Complete'}
                             </button>
                           </>

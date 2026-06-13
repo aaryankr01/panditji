@@ -98,11 +98,12 @@ const ChatInterface = ({ otherUser, socket }) => {
           headers: { Authorization: `Bearer ${token}` }
         });
         const bookings = res.data.data;
-        const paidBooking = bookings.find(b =>
+        const activeBooking = bookings.find(b =>
           (b.pandit?._id === otherUser._id || b.devotee?._id === otherUser._id) &&
-          b.paymentStatus === 'paid'
+          b.paymentStatus === 'paid' &&
+          b.status === 'confirmed'
         );
-        setIsLocked(!paidBooking);
+        setIsLocked(!activeBooking);
       } catch (err) {
         console.error('Failed to check booking status', err);
       }

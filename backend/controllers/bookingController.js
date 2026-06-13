@@ -434,3 +434,94 @@ exports.updateBookingLink = async (req, res, next) => {
     next(err);
   }
 };
+
+// @desc    Request booking completion (generate 4-digit OTP)
+// @route   POST /api/bookings/:id/request-completion
+// @access  Private/Pandit
+exports.requestCompletion = async (req, res, next) => {
+  try {
+    const booking = await Booking.findById(req.params.id);
+
+    if (!booking) return res.status(404).json({ success: false, message: 'Booking not found' });
+    if (booking.pandit.toString() !== req.user.id) {
+      return res.status(401).json({ success: false, message: 'Not authorized' });
+    }
+    if (booking.status !== 'confirmed') {
+      return res.status(400).json({ success: false, message: 'Booking is not confirmed' });
+    }
+    if (booking.paymentStatus !== 'paid') {
+      return res.status(400).json({ success: false, message: 'Booking must be paid to complete' });
+    }
+
+    // Generate random 4-digit OTP code
+    const otp = Math.floor(1000 + Math.random() * 9000).toString();
+    booking.completionOtp = otp;
+    booking.otpGeneratedAt = new Date();
+    await booking.save();
+
+    // Notify Devotee via Socket
+    if (_io) {
+      _io.to(`user_${booking.devotee.toString()}`).emit('bookingCompletionOtpGenerated', {
+        bookingId: booking._id.toString(),
+        completionOtp: otp,
+      });
+    }
+
+    res.status(200).json({ success: true, message: 'Completion OTP generated successfully' });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Verify booking completion with OTP code
+// @route   POST /api/bookings/:id/verify-completion
+// @access  Private/Pandit
+exports.verifyCompletion = async (req, res, next) => {
+  try {
+    const { otp } = req.body;
+    const booking = await Booking.findById(req.params.id)
+      .populate('devotee', 'firstName lastName phone city')
+      .populate('pandit', 'firstName lastName phone city');
+
+    if (!booking) return res.status(404).json({ success: false, message: 'Booking not found' });
+    if (booking.pandit.toString() !== req.user.id) {
+      return res.status(401).json({ success: false, message: 'Not authorized' });
+    }
+    if (booking.status !== 'confirmed') {
+      return res.status(400).json({ success: false, message: 'Booking is not active/confirmed' });
+    }
+    if (!booking.completionOtp) {
+      return res.status(400).json({ success: false, message: 'OTP has not been generated for this booking' });
+    }
+    if (booking.completionOtp !== otp) {
+      return res.status(400).json({ success: false, message: 'Invalid OTP code' });
+    }
+
+    // OTP Verified! Complete Puja
+    booking.status = 'completed';
+    booking.completionOtp = null;
+    booking.otpGeneratedAt = null;
+    booking.completedAt = new Date();
+    await booking.save();
+
+    // Notify Devotee via Socket
+    if (_io) {
+      _io.to(`user_${booking.devotee._id.toString()}`).emit('bookingStatusUpdated', {
+        bookingId: booking._id.toString(),
+        status: 'completed',
+      });
+    }
+
+    // Persist notification
+    await createAndEmitNotification(booking.devotee._id.toString(), {
+      type: 'booking_accepted',
+      title: '✅ Puja Completed',
+      message: `Your ${booking.pujaType} booking has been successfully completed.`,
+      bookingId: booking._id,
+    });
+
+    res.status(200).json({ success: true, data: booking });
+  } catch (err) {
+    next(err);
+  }
+};
