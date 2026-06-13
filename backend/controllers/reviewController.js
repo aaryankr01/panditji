@@ -1,27 +1,58 @@
 const Review = require('../models/Review');
 const User = require('../models/User');
+const Booking = require('../models/Booking');
+const Pandit = require('../models/Pandit');
 
 // @desc    Add a review for a pandit
 // @route   POST /api/reviews
 // @access  Private/Devotee
 exports.addReview = async (req, res, next) => {
   try {
-    const { panditId, rating, comment } = req.body;
+    const { bookingId, rating, comment } = req.body;
     const devoteeId = req.user.id;
 
-    // Check if pandit exists
-    const pandit = await User.findById(panditId);
-    if (!pandit || pandit.role !== 'pandit') {
-      return res.status(404).json({ success: false, message: 'Pandit not found' });
+    // Find and validate the booking
+    const booking = await Booking.findById(bookingId);
+    if (!booking) {
+      return res.status(404).json({ success: false, message: 'Booking not found' });
+    }
+
+    if (booking.devotee.toString() !== devoteeId) {
+      return res.status(403).json({ success: false, message: 'You are not authorized to review this booking' });
+    }
+
+    if (booking.status !== 'completed') {
+      return res.status(400).json({ success: false, message: 'You can only review completed bookings' });
+    }
+
+    if (booking.reviewed) {
+      return res.status(400).json({ success: false, message: 'This booking has already been reviewed' });
+    }
+
+    // Get pandit and their profile
+    const panditId = booking.pandit;
+    if (!panditId) {
+      return res.status(400).json({ success: false, message: 'No pandit assigned to this booking' });
+    }
+
+    const panditProfile = await Pandit.findOne({ user: panditId });
+    if (!panditProfile) {
+      return res.status(404).json({ success: false, message: 'Pandit profile not found' });
     }
 
     // Create review
     const review = await Review.create({
-      pandit: panditId,
+      booking: bookingId,
       devotee: devoteeId,
+      pandit: panditId,
+      panditProfile: panditProfile._id,
       rating,
       comment
     });
+
+    // Mark booking as reviewed
+    booking.reviewed = true;
+    await booking.save();
 
     res.status(201).json({ success: true, data: review });
   } catch (err) {

@@ -95,7 +95,7 @@ const PanditProfile = () => {
             </div>
             <h1 className="text-3xl font-bold text-gray-800 mb-2">{t('profile_pt_prefix')} {pandit.firstName} {pandit.lastName}</h1>
             <div className="flex items-center gap-2 text-yellow-500 font-bold mb-4">
-              <Star fill="currentColor" /> 4.9 <span className="text-gray-400 font-normal text-sm">{t('profile_reviews', { count: 120 })}</span>
+              <Star fill="currentColor" /> {pandit.panditProfile?.rating || 3.8} <span className="text-gray-400 font-normal text-sm">{t('profile_reviews', { count: pandit.panditProfile?.totalReviews || 0 })}</span>
             </div>
             <div className="flex items-center gap-2 text-gray-600 mb-6 bg-gray-50 px-4 py-2 rounded-full border border-gray-100">
               <MapPin size={18} /> {pandit.city || t('profile_available_worldwide')}

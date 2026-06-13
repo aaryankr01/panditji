@@ -39,7 +39,7 @@ const panditSchema = new mongoose.Schema(
       type: { type: String, enum: ['Point'], default: 'Point' },
       coordinates: { type: [Number], default: [0, 0] }, // [lng, lat]
     },
-    rating: { type: Number, default: 0, min: 0, max: 5 },
+    rating: { type: Number, default: 3.8, min: 0, max: 5 },
     totalReviews: { type: Number, default: 0 },
     totalBookings: { type: Number, default: 0 },
     isApproved: { type: Boolean, default: false },
