@@ -516,6 +516,7 @@ const DevoteeDashboard = () => {
         return [booking, ...prev];
       });
       setSelectedChatUser(booking.pandit);
+      setMobileChatView('chat');
       setActiveTab('chat');
     });
     socket.on('bookingLinkUpdated', ({ bookingId, videoLink }) => {
@@ -525,7 +526,7 @@ const DevoteeDashboard = () => {
   }, [token, user, isInitialized, navigate, fetchConversations, fetchMyBookings, fetchMyPayments]);
 
   const handleLogout = () => { logout(); navigate('/'); };
-  const startChat = (pandit) => { setSelectedChatUser(pandit); setActiveTab('chat'); };
+  const startChat = (pandit) => { setSelectedChatUser(pandit); setMobileChatView('chat'); setActiveTab('chat'); };
 
   const handleOpenBookingModal = (panditId) => {
     const pandit = pandits.find(p => p._id === panditId);
@@ -661,6 +662,7 @@ const DevoteeDashboard = () => {
               fetchMyPayments();
               fetchConversations();
               setSelectedChatUser(booking.pandit);
+              setMobileChatView('chat');
               setActiveTab('chat');
             }
           } catch (err) {
@@ -754,7 +756,7 @@ const DevoteeDashboard = () => {
           <CancelContactModal
             booking={cancelContactModal}
             onClose={() => setCancelContactModal(null)}
-            onGoToChat={(pandit) => { setSelectedChatUser(pandit); setActiveTab('chat'); }}
+            onGoToChat={(pandit) => { setSelectedChatUser(pandit); setMobileChatView('chat'); setActiveTab('chat'); }}
             onRequestCancel={requestCancelBooking}
           />
         )}

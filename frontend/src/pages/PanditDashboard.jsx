@@ -810,7 +810,7 @@ const PanditDashboard = () => {
                               </span>
                             </div>
                           </div>
-                          <button onClick={() => { setSelectedChatUser(booking.devotee); setActiveTab('chat'); }} style={{ padding: '8px 12px', background: C.maroon, color: '#fff', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <button onClick={() => { setSelectedChatUser(booking.devotee); setMobileChatView('chat'); setActiveTab('chat'); }} style={{ padding: '8px 12px', background: C.maroon, color: '#fff', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
                             <MessageSquare size={14} /> {t('dd_chat') || 'Chat'}
                           </button>
                         </div>
@@ -884,7 +884,7 @@ const PanditDashboard = () => {
                       </div>
                       <div className="pd-booking-actions" style={{ display: 'flex', gap: 8 }}>
                         {booking.paymentStatus === 'paid' && (
-                          <button className="dd-btn dd-btn-ghost" onClick={() => { setSelectedChatUser(booking.devotee); setActiveTab('chat'); }}>
+                          <button className="dd-btn dd-btn-ghost" onClick={() => { setSelectedChatUser(booking.devotee); setMobileChatView('chat'); setActiveTab('chat'); }}>
                             <MessageSquare size={16} /> {t('dd_chat')}
                           </button>
                         )}
