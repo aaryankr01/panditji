@@ -633,22 +633,7 @@ const PanditDashboard = () => {
           </div>
         </div>
 
-        {/* Decorative Peacock Watermark */}
-        <div style={{ position: 'absolute', bottom: 80, left: -20, width: 220, height: 220, pointerEvents: 'none', opacity: 0.05, zIndex: 0, color: C.maroon }}>
-          <svg viewBox="0 0 100 100" width="100%" height="100%" fill="none" stroke="currentColor" strokeWidth="1">
-            <path d="M50 30 C 47 20, 53 20, 50 30 Z" />
-            <path d="M48 30 C 42 21, 47 19, 48 30 Z" />
-            <path d="M52 30 C 58 21, 53 19, 52 30 Z" />
-            <path d="M50 30 C 45 35, 45 42, 50 45 C 55 42, 55 35, 50 30" />
-            <path d="M50 45 C 40 48, 38 60, 42 70 C 46 80, 54 80, 58 70 C 62 60, 60 48, 50 45" />
-            <path d="M50 30 L 48 33 L 52 33 Z" fill="currentColor" />
-            <path d="M42 70 C 30 75, 20 65, 15 50 C 10 35, 25 25, 40 38" />
-            <path d="M58 70 C 70 75, 80 65, 85 50 C 90 35, 75 25, 60 38" />
-            <path d="M45 75 C 35 85, 25 80, 20 90 C 15 100, 35 100, 48 80" />
-            <path d="M55 75 C 65 85, 75 80, 80 90 C 85 100, 65 100, 52 80" />
-            <path d="M50 78 C 50 92, 45 98, 50 100 C 55 98, 50 92, 50 78" />
-          </svg>
-        </div>
+
 
         <nav style={{ flex: 1, padding: 16, display: 'flex', flexDirection: 'column', gap: 8, zIndex: 1, position: 'relative' }}>
           {[
@@ -739,25 +724,7 @@ const PanditDashboard = () => {
 
           {activeTab === 'overview' && (
             <div style={{ maxWidth: 1200, margin: '0 auto', width: '100%', position: 'relative' }}>
-              {/* Decorative Mandala Watermark */}
-              <div style={{ position: 'absolute', bottom: -50, right: -50, width: 350, height: 350, pointerEvents: 'none', opacity: 0.04, zIndex: 0, color: C.maroon }}>
-                <svg viewBox="0 0 100 100" width="100%" height="100%" fill="none" stroke="currentColor" strokeWidth="1">
-                  <circle cx="50" cy="50" r="45" />
-                  <circle cx="50" cy="50" r="35" />
-                  <circle cx="50" cy="50" r="25" />
-                  <circle cx="50" cy="50" r="15" />
-                  {Array.from({ length: 16 }).map((_, i) => {
-                    const angle = (i * 360) / 16;
-                    return (
-                      <g key={i} transform={`rotate(${angle} 50 50)`}>
-                        <line x1="50" y1="5" x2="50" y2="15" />
-                        <path d="M47 15 C 47 5, 53 5, 53 15 Z" />
-                        <path d="M45 25 C 45 15, 55 15, 55 25 Z" />
-                      </g>
-                    );
-                  })}
-                </svg>
-              </div>
+
 
               {/* Stats Grid */}
               <div className="pd-stats-grid" style={{ position: 'relative', zIndex: 1 }}>
@@ -824,7 +791,7 @@ const PanditDashboard = () => {
 
                   {bookings.filter(b => b.status === 'confirmed').length === 0 ? (
                     <div style={{ borderRadius: 16, overflow: 'hidden' }}>
-                      <img src="/pictures/upcoming_empty.png" alt="No upcoming pujas" style={{ width: '100%', display: 'block' }} />
+                      <img src="/pictures/upcoming_empty.jpg" alt="No upcoming pujas" style={{ width: '100%', display: 'block' }} />
                     </div>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
