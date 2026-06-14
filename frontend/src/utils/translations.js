@@ -272,6 +272,12 @@ const translations = {
     pd_address: 'Address:',
     pd_mode: 'Mode:',
     pd_meeting_link: 'Meeting Link:',
+    pd_bank_details_title: 'Bank & Payout Details',
+    pd_bank_name: 'Bank Name',
+    pd_account_holder_name: 'Account Holder Name',
+    pd_account_number: 'Account Number',
+    pd_ifsc_code: 'IFSC Code',
+    pd_upi_id: 'UPI ID (Optional)',
 
     // Footer
     footer_tagline: 'Connecting devotees with verified Pandits across India.',
@@ -780,6 +786,12 @@ const translations = {
     pd_address: 'पता:',
     pd_mode: 'मोड:',
     pd_meeting_link: 'मीटिंग लिंक:',
+    pd_bank_details_title: 'बैंक और भुगतान विवरण',
+    pd_bank_name: 'बैंक का नाम',
+    pd_account_holder_name: 'खाता धारक का नाम',
+    pd_account_number: 'खाता संख्या',
+    pd_ifsc_code: 'आईएफएससी कोड',
+    pd_upi_id: 'यूपीआई आईडी (वैकल्पिक)',
 
     // Footer
     footer_tagline: 'भारत भर में श्रद्धालुओं को सत्यापित पंडितों से जोड़ना।',
