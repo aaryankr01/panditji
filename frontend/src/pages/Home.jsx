@@ -266,44 +266,34 @@ const timeAgo = (dateStr) => {
   return months === 1 ? '1 month ago' : `${months} months ago`;
 };
 
-const FALLBACK_REVIEWS = [
+const APP_REVIEWS = [
   {
-    _id: 'fb1',
+    _id: 'ar1',
     rating: 5,
-    comment: 'The Griha Pravesh puja was conducted with such devotion and precision — every mantra felt alive. Panditji arrived early, explained each ritual to our family beautifully, and the energy in our new home was transformed. We couldn\'t have asked for a better beginning.',
-    devotee: { firstName: 'Priya', lastName: 'Sharma' },
-    createdAt: new Date(Date.now() - 4 * 86400000).toISOString(),
-    booking: { pujaType: 'Griha Pravesh' },
+    comment: 'Booking a Pandit was always a stressful task for our family, but this app made it incredibly easy. Within 5 minutes, we booked a verified Pandit for our Griha Pravesh. The real-time updates and transparent pricing are fantastic!',
+    devotee: { firstName: 'Aditya', lastName: 'Singhal' },
+    tag: 'Verified User',
+    date: '3 days ago'
   },
   {
-    _id: 'fb2',
+    _id: 'ar2',
     rating: 5,
-    comment: 'I was worried about finding a knowledgeable Pandit for our son\'s Vivah, but PanditJi completely exceeded all expectations. The ceremony was flawless — traditional, soulful, and deeply meaningful. Every guest was moved. Absolutely 5 stars!',
-    devotee: { firstName: 'Rajesh', lastName: 'Agarwal' },
-    createdAt: new Date(Date.now() - 11 * 86400000).toISOString(),
-    booking: { pujaType: 'Vivah Ceremony' },
+    comment: 'I am amazed by the quality of service. The Pandit arrived on time, brought all the required Samagri, and conducted the puja beautifully. The built-in chat and secure payments give total peace of mind. Excellent app!',
+    devotee: { firstName: 'Meenakshi', lastName: 'Patel' },
+    tag: 'Verified Devotee',
+    date: '1 week ago'
   },
   {
-    _id: 'fb3',
+    _id: 'ar3',
     rating: 5,
-    comment: 'Booked for Satyanarayan Katha and the experience was divine. Panditji\'s voice and pronunciation were impeccable. He was patient with our elderly parents and kept the children engaged throughout. This platform is a blessing for every Hindu family.',
-    devotee: { firstName: 'Anita', lastName: 'Verma' },
-    createdAt: new Date(Date.now() - 18 * 86400000).toISOString(),
-    booking: { pujaType: 'Satyanarayan Katha' },
-  },
+    comment: 'Finally, a modern platform for our spiritual needs. The interface is clean, and the booking process is seamless. The Panchang feature is also very useful for finding auspicious dates. Highly recommended app for everyone!',
+    devotee: { firstName: 'Vikram', lastName: 'Malhotra' },
+    tag: 'Verified Devotee',
+    date: '2 weeks ago'
+  }
 ];
 
 const ReviewsSection = () => {
-  const [reviews, setReviews] = useState([]);
-
-  useEffect(() => {
-    api.get('/reviews/latest')
-      .then(res => { if ((res.data.data || []).length > 0) setReviews(res.data.data); })
-      .catch(() => {});
-  }, []);
-
-  const displayReviews = reviews.length > 0 ? reviews : FALLBACK_REVIEWS;
-
   return (
     <section className="py-20 px-4 bg-surface overflow-hidden relative">
       <div className="absolute top-0 left-0 w-96 h-96 bg-saffron-light rounded-full blur-[120px] -z-10 opacity-40" />
@@ -312,16 +302,16 @@ const ReviewsSection = () => {
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="text-center mb-14">
-          <span className="text-saffron font-black text-sm uppercase tracking-widest mb-3 block">Real Stories</span>
+          <span className="text-saffron font-black text-sm uppercase tracking-widest mb-3 block">App Experience</span>
           <h2 className="text-4xl lg:text-5xl font-black text-maroon leading-tight font-serif mb-4">
-            What Devotees <span className="text-saffron italic">Say</span>
+            What Devotees <span className="text-saffron italic">Say About Us</span>
           </h2>
-          <p className="text-textMid max-w-xl mx-auto">Hear from families who experienced the divine touch of our verified Pandits.</p>
+          <p className="text-textMid max-w-xl mx-auto">Hear from families who booked their sacred pujas seamlessly using the PanditJi app.</p>
         </div>
 
         {/* Reviews Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {displayReviews.map((review) => (
+          {APP_REVIEWS.map((review) => (
             <div
               key={review._id}
               className="bg-white rounded-[28px] border border-brandborder p-6 flex flex-col gap-4 shadow-sm hover:shadow-xl hover:shadow-saffron-light/40 hover:-translate-y-1 transition-all duration-300"
@@ -333,9 +323,7 @@ const ReviewsSection = () => {
 
               {/* Comment */}
               <p className="text-textMid text-sm leading-relaxed flex-1 font-medium">
-                {review.comment
-                  ? `"${review.comment}"`
-                  : '"A truly divine and memorable puja experience. Highly recommended!"'}
+                "{review.comment}"
               </p>
 
               {/* Stars */}
@@ -355,22 +343,18 @@ const ReviewsSection = () => {
               <div className="border-t border-brandborder pt-4 flex items-center gap-3">
                 {/* Avatar */}
                 <div className="w-10 h-10 rounded-full bg-maroon text-white flex items-center justify-center font-bold text-base flex-shrink-0 overflow-hidden">
-                  {review.devotee?.avatar
-                    ? <img src={review.devotee.avatar} alt="" className="w-full h-full object-cover" />
-                    : (review.devotee?.firstName?.charAt(0) || '🙏')}
+                  {review.devotee.firstName.charAt(0)}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-bold text-maroon text-sm truncate">
-                    {review.devotee?.firstName} {review.devotee?.lastName}
+                    {review.devotee.firstName} {review.devotee.lastName}
                   </p>
-                  <p className="text-textMuted text-xs">{timeAgo(review.createdAt)}</p>
+                  <p className="text-textMuted text-xs">{review.date}</p>
                 </div>
-                {/* Puja tag */}
-                {review.booking?.pujaType && (
-                  <span className="text-[10px] bg-saffron-light text-saffron border border-brandborder px-2 py-1 rounded-full font-black flex-shrink-0">
-                    🕉 {review.booking.pujaType.split(' ')[0]}
-                  </span>
-                )}
+                {/* Tag */}
+                <span className="text-[10px] bg-saffron-light text-saffron border border-brandborder px-2 py-1 rounded-full font-black flex-shrink-0">
+                  {review.tag}
+                </span>
               </div>
             </div>
           ))}
