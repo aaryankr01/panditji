@@ -210,6 +210,8 @@ const translations = {
     dd_past_transactions: 'Past Transactions',
     dd_no_payment_history: 'No payment history found.',
     dd_payment_success: 'SUCCESS',
+    dd_upi_lite_wallet: 'UPI Lite Wallet',
+    dd_pay_with_wallet: 'Pay with Wallet',
 
     // PanditDashboard
     pd_booking_requests: 'Booking Requests',
@@ -716,6 +718,8 @@ const translations = {
     dd_past_transactions: 'पिछले लेन-देन',
     dd_no_payment_history: 'कोई भुगतान इतिहास नहीं मिला।',
     dd_payment_success: 'सफल',
+    dd_upi_lite_wallet: 'यूपीआई लाइट वॉलेट',
+    dd_pay_with_wallet: 'वॉलेट से भुगतान करें',
 
     // PanditDashboard
     pd_booking_requests: 'बुकिंग अनुरोध',
