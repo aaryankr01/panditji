@@ -484,6 +484,7 @@ const DevoteeDashboard = () => {
   const [cancelConfirmModal, setCancelConfirmModal] = useState(null); // unpaid cancel confirm
   const [reviewModal, setReviewModal] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [walletBalance, setWalletBalance] = useState(0);
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const intentCity = searchParams.get('city');
@@ -599,6 +600,42 @@ const DevoteeDashboard = () => {
     } catch (err) { console.error(err); }
   }, [token]);
 
+  const fetchWalletBalance = useCallback(async () => {
+    try {
+      const res = await api.get('/auth/me', { headers: { Authorization: `Bearer ${token}` } });
+      if (res.data.success && res.data.data) {
+        setWalletBalance(res.data.data.walletBalance || 0);
+      }
+    } catch (err) {
+      console.error('Error fetching wallet balance:', err);
+    }
+  }, [token]);
+
+  const handlePayWithWallet = async (booking) => {
+    if (!window.confirm(`Are you sure you want to pay ₹${booking.fee} using your UPI Lite Wallet balance?`)) return;
+    try {
+      setLoading(true);
+      const res = await api.post('/payments/pay-with-wallet', { bookingId: booking._id }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.data.success) {
+        alert('Payment Successful! You can now chat with the Pandit.');
+        setAcceptedBooking(null);
+        fetchMyBookings();
+        fetchMyPayments();
+        fetchConversations();
+        fetchWalletBalance();
+        setSelectedChatUser(booking.pandit);
+        setMobileChatView('chat');
+        setActiveTab('chat');
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Error processing wallet payment');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (!isInitialized || !token || user?.role !== 'devotee') return;
     fetchPandits();
@@ -610,6 +647,7 @@ const DevoteeDashboard = () => {
     fetchConversations();
     fetchMyBookings();
     fetchMyPayments();
+    fetchWalletBalance();
 
     const socket = io(import.meta.env.VITE_SOCKET_URL || 'https://panditji-1tf8.onrender.com', { transports: ['websocket'] });
     socketRef.current = socket;
@@ -635,7 +673,7 @@ const DevoteeDashboard = () => {
       setBookings(prev => prev.map(b => b._id === bookingId ? { ...b, completionOtp } : b));
     });
     return () => socket.disconnect();
-  }, [token, user, isInitialized, navigate, fetchConversations, fetchMyBookings, fetchMyPayments]);
+  }, [token, user, isInitialized, navigate, fetchConversations, fetchMyBookings, fetchMyPayments, fetchWalletBalance]);
 
   const handleLogout = () => { logout(); navigate('/'); };
   const startChat = (pandit) => { setSelectedChatUser(pandit); setMobileChatView('chat'); setActiveTab('chat'); };
@@ -1057,7 +1095,7 @@ const DevoteeDashboard = () => {
                 <X size={16} />
               </button>
             </div>
-            <div className="dd-profile-area">
+            <div className="dd-profile-area" style={{ paddingBottom: 15 }}>
               <div className="dd-avatar-wrap">
                 {user?.avatar
                   ? <img src={user.avatar} alt="Profile" className="dd-avatar-img" />
@@ -1069,6 +1107,25 @@ const DevoteeDashboard = () => {
               </div>
               <div className="dd-user-name">{user?.firstName} {user?.lastName}</div>
               {user?.city && <div className="dd-user-city"><MapPin size={11} /> {user.city}</div>}
+              
+              {/* UPI Lite Wallet Card */}
+              <div style={{
+                marginTop: 18,
+                padding: '12px 14px',
+                background: 'linear-gradient(135deg, #7B1D0E 0%, #E8710A 100%)',
+                borderRadius: 12,
+                color: '#fff',
+                width: '88%',
+                boxShadow: '0 4px 10px rgba(123, 29, 14, 0.25)',
+                textAlign: 'left'
+              }}>
+                <div style={{ fontSize: 9, opacity: 0.8, textTransform: 'uppercase', tracking: '0.5px', fontWeight: 700 }}>
+                  ⚡ {t('dd_upi_lite_wallet') || 'UPI Lite Wallet'}
+                </div>
+                <div style={{ fontSize: 20, fontWeight: 900, marginTop: 4, fontFamily: "'Playfair Display', serif" }}>
+                  ₹{walletBalance.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                </div>
+              </div>
             </div>
           </div>
           <nav className="dd-nav">
@@ -1501,9 +1558,31 @@ const DevoteeDashboard = () => {
                         <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 24, fontWeight: 900, color: C.maroon, marginBottom: 8 }}>
                           ₹{booking.fee?.toLocaleString() || '1,500'}
                         </div>
-                        <button className="dd-btn dd-btn-primary" onClick={() => handlePayment(booking)} disabled={loading}>
-                          {loading ? (t('dd_processing') || 'Processing...') : (t('dd_pay_now') || 'Pay Now')}
-                        </button>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-end' }}>
+                          <button className="dd-btn dd-btn-primary" onClick={() => handlePayment(booking)} disabled={loading} style={{ width: '100%' }}>
+                            {loading ? (t('dd_processing') || 'Processing...') : (t('dd_pay_now') || 'Pay Now')}
+                          </button>
+                          {walletBalance >= booking.fee && (
+                            <button 
+                              className="dd-btn" 
+                              onClick={() => handlePayWithWallet(booking)} 
+                              disabled={loading}
+                              style={{ 
+                                background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)', 
+                                color: '#fff', 
+                                border: 'none',
+                                fontSize: 11,
+                                fontWeight: 800,
+                                padding: '6px 12px',
+                                borderRadius: 8,
+                                cursor: 'pointer',
+                                width: '100%'
+                              }}
+                            >
+                              {loading ? (t('dd_processing') || 'Processing...') : (t('dd_pay_with_wallet') || '⚡ Pay with Wallet')}
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))}

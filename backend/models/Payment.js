@@ -28,6 +28,13 @@ const paymentSchema = new mongoose.Schema(
     month: { type: String }, // e.g. "2024-08" for subscription tracking
     description: { type: String },
     failureReason: { type: String },
+    payoutStatus: {
+      type: String,
+      enum: ['pending', 'paid'],
+      default: 'pending',
+    },
+    payoutDate: { type: Date },
+    payoutTransactionId: { type: String },
   },
   { timestamps: true }
 );

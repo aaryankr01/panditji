@@ -51,6 +51,8 @@ const userSchema = new mongoose.Schema(
     isActive: { type: Boolean, default: true },
     isVerified: { type: Boolean, default: false },
     lastLogin: { type: Date },
+    // Devotee wallet balance in Rupees
+    walletBalance: { type: Number, default: 0 },
     // Pandit-specific fields (stored on User for simplicity)
     panditProfile: {
       type: mongoose.Schema.Types.ObjectId,
