@@ -298,6 +298,7 @@ const ReviewsSection = () => {
   const { user, token } = useAuthStore();
   const [reviews, setReviews] = useState([]);
   const [showModal, setShowModal] = useState(false);
+  const [showAllModal, setShowAllModal] = useState(false);
   const [rating, setRating] = useState(5);
   const [hoverRating, setHoverRating] = useState(0);
   const [comment, setComment] = useState('');
@@ -342,7 +343,7 @@ const ReviewsSection = () => {
     }
   };
 
-  // Convert DB user reviews to the display format
+  // Convert DB user reviews to display format
   const dbReviewsFormatted = reviews.map(r => ({
     _id: r._id,
     rating: r.rating,
@@ -355,8 +356,20 @@ const ReviewsSection = () => {
     date: 'Just now'
   }));
 
-  // Merge so we show user reviews first, then fallback reviews, capped at 6
-  const displayReviews = [...dbReviewsFormatted, ...APP_REVIEWS].slice(0, 6);
+  // Merge so we show user reviews first, then fallback reviews
+  const displayReviews = [...dbReviewsFormatted, ...APP_REVIEWS];
+  const featuredReviews = displayReviews.slice(0, 3); // Display only top 3 on home page
+
+  // Calculate stats for Flipkart / Play Store style breakdown
+  const totalCount = displayReviews.length;
+  const sumRatings = displayReviews.reduce((sum, r) => sum + r.rating, 0);
+  const averageRating = totalCount > 0 ? (sumRatings / totalCount).toFixed(1) : '0.0';
+
+  const starCounts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+  displayReviews.forEach(r => {
+    const rounded = Math.min(5, Math.max(1, Math.round(r.rating)));
+    starCounts[rounded] = (starCounts[rounded] || 0) + 1;
+  });
 
   return (
     <section className="py-20 px-4 bg-surface overflow-hidden relative">
@@ -372,23 +385,32 @@ const ReviewsSection = () => {
           </h2>
           <p className="text-textMid max-w-xl mx-auto mb-6">Hear from families who booked their sacred pujas seamlessly using the PanditJi app.</p>
           
-          {user ? (
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            {user ? (
+              <button
+                onClick={() => { setShowModal(true); setError(''); }}
+                className="bg-saffron hover:bg-saffron-dark text-white font-bold px-6 py-3 rounded-full shadow-md hover:-translate-y-0.5 active:translate-y-0 transition-all text-sm flex items-center gap-2"
+              >
+                <MessageSquare size={16} /> Write an App Review
+              </button>
+            ) : (
+              <p className="text-xs text-textMuted bg-saffron-light/50 px-4 py-2 rounded-full border border-brandborder/50">
+                Logged in users can share their app experience here!
+              </p>
+            )}
+
             <button
-              onClick={() => { setShowModal(true); setError(''); }}
-              className="bg-saffron hover:bg-saffron-dark text-white font-bold px-6 py-3 rounded-full shadow-md hover:-translate-y-0.5 active:translate-y-0 transition-all text-sm flex items-center gap-2 mx-auto"
+              onClick={() => setShowAllModal(true)}
+              className="border-2 border-maroon text-maroon hover:bg-maroon hover:text-white font-bold px-6 py-2.5 rounded-full transition-all text-sm flex items-center gap-2"
             >
-              <MessageSquare size={16} /> Write an App Review
+              See All Reviews ({totalCount})
             </button>
-          ) : (
-            <p className="text-xs text-textMuted bg-saffron-light/50 px-4 py-2 rounded-full w-max mx-auto border border-brandborder/50">
-              Logged in users can share their app experience here!
-            </p>
-          )}
+          </div>
         </div>
 
-        {/* Reviews Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {displayReviews.map((review) => (
+        {/* Featured Reviews Grid (Showing top 3) */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {featuredReviews.map((review) => (
             <div
               key={review._id}
               className="bg-white rounded-[28px] border border-brandborder p-6 flex flex-col gap-4 shadow-sm hover:shadow-xl hover:shadow-saffron-light/40 hover:-translate-y-1 transition-all duration-300"
@@ -521,6 +543,117 @@ const ReviewsSection = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Flipkart / Play Store Style "See All Reviews" Modal */}
+      {showAllModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(44,26,14,0.72)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+          <div style={{ background: '#fff', borderRadius: 24, maxWidth: 880, width: '100%', overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.3)', display: 'flex', flexDirection: 'column', maxHeight: '90vh' }}>
+            {/* Header */}
+            <div style={{ background: 'linear-gradient(135deg, #7B1D0E 0%, #E8710A 100%)', padding: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+              <div>
+                <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.75)', textTransform: 'uppercase', fontWeight: 900, letterSpacing: '1px' }}>Feedback Center</span>
+                <h2 style={{ fontFamily: "'Playfair Display',serif", color: '#fff', fontWeight: 900, fontSize: 22, marginTop: 2 }}>
+                  App Experience Reviews
+                </h2>
+              </div>
+              <button
+                onClick={() => setShowAllModal(false)}
+                style={{ background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: '50%', width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#fff' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Split Content */}
+            <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', overflowY: 'auto', flex: 1, padding: 24, gap: 24 }}>
+              {/* Left Side: Rating Breakdown */}
+              <div style={{ flex: '1 1 280px', display: 'flex', flexDirection: 'column', gap: 16, borderRight: '1px solid #F2DFD8', paddingRight: 24 }}>
+                <h3 style={{ fontSize: 16, fontWeight: 900, color: '#7B1D0E' }}>Overall Ratings</h3>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+                  <span style={{ fontSize: 48, fontWeight: 900, color: '#E8710A', lineHeight: 1 }}>{averageRating}</span>
+                  <span style={{ fontSize: 14, color: '#6B4C3B', fontWeight: 700 }}>out of 5</span>
+                </div>
+
+                {/* Stars row */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  {[1, 2, 3, 4, 5].map((s) => (
+                    <Star
+                      key={s}
+                      size={20}
+                      fill={s <= Math.round(Number(averageRating)) ? '#E8710A' : 'none'}
+                      color={s <= Math.round(Number(averageRating)) ? '#E8710A' : '#d1d5db'}
+                    />
+                  ))}
+                  <span style={{ fontSize: 12, color: '#6B4C3B', marginLeft: 4, fontWeight: 700 }}>({totalCount} reviews)</span>
+                </div>
+
+                {/* Rating bars */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
+                  {[5, 4, 3, 2, 1].map((stars) => {
+                    const count = starCounts[stars] || 0;
+                    const percent = totalCount > 0 ? Math.round((count / totalCount) * 100) : 0;
+                    return (
+                      <div key={stars} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: '#6B4C3B', width: 12 }}>{stars}</span>
+                        <Star size={12} fill="#E8710A" color="#E8710A" />
+                        <div style={{ flex: 1, height: 8, background: '#F9F4F0', borderRadius: 4, overflow: 'hidden' }}>
+                          <div style={{ width: `${percent}%`, height: '100%', background: 'linear-gradient(90deg, #E8710A, #7B1D0E)', borderRadius: 4 }} />
+                        </div>
+                        <span style={{ fontSize: 11, color: '#6B4C3B', width: 24, textAlign: 'right', fontWeight: 600 }}>{percent}%</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Right Side: Scrollable List of All Reviews */}
+              <div style={{ flex: '2 2 400px', display: 'flex', flexDirection: 'column', gap: 16, maxHeight: 420, overflowY: 'auto', paddingRight: 8 }}>
+                {displayReviews.map((review) => (
+                  <div
+                    key={review._id}
+                    style={{ background: '#FAF6F2', border: '1px solid #F2DFD8', borderRadius: 18, padding: 18, display: 'flex', flexDirection: 'column', gap: 10 }}
+                  >
+                    {/* Header: Name, Stars, Tag */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#7B1D0E', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 14 }}>
+                          {review.devotee.firstName.charAt(0)}
+                        </div>
+                        <div>
+                          <p style={{ fontWeight: 800, color: '#7B1D0E', fontSize: 13, margin: 0 }}>
+                            {review.devotee.firstName} {review.devotee.lastName}
+                          </p>
+                          <p style={{ fontSize: 11, color: '#6B4C3B', margin: 0, opacity: 0.8 }}>{review.date}</p>
+                        </div>
+                      </div>
+                      <span style={{ fontSize: 10, background: '#FFF0E5', color: '#E8710A', border: '1px solid #FFD9C2', padding: '3px 8px', borderRadius: 12, fontWeight: 900 }}>
+                        {review.tag}
+                      </span>
+                    </div>
+
+                    {/* Stars */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                      {[1, 2, 3, 4, 5].map(s => (
+                        <Star
+                          key={s}
+                          size={12}
+                          fill={s <= review.rating ? '#E8710A' : 'none'}
+                          color={s <= review.rating ? '#E8710A' : '#d1d5db'}
+                        />
+                      ))}
+                    </div>
+
+                    {/* Comment */}
+                    <p style={{ fontSize: 13, color: '#6B4C3B', margin: 0, lineHeight: 1.5, fontWeight: 500 }}>
+                      "{review.comment}"
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       )}
