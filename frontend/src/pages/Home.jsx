@@ -243,7 +243,6 @@ const HinduCalendar = () => {
               </div>
             ))}
 
-            {/* CTA */}
             <Link to="/pujas" className="flex items-center justify-center gap-2 bg-maroon text-white font-black py-4 px-6 rounded-2xl hover:bg-saffron transition-all duration-300 shadow-lg shadow-maroon/20">
               <Calendar size={18} /> {t('panchang_book_date')} <ArrowRight size={16} />
             </Link>
@@ -254,47 +253,9 @@ const HinduCalendar = () => {
   );
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-
 // ─── Reviews Section ─────────────────────────────────────────────────────────
-const timeAgo = (dateStr) => {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const days = Math.floor(diff / 86400000);
-  if (days === 0) return 'Today';
-  if (days === 1) return 'Yesterday';
-  if (days < 30) return `${days} days ago`;
-  const months = Math.floor(days / 30);
-  return months === 1 ? '1 month ago' : `${months} months ago`;
-};
-
-const APP_REVIEWS = [
-  {
-    _id: 'ar1',
-    rating: 5,
-    comment: 'Booking a Pandit was always a stressful task for our family, but this app made it incredibly easy. Within 5 minutes, we booked a verified Pandit for our Griha Pravesh. The real-time updates and transparent pricing are fantastic!',
-    devotee: { firstName: 'Aditya', lastName: 'Singhal' },
-    tag: 'Verified User',
-    date: '3 days ago'
-  },
-  {
-    _id: 'ar2',
-    rating: 5,
-    comment: 'I am amazed by the quality of service. The Pandit arrived on time, brought all the required Samagri, and conducted the puja beautifully. The built-in chat and secure payments give total peace of mind. Excellent app!',
-    devotee: { firstName: 'Meenakshi', lastName: 'Patel' },
-    tag: 'Verified Devotee',
-    date: '1 week ago'
-  },
-  {
-    _id: 'ar3',
-    rating: 5,
-    comment: 'Finally, a modern platform for our spiritual needs. The interface is clean, and the booking process is seamless. The Panchang feature is also very useful for finding auspicious dates. Highly recommended app for everyone!',
-    devotee: { firstName: 'Vikram', lastName: 'Malhotra' },
-    tag: 'Verified Devotee',
-    date: '2 weeks ago'
-  }
-];
-
 const ReviewsSection = () => {
+  const t = useT();
   const { user, token } = useAuthStore();
   const [reviews, setReviews] = useState([]);
   const [showModal, setShowModal] = useState(false);
@@ -304,6 +265,43 @@ const ReviewsSection = () => {
   const [comment, setComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+
+  const timeAgo = (dateStr) => {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const days = Math.floor(diff / 86400000);
+    if (days === 0) return t('time_today');
+    if (days === 1) return t('time_yesterday');
+    if (days < 30) return t('time_days_ago', { count: days });
+    const months = Math.floor(days / 30);
+    return months === 1 ? t('time_month_ago') : t('time_months_ago', { count: months });
+  };
+
+  const APP_REVIEWS = [
+    {
+      _id: 'ar1',
+      rating: 5,
+      comment: t('rev_ar1_comment'),
+      devotee: { firstName: t('rev_ar1_fname'), lastName: t('rev_ar1_lname') },
+      tag: t('rev_verified_user'),
+      date: t('rev_ar1_date')
+    },
+    {
+      _id: 'ar2',
+      rating: 5,
+      comment: t('rev_ar2_comment'),
+      devotee: { firstName: t('rev_ar2_fname'), lastName: t('rev_ar2_lname') },
+      tag: t('rev_verified_devotee'),
+      date: t('rev_ar2_date')
+    },
+    {
+      _id: 'ar3',
+      rating: 5,
+      comment: t('rev_ar3_comment'),
+      devotee: { firstName: t('rev_ar3_fname'), lastName: t('rev_ar3_lname') },
+      tag: t('rev_verified_devotee'),
+      date: t('rev_ar3_date')
+    }
+  ];
 
   const fetchReviews = useCallback(async () => {
     try {
@@ -323,7 +321,7 @@ const ReviewsSection = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!comment.trim()) {
-      setError('Please enter your feedback comment');
+      setError(t('rev_please_enter_comment') || 'Please enter your feedback comment');
       return;
     }
     setSubmitting(true);
@@ -337,7 +335,7 @@ const ReviewsSection = () => {
       setRating(5);
       fetchReviews();
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to submit review');
+      setError(err.response?.data?.message || t('rev_submit_fail') || 'Failed to submit review');
     } finally {
       setSubmitting(false);
     }
@@ -352,8 +350,8 @@ const ReviewsSection = () => {
       firstName: r.user?.firstName || 'User',
       lastName: r.user?.lastName || ''
     },
-    tag: r.user?.role === 'pandit' ? 'Verified Pandit' : 'Verified Devotee',
-    date: 'Just now'
+    tag: r.user?.role === 'pandit' ? t('rev_verified_pandit') : t('rev_verified_devotee'),
+    date: t('time_today')
   }));
 
   // Merge so we show user reviews first, then fallback reviews
@@ -379,11 +377,11 @@ const ReviewsSection = () => {
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="text-center mb-14 relative">
-          <span className="text-saffron font-black text-sm uppercase tracking-widest mb-3 block">App Experience</span>
+          <span className="text-saffron font-black text-sm uppercase tracking-widest mb-3 block">{t('rev_app_experience')}</span>
           <h2 className="text-4xl lg:text-5xl font-black text-maroon leading-tight font-serif mb-4">
-            What Devotees <span className="text-saffron italic">Say About Us</span>
+            {t('rev_what_devotees_say_title')}
           </h2>
-          <p className="text-textMid max-w-xl mx-auto mb-6">Hear from families who booked their sacred pujas seamlessly using the PanditJi app.</p>
+          <p className="text-textMid max-w-xl mx-auto mb-6">{t('rev_what_devotees_say_desc')}</p>
           
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             {user ? (
@@ -391,11 +389,11 @@ const ReviewsSection = () => {
                 onClick={() => { setShowModal(true); setError(''); }}
                 className="bg-saffron hover:bg-saffron-dark text-white font-bold px-6 py-3 rounded-full shadow-md hover:-translate-y-0.5 active:translate-y-0 transition-all text-sm flex items-center gap-2"
               >
-                <MessageSquare size={16} /> Write an App Review
+                <MessageSquare size={16} /> {t('rev_write_app_review')}
               </button>
             ) : (
               <p className="text-xs text-textMuted bg-saffron-light/50 px-4 py-2 rounded-full border border-brandborder/50">
-                Logged in users can share their app experience here!
+                {t('rev_logged_in_share')}
               </p>
             )}
 
@@ -403,7 +401,7 @@ const ReviewsSection = () => {
               onClick={() => setShowAllModal(true)}
               className="border-2 border-maroon text-maroon hover:bg-maroon hover:text-white font-bold px-6 py-2.5 rounded-full transition-all text-sm flex items-center gap-2"
             >
-              See All Reviews ({totalCount})
+              {t('rev_see_all_reviews', { count: totalCount })}
             </button>
           </div>
         </div>
@@ -442,7 +440,7 @@ const ReviewsSection = () => {
               <div className="border-t border-brandborder pt-4 flex items-center gap-3">
                 {/* Avatar */}
                 <div className="w-10 h-10 rounded-full bg-maroon text-white flex items-center justify-center font-bold text-base flex-shrink-0 overflow-hidden">
-                  {review.devotee.firstName.charAt(0)}
+                  {review.devotee.firstName ? review.devotee.firstName.charAt(0) : '?'}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-bold text-maroon text-sm truncate">
@@ -467,9 +465,9 @@ const ReviewsSection = () => {
             {/* Header */}
             <div style={{ background: 'linear-gradient(135deg, #7B1D0E 0%, #E8710A 100%)', padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
-                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', marginBottom: 2, textTransform: 'uppercase', letterSpacing: '0.6px' }}>App Experience</div>
+                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', marginBottom: 2, textTransform: 'uppercase', letterSpacing: '0.6px' }}>{t('rev_app_experience')}</div>
                 <h2 style={{ fontFamily: "'Playfair Display',serif", color: '#fff', fontWeight: 900, fontSize: 18 }}>
-                  Write an App Review
+                  {t('rev_write_app_review')}
                 </h2>
               </div>
               <button
@@ -483,7 +481,7 @@ const ReviewsSection = () => {
             <form onSubmit={handleSubmit} style={{ padding: '22px 24px' }}>
               {/* Stars Selection */}
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, marginBottom: 24 }}>
-                <label style={{ fontSize: 12, fontWeight: 700, color: '#6B4C3B' }}>Rate your experience with the platform</label>
+                <label style={{ fontSize: 12, fontWeight: 700, color: '#6B4C3B' }}>{t('rev_rate_experience')}</label>
                 <div style={{ display: 'flex', gap: 8 }}>
                   {[1, 2, 3, 4, 5].map((star) => (
                     <button
@@ -507,11 +505,11 @@ const ReviewsSection = () => {
 
               {/* Comment */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 20 }}>
-                <label style={{ fontSize: 12, fontWeight: 700, color: '#6B4C3B' }}>Your Feedback</label>
+                <label style={{ fontSize: 12, fontWeight: 700, color: '#6B4C3B' }}>{t('dd_comment')}</label>
                 <textarea
                   value={comment}
                   onChange={e => setComment(e.target.value)}
-                  placeholder="Tell us what you like about the app, speed of booking, interface..."
+                  placeholder={t('rev_comment_placeholder')}
                   rows={4}
                   maxLength={500}
                   style={{ width: '100%', padding: 12, borderRadius: 10, border: '1.5px solid #EAD9CC', fontSize: 13, outline: 'none', resize: 'none', fontFamily: 'inherit' }}
@@ -532,14 +530,14 @@ const ReviewsSection = () => {
                   disabled={submitting}
                   style={{ flex: 1, padding: '11px', borderRadius: 10, border: '1.5px solid #EAD9CC', background: '#f5f0eb', color: '#6B4C3B', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}
                 >
-                  Cancel
+                  {t('dd_cancel')}
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
                   style={{ flex: 2, padding: '11px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #7B1D0E, #E8710A)', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
                 >
-                  {submitting ? 'Submitting...' : 'Submit Review'}
+                  {submitting ? t('rev_submitting') : t('rev_submit_review')}
                 </button>
               </div>
             </form>
@@ -554,9 +552,9 @@ const ReviewsSection = () => {
             {/* Header */}
             <div style={{ background: 'linear-gradient(135deg, #7B1D0E 0%, #E8710A 100%)', padding: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
               <div>
-                <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.75)', textTransform: 'uppercase', fontWeight: 900, letterSpacing: '1px' }}>Feedback Center</span>
+                <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.75)', textTransform: 'uppercase', fontWeight: 900, letterSpacing: '1px' }}>{t('rev_feedback_center')}</span>
                 <h2 style={{ fontFamily: "'Playfair Display',serif", color: '#fff', fontWeight: 900, fontSize: 22, marginTop: 2 }}>
-                  App Experience Reviews
+                  {t('rev_app_experience_reviews')}
                 </h2>
               </div>
               <button
@@ -571,10 +569,10 @@ const ReviewsSection = () => {
             <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', overflowY: 'auto', flex: 1, padding: 24, gap: 24 }}>
               {/* Left Side: Rating Breakdown */}
               <div style={{ flex: '1 1 280px', display: 'flex', flexDirection: 'column', gap: 16, borderRight: '1px solid #F2DFD8', paddingRight: 24 }}>
-                <h3 style={{ fontSize: 16, fontWeight: 900, color: '#7B1D0E' }}>Overall Ratings</h3>
+                <h3 style={{ fontSize: 16, fontWeight: 900, color: '#7B1D0E' }}>{t('rev_overall_ratings')}</h3>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
                   <span style={{ fontSize: 48, fontWeight: 900, color: '#E8710A', lineHeight: 1 }}>{averageRating}</span>
-                  <span style={{ fontSize: 14, color: '#6B4C3B', fontWeight: 700 }}>out of 5</span>
+                  <span style={{ fontSize: 14, color: '#6B4C3B', fontWeight: 700 }}>{t('rev_out_of_5')}</span>
                 </div>
 
                 {/* Stars row */}
@@ -587,7 +585,7 @@ const ReviewsSection = () => {
                       color={s <= Math.round(Number(averageRating)) ? '#E8710A' : '#d1d5db'}
                     />
                   ))}
-                  <span style={{ fontSize: 12, color: '#6B4C3B', marginLeft: 4, fontWeight: 700 }}>({totalCount} reviews)</span>
+                  <span style={{ fontSize: 12, color: '#6B4C3B', marginLeft: 4, fontWeight: 700 }}>{t('rev_reviews_count', { count: totalCount })}</span>
                 </div>
 
                 {/* Rating bars */}
@@ -620,7 +618,7 @@ const ReviewsSection = () => {
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                         <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#7B1D0E', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 14 }}>
-                          {review.devotee.firstName.charAt(0)}
+                          {review.devotee.firstName ? review.devotee.firstName.charAt(0) : '?'}
                         </div>
                         <div>
                           <p style={{ fontWeight: 800, color: '#7B1D0E', fontSize: 13, margin: 0 }}>

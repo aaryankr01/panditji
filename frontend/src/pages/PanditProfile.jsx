@@ -65,11 +65,11 @@ const PanditProfile = () => {
   const timeAgo = (dateStr) => {
     const diff = Date.now() - new Date(dateStr).getTime();
     const days = Math.floor(diff / 86400000);
-    if (days === 0) return 'Today';
-    if (days === 1) return 'Yesterday';
-    if (days < 30) return `${days} days ago`;
+    if (days === 0) return t('time_today');
+    if (days === 1) return t('time_yesterday');
+    if (days < 30) return t('time_days_ago', { count: days });
     const months = Math.floor(days / 30);
-    return months === 1 ? '1 month ago' : `${months} months ago`;
+    return months === 1 ? t('time_month_ago') : t('time_months_ago', { count: months });
   };
 
   useEffect(() => {
@@ -115,7 +115,11 @@ const PanditProfile = () => {
             <div className="flex items-center justify-center gap-2 text-orange-600 font-bold mb-4">
               <Star fill="currentColor" size={20} />
               <span>{pandit.panditProfile?.rating || 3.8}</span>
-              <span className="text-gray-400 font-normal text-sm">({pandit.panditProfile?.totalReviews || 0} {pandit.panditProfile?.totalReviews === 1 ? 'review' : 'reviews'})</span>
+              <span className="text-gray-400 font-normal text-sm">
+                ({pandit.panditProfile?.totalReviews === 1 
+                  ? t('prof_reviews_count_short_singular') 
+                  : t('prof_reviews_count_short', { count: pandit.panditProfile?.totalReviews || 0 })})
+              </span>
             </div>
             <div className="flex items-center gap-2 text-gray-600 mb-6 bg-gray-50 px-4 py-2 rounded-full border border-gray-100">
               <MapPin size={18} /> {pandit.city || t('profile_available_worldwide')}
@@ -183,13 +187,17 @@ const PanditProfile = () => {
               <span className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
                 <Star size={20} fill="#ea580c" color="#ea580c" />
               </span>
-              What Devotees Say
+              {t('prof_what_devotees_say')}
             </h2>
             {reviews.length > 0 && (
               <div className="flex items-center gap-2 bg-orange-50 border border-orange-200 px-4 py-2 rounded-full">
                 <Star size={16} fill="#ea580c" color="#ea580c" />
                 <span className="font-bold text-orange-700 text-lg">{pandit.panditProfile?.rating || 3.8}</span>
-                <span className="text-gray-400 text-sm">· {reviews.length} {reviews.length === 1 ? 'review' : 'reviews'}</span>
+                <span className="text-gray-400 text-sm">
+                  · {reviews.length === 1 
+                    ? t('prof_reviews_count_short_singular') 
+                    : t('prof_reviews_count_short', { count: reviews.length })}
+                </span>
               </div>
             )}
           </div>
@@ -199,8 +207,8 @@ const PanditProfile = () => {
               <div className="w-16 h-16 bg-orange-50 rounded-full flex items-center justify-center mb-2">
                 <Star size={32} color="#fdba74" />
               </div>
-              <p className="text-gray-700 font-semibold text-lg">No reviews yet</p>
-              <p className="text-gray-400 text-sm">Be the first to share your experience after a completed puja.</p>
+              <p className="text-gray-700 font-semibold text-lg">{t('prof_no_reviews')}</p>
+              <p className="text-gray-400 text-sm">{t('prof_be_first')}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">

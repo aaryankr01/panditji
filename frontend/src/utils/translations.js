@@ -453,6 +453,59 @@ const translations = {
     ep_adv6: 'Expert guidance through Astrology services.',
     ep_adv7: 'Choose from 180+ Vedic Pujas as you need.',
     ep_adv8: 'Follow every custom with complete Hindu Rituals.',
+
+    // App Experience Reviews
+    rev_app_experience: 'App Experience',
+    rev_what_devotees_say_title: 'What Devotees Say About Us',
+    rev_what_devotees_say_desc: 'Hear from families who booked their sacred pujas seamlessly using the PanditJi app.',
+    rev_write_app_review: 'Write an App Review',
+    rev_logged_in_share: 'Logged in users can share their app experience here!',
+    rev_see_all_reviews: 'See All Reviews ({{count}})',
+    rev_overall_ratings: 'Overall Ratings',
+    rev_out_of_5: 'out of 5',
+    rev_reviews_count: '({{count}} reviews)',
+    rev_feedback_center: 'Feedback Center',
+    rev_app_experience_reviews: 'App Experience Reviews',
+    rev_rate_experience: 'Rate your experience with the platform',
+    rev_comment_placeholder: 'Tell us what you like about the app, speed of booking, interface...',
+    rev_please_enter_comment: 'Please enter your feedback comment',
+    rev_submit_fail: 'Failed to submit review',
+    rev_verified_user: 'Verified User',
+    rev_verified_devotee: 'Verified Devotee',
+    rev_verified_pandit: 'Verified Pandit',
+    rev_submitting: 'Submitting...',
+    rev_submit_success: 'Thank you! Your review has been submitted successfully.',
+    rev_submit_review: 'Submit Review',
+
+    // Pandit Profile page
+    prof_what_devotees_say: 'What Devotees Say',
+    prof_no_reviews: 'No reviews yet',
+    prof_be_first: 'Be the first to share your experience after a completed puja.',
+    prof_reviews_count_short: '{{count}} reviews',
+    prof_reviews_count_short_singular: '1 review',
+
+    // Relative Time
+    time_today: 'Today',
+    time_yesterday: 'Yesterday',
+    time_days_ago: '{{count}} days ago',
+    time_month_ago: '1 month ago',
+    time_months_ago: '{{count}} months ago',
+
+    // Static reviews comments
+    rev_ar1_comment: 'Booking a Pandit was always a stressful task for our family, but this app made it incredibly easy. Within 5 minutes, we booked a verified Pandit for our Griha Pravesh. The real-time updates and transparent pricing are fantastic!',
+    rev_ar1_fname: 'Aditya',
+    rev_ar1_lname: 'Singhal',
+    rev_ar1_date: '3 days ago',
+
+    rev_ar2_comment: 'I am amazed by the quality of service. The Pandit arrived on time, brought all the required Samagri, and conducted the puja beautifully. The built-in chat and secure payments give total peace of mind. Excellent app!',
+    rev_ar2_fname: 'Meenakshi',
+    rev_ar2_lname: 'Patel',
+    rev_ar2_date: '1 week ago',
+
+    rev_ar3_comment: 'Finally, a modern platform for our spiritual needs. The interface is clean, and the booking process is seamless. The Panchang feature is also very useful for finding auspicious dates. Highly recommended app for everyone!',
+    rev_ar3_fname: 'Vikram',
+    rev_ar3_lname: 'Malhotra',
+    rev_ar3_date: '2 weeks ago',
   },
 
   hi: {
@@ -906,6 +959,59 @@ const translations = {
     ep_adv6: 'ज्योतिष सेवाओं के माध्यम से विशेषज्ञ मार्गदर्शन।',
     ep_adv7: 'अपनी आवश्यकता के अनुसार 180+ वैदिक पूजाओं में से चुनें।',
     ep_adv8: 'पूर्ण हिंदू रीति-रिवाजों के साथ हर प्रथा का पालन करें।',
+
+    // App Experience Reviews (Hindi)
+    rev_app_experience: 'ऐप अनुभव',
+    rev_what_devotees_say_title: 'हमारे बारे में श्रद्धालु क्या कहते हैं',
+    rev_what_devotees_say_desc: 'उन परिवारों से सुनें जिन्होंने पंडितजी ऐप का उपयोग करके अपनी पवित्र पूजा आसानी से बुक की है।',
+    rev_write_app_review: 'ऐप समीक्षा लिखें',
+    rev_logged_in_share: 'लॉग इन उपयोगकर्ता यहाँ अपना ऐप अनुभव साझा कर सकते हैं!',
+    rev_see_all_reviews: 'सभी समीक्षाएं देखें ({{count}})',
+    rev_overall_ratings: 'कुल रेटिंग',
+    rev_out_of_5: '5 में से',
+    rev_reviews_count: '({{count}} समीक्षाएं)',
+    rev_feedback_center: 'प्रतिक्रिया केंद्र',
+    rev_app_experience_reviews: 'ऐप अनुभव समीक्षाएं',
+    rev_rate_experience: 'प्लेटफॉर्म के साथ अपने अनुभव को रेट करें',
+    rev_comment_placeholder: 'हमें बताएं कि आपको ऐप में क्या पसंद आया, बुकिंग की गति, इंटरफ़ेस...',
+    rev_please_enter_comment: 'कृपया अपनी प्रतिक्रिया टिप्पणी दर्ज करें',
+    rev_submit_fail: 'समीक्षा सबमिट करने में विफल',
+    rev_verified_user: 'सत्यापित उपयोगकर्ता',
+    rev_verified_devotee: 'सत्यापित श्रद्धालु',
+    rev_verified_pandit: 'सत्यापित पंडित',
+    rev_submitting: 'सबमिट किया जा रहा है...',
+    rev_submit_success: 'धन्यवाद! आपकी समीक्षा सफलतापूर्वक सबमिट हो गई है।',
+    rev_submit_review: 'समीक्षा सबमिट करें',
+
+    // Pandit Profile page (Hindi)
+    prof_what_devotees_say: 'श्रद्धालु क्या कहते हैं',
+    prof_no_reviews: 'अभी तक कोई समीक्षा नहीं',
+    prof_be_first: 'पूरी हुई पूजा के बाद अपना अनुभव साझा करने वाले पहले व्यक्ति बनें।',
+    prof_reviews_count_short: '{{count}} समीक्षाएं',
+    prof_reviews_count_short_singular: '1 समीक्षा',
+
+    // Relative Time (Hindi)
+    time_today: 'आज',
+    time_yesterday: 'कल',
+    time_days_ago: '{{count}} दिन पहले',
+    time_month_ago: '1 महीना पहले',
+    time_months_ago: '{{count}} महीने पहले',
+
+    // Static reviews comments (Hindi)
+    rev_ar1_comment: 'पंडित जी को बुक करना हमारे परिवार के लिए हमेशा तनावपूर्ण काम था, लेकिन इस ऐप ने इसे बेहद आसान बना दिया। 5 मिनट के भीतर, हमने अपने गृह प्रवेश के लिए एक सत्यापित पंडित बुक कर लिया। रीयल-टाइम अपडेट और पारदर्शी मूल्य निर्धारण शानदार हैं!',
+    rev_ar1_fname: 'आदित्य',
+    rev_ar1_lname: 'सिंघल',
+    rev_ar1_date: '3 दिन पहले',
+
+    rev_ar2_comment: 'मैं सेवा की गुणवत्ता से चकित हूँ। पंडित जी समय पर पहुंचे, सभी आवश्यक सामग्री लाए, और पूजा को खूबसूरती से संपन्न कराया। इन-ऐप चैट और सुरक्षित भुगतान पूरी मानसिक शांति देते हैं। उत्कृष्ट ऐप!',
+    rev_ar2_fname: 'मीनाक्षी',
+    rev_ar2_lname: 'पटेल',
+    rev_ar2_date: '1 सप्ताह पहले',
+
+    rev_ar3_comment: 'अंततः, हमारी आध्यात्मिक आवश्यकताओं के लिए एक आधुनिक मंच। इंटरफ़ेस साफ-सुथरा है, और बुकिंग प्रक्रिया सहज है। शुभ तिथियां खोजने के लिए पंचांग सुविधा भी बहुत उपयोगी है। सभी के लिए अत्यधिक अनुशंसित ऐप!',
+    rev_ar3_fname: 'विक्रम',
+    rev_ar3_lname: 'मल्होत्रा',
+    rev_ar3_date: '2 सप्ताह पहले',
   },
 };
 

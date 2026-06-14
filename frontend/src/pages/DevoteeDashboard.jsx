@@ -452,7 +452,7 @@ const ReviewModal = ({ booking, onClose, onSubmitReview }) => {
               disabled={submitting}
               style={{ flex: 2, padding: '11px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #7B1D0E, #E8710A)', color: '#fff', fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
             >
-              {submitting ? 'Submitting...' : t('dd_submit_review') || 'Submit Review'}
+              {submitting ? (t('rev_submitting') || 'Submitting...') : (t('dd_submit_review') || 'Submit Review')}
             </button>
           </div>
         </form>
@@ -731,11 +731,11 @@ const DevoteeDashboard = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setBookings(prev => prev.map(b => b._id === bookingId ? { ...b, reviewed: true } : b));
-      alert('Thank you! Your review has been submitted successfully.');
+      alert(t('rev_submit_success') || 'Thank you! Your review has been submitted successfully.');
       setReviewModal(null);
       fetchPandits();
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to submit review. Please try again.');
+      alert(err.response?.data?.message || t('rev_submit_fail') || 'Failed to submit review. Please try again.');
     }
   };
 

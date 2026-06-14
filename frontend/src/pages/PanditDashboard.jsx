@@ -723,7 +723,9 @@ const PanditDashboard = () => {
               <Star size={14} fill={C.saffron} color={C.saffron} style={{ marginTop: -2 }} />
               {profileData.panditProfile.rating || 3.8}
               <span style={{ color: 'rgba(255,255,255,0.6)', fontWeight: 400 }}>
-                ({profileData.panditProfile.totalReviews || 0} {profileData.panditProfile.totalReviews === 1 ? 'review' : 'reviews'})
+                ({profileData.panditProfile.totalReviews === 1 
+                  ? t('prof_reviews_count_short_singular') 
+                  : t('prof_reviews_count_short', { count: profileData.panditProfile.totalReviews || 0 })})
               </span>
             </div>
           )}
