@@ -67,6 +67,7 @@ exports.getPanditReviews = async (req, res, next) => {
   try {
     const reviews = await Review.find({ pandit: req.params.panditId })
       .populate('devotee', 'firstName lastName avatar')
+      .populate('booking', 'pujaType')
       .sort('-createdAt');
 
     res.status(200).json({ success: true, count: reviews.length, data: reviews });

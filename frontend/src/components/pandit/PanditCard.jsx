@@ -57,7 +57,7 @@ const PanditCard = ({ pandit }) => {
           )}
         </div>
         <div className="flex items-center gap-1 bg-surface text-maroon px-3 py-1.5 rounded-xl text-sm font-bold border border-brandborder">
-          <Star size={14} className="fill-gold text-gold" /> {pandit.panditProfile?.rating || 3.8}
+          <Star size={14} className="fill-saffron text-saffron" /> {pandit.panditProfile?.rating || 3.8}
         </div>
       </div>
       

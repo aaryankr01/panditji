@@ -415,8 +415,8 @@ const ReviewModal = ({ booking, onClose, onSubmitReview }) => {
                 >
                   <Star
                     size={32}
-                    color="#C8960C"
-                    fill={(hoverRating || rating) >= star ? '#C8960C' : 'none'}
+                    color={C.saffron}
+                    fill={(hoverRating || rating) >= star ? C.saffron : 'none'}
                     strokeWidth={2}
                   />
                 </button>
@@ -1169,7 +1169,7 @@ const DevoteeDashboard = () => {
                             )}
                           </div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 4, background: C.surface, color: C.maroon, padding: '4px 8px', borderRadius: 8, fontSize: 12, fontWeight: 700, border: `1px solid ${C.border}` }}>
-                            <Star size={12} fill="#C8960C" color="#C8960C" /> {pandit.panditProfile?.rating || 3.8}
+                            <Star size={12} fill={C.saffron} color={C.saffron} /> {pandit.panditProfile?.rating || 3.8}
                           </div>
                         </div>
 
@@ -1367,9 +1367,9 @@ const DevoteeDashboard = () => {
                               </button>
                             )}
                             {!booking.reviewed && (
-                              <button className="dd-btn dd-btn-primary" style={{ fontSize: 12, justifyContent: 'center', background: '#C8960C', color: '#fff' }}
+                              <button className="dd-btn dd-btn-primary" style={{ fontSize: 12, justifyContent: 'center', background: C.saffron, color: '#fff' }}
                                 onClick={() => setReviewModal(booking)}>
-                                <Star size={14} fill="#fff" /> {t('dd_rate_pandit') || 'Rate Pandit'}
+                                <Star size={14} fill="#fff" color="#fff" /> {t('dd_rate_pandit') || 'Rate Pandit'}
                               </button>
                             )}
                           </div>

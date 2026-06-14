@@ -7,7 +7,7 @@ import { io } from 'socket.io-client';
 import {
   LogOut, Calendar, MessageSquare, CheckCircle, XCircle,
   MapPin, Clock, Bell, Phone, User, AlertCircle, Trash2, Headphones, Video, ShieldCheck, Save,
-  LayoutDashboard, Coins, TrendingUp, CheckCircle2, CalendarCheck
+  LayoutDashboard, Coins, TrendingUp, CheckCircle2, CalendarCheck, Star
 } from 'lucide-react';
 import ChatInterface from '../components/ChatInterface';
 import SupportCare from '../components/SupportCare';
@@ -480,16 +480,21 @@ const PanditDashboard = () => {
         
         .pd-stats-grid {
           display: grid;
-          grid-template-columns: repeat(4, 1fr);
+          grid-template-columns: repeat(5, 1fr);
           gap: 20px;
           margin-bottom: 28px;
         }
-        @media (max-width: 1024px) {
+        @media (max-width: 1200px) {
+          .pd-stats-grid {
+            grid-template-columns: repeat(3, 1fr);
+          }
+        }
+        @media (max-width: 800px) {
           .pd-stats-grid {
             grid-template-columns: repeat(2, 1fr);
           }
         }
-        @media (max-width: 640px) {
+        @media (max-width: 500px) {
           .pd-stats-grid {
             grid-template-columns: 1fr;
           }
@@ -713,6 +718,15 @@ const PanditDashboard = () => {
               <MapPin size={14} color={C.gold} /> {user.city}
             </div>
           )}
+          {profileData?.panditProfile && (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 8, fontSize: 13, color: '#fff', fontWeight: 600 }}>
+              <Star size={14} fill={C.saffron} color={C.saffron} style={{ marginTop: -2 }} />
+              {profileData.panditProfile.rating || 3.8}
+              <span style={{ color: 'rgba(255,255,255,0.6)', fontWeight: 400 }}>
+                ({profileData.panditProfile.totalReviews || 0} {profileData.panditProfile.totalReviews === 1 ? 'review' : 'reviews'})
+              </span>
+            </div>
+          )}
           <div style={{ marginTop: 24, paddingTop: 24, borderTop: '1px dashed rgba(255,255,255,0.2)' }}>
             <p className="dd-stat-lbl" style={{ color: 'rgba(255,255,255,0.6)' }}>{t('pd_total_earnings')}</p>
             <p className="dd-stat" style={{ color: '#fff' }}>₹{totalEarnings.toLocaleString()}</p>
@@ -858,6 +872,22 @@ const PanditDashboard = () => {
                   <div>
                     <p className="dd-stat-lbl" style={{ color: 'rgba(200,150,12,0.6)' }}>{t('pd_active_confirmed') || 'Confirmed Pujas'}</p>
                     <p className="dd-stat" style={{ color: C.gold }}>{bookings.filter(b => b.status === 'confirmed').length}</p>
+                  </div>
+                </div>
+
+                {/* Average Rating Card */}
+                <div className="pd-stat-card" style={{ background: 'linear-gradient(135deg, #FFF5E6 0%, #FFE0B2 100%)', border: 'none' }}>
+                  <div className="pd-stat-card-icon" style={{ background: '#fff', color: C.saffron }}>
+                    <Star size={24} fill={C.saffron} color={C.saffron} />
+                  </div>
+                  <div>
+                    <p className="dd-stat-lbl" style={{ color: 'rgba(232,113,10,0.6)' }}>{t('pd_average_rating') || 'Average Rating'}</p>
+                    <p className="dd-stat" style={{ color: C.saffron }}>
+                      {profileData?.panditProfile?.rating || 3.8} 
+                      <span style={{ fontSize: 13, fontWeight: 500, color: C.textMuted, marginLeft: 4 }}>
+                        ({profileData?.panditProfile?.totalReviews || 0})
+                      </span>
+                    </p>
                   </div>
                 </div>
               </div>
