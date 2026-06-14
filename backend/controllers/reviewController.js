@@ -92,3 +92,45 @@ exports.getLatestReviews = async (req, res, next) => {
     next(err);
   }
 };
+
+const AppReview = require('../models/AppReview');
+
+// @desc    Add a review for the app/platform
+// @route   POST /api/reviews/app
+// @access  Private
+exports.addAppReview = async (req, res, next) => {
+  try {
+    const { rating, comment } = req.body;
+    const userId = req.user.id;
+
+    if (!rating || !comment) {
+      return res.status(400).json({ success: false, message: 'Rating and comment are required' });
+    }
+
+    const appReview = await AppReview.create({
+      user: userId,
+      rating,
+      comment
+    });
+
+    res.status(201).json({ success: true, data: appReview });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Get app reviews
+// @route   GET /api/reviews/app
+// @access  Public
+exports.getAppReviews = async (req, res, next) => {
+  try {
+    const reviews = await AppReview.find()
+      .populate('user', 'firstName lastName avatar role')
+      .sort('-createdAt')
+      .limit(10);
+
+    res.status(200).json({ success: true, data: reviews });
+  } catch (err) {
+    next(err);
+  }
+};

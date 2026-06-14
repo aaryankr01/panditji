@@ -4,10 +4,11 @@ import Navbar from '../components/common/Navbar';
 import useT from '../hooks/useT';
 import Footer from '../components/common/Footer';
 import api from '../utils/api';
+import useAuthStore from '../store/useAuthStore';
 import { 
   ArrowRight, CheckCircle, Users, Star, Shield, 
   Home as HomeIcon, BookOpen, Heart, Scissors, Flame, 
-  Droplets, Calendar, Sparkles, MapPin, Zap, ChevronLeft, ChevronRight, Sun, Moon, Quote
+  Droplets, Calendar, Sparkles, MapPin, Zap, ChevronLeft, ChevronRight, Sun, Moon, Quote, X, MessageSquare
 } from 'lucide-react';
 
 // ─── Hindu Panchang helpers (no library needed) ───────────────────────────
@@ -294,6 +295,69 @@ const APP_REVIEWS = [
 ];
 
 const ReviewsSection = () => {
+  const { user, token } = useAuthStore();
+  const [reviews, setReviews] = useState([]);
+  const [showModal, setShowModal] = useState(false);
+  const [rating, setRating] = useState(5);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [comment, setComment] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+
+  const fetchReviews = useCallback(async () => {
+    try {
+      const res = await api.get('/reviews/app');
+      if (res.data && res.data.data) {
+        setReviews(res.data.data);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchReviews();
+  }, [fetchReviews]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!comment.trim()) {
+      setError('Please enter your feedback comment');
+      return;
+    }
+    setSubmitting(true);
+    setError('');
+    try {
+      await api.post('/reviews/app', { rating, comment }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setShowModal(false);
+      setComment('');
+      setRating(5);
+      fetchReviews();
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to submit review');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // Convert DB user reviews to the display format
+  const dbReviewsFormatted = reviews.map(r => ({
+    _id: r._id,
+    rating: r.rating,
+    comment: r.comment,
+    devotee: {
+      firstName: r.user?.firstName || 'User',
+      lastName: r.user?.lastName || ''
+    },
+    tag: r.user?.role === 'pandit' ? 'Verified Pandit' : 'Verified Devotee',
+    date: 'Just now'
+  }));
+
+  // Merge so we show user reviews first, then fallback reviews, capped at 6
+  const displayReviews = [...dbReviewsFormatted, ...APP_REVIEWS].slice(0, 6);
+
   return (
     <section className="py-20 px-4 bg-surface overflow-hidden relative">
       <div className="absolute top-0 left-0 w-96 h-96 bg-saffron-light rounded-full blur-[120px] -z-10 opacity-40" />
@@ -301,17 +365,30 @@ const ReviewsSection = () => {
 
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-14">
+        <div className="text-center mb-14 relative">
           <span className="text-saffron font-black text-sm uppercase tracking-widest mb-3 block">App Experience</span>
           <h2 className="text-4xl lg:text-5xl font-black text-maroon leading-tight font-serif mb-4">
             What Devotees <span className="text-saffron italic">Say About Us</span>
           </h2>
-          <p className="text-textMid max-w-xl mx-auto">Hear from families who booked their sacred pujas seamlessly using the PanditJi app.</p>
+          <p className="text-textMid max-w-xl mx-auto mb-6">Hear from families who booked their sacred pujas seamlessly using the PanditJi app.</p>
+          
+          {user ? (
+            <button
+              onClick={() => { setShowModal(true); setError(''); }}
+              className="bg-saffron hover:bg-saffron-dark text-white font-bold px-6 py-3 rounded-full shadow-md hover:-translate-y-0.5 active:translate-y-0 transition-all text-sm flex items-center gap-2 mx-auto"
+            >
+              <MessageSquare size={16} /> Write an App Review
+            </button>
+          ) : (
+            <p className="text-xs text-textMuted bg-saffron-light/50 px-4 py-2 rounded-full w-max mx-auto border border-brandborder/50">
+              Logged in users can share their app experience here!
+            </p>
+          )}
         </div>
 
         {/* Reviews Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {APP_REVIEWS.map((review) => (
+          {displayReviews.map((review) => (
             <div
               key={review._id}
               className="bg-white rounded-[28px] border border-brandborder p-6 flex flex-col gap-4 shadow-sm hover:shadow-xl hover:shadow-saffron-light/40 hover:-translate-y-1 transition-all duration-300"
@@ -360,6 +437,93 @@ const ReviewsSection = () => {
           ))}
         </div>
       </div>
+
+      {/* Write App Review Modal */}
+      {showModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(44,26,14,0.72)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+          <div style={{ background: '#fff', borderRadius: 18, maxWidth: 440, width: '100%', overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
+            {/* Header */}
+            <div style={{ background: 'linear-gradient(135deg, #7B1D0E 0%, #E8710A 100%)', padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', marginBottom: 2, textTransform: 'uppercase', letterSpacing: '0.6px' }}>App Experience</div>
+                <h2 style={{ fontFamily: "'Playfair Display',serif", color: '#fff', fontWeight: 900, fontSize: 18 }}>
+                  Write an App Review
+                </h2>
+              </div>
+              <button
+                onClick={() => setShowModal(false)}
+                style={{ background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#fff' }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} style={{ padding: '22px 24px' }}>
+              {/* Stars Selection */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, marginBottom: 24 }}>
+                <label style={{ fontSize: 12, fontWeight: 700, color: '#6B4C3B' }}>Rate your experience with the platform</label>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setRating(star)}
+                      onMouseEnter={() => setHoverRating(star)}
+                      onMouseLeave={() => setHoverRating(0)}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                    >
+                      <Star
+                        size={32}
+                        color="#E8710A"
+                        fill={(hoverRating || rating) >= star ? '#E8710A' : 'none'}
+                        strokeWidth={2}
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Comment */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 20 }}>
+                <label style={{ fontSize: 12, fontWeight: 700, color: '#6B4C3B' }}>Your Feedback</label>
+                <textarea
+                  value={comment}
+                  onChange={e => setComment(e.target.value)}
+                  placeholder="Tell us what you like about the app, speed of booking, interface..."
+                  rows={4}
+                  maxLength={500}
+                  style={{ width: '100%', padding: 12, borderRadius: 10, border: '1.5px solid #EAD9CC', fontSize: 13, outline: 'none', resize: 'none', fontFamily: 'inherit' }}
+                />
+              </div>
+
+              {error && (
+                <p style={{ color: '#7B1D0E', fontSize: 12, fontWeight: 600, marginBottom: 16, textAlign: 'center' }}>
+                  {error}
+                </p>
+              )}
+
+              {/* Action buttons */}
+              <div style={{ display: 'flex', gap: 12 }}>
+                <button
+                  type="button"
+                  onClick={() => setShowModal(false)}
+                  disabled={submitting}
+                  style={{ flex: 1, padding: '11px', borderRadius: 10, border: '1.5px solid #EAD9CC', background: '#f5f0eb', color: '#6B4C3B', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  style={{ flex: 2, padding: '11px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #7B1D0E, #E8710A)', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+                >
+                  {submitting ? 'Submitting...' : 'Submit Review'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </section>
   );
 };
