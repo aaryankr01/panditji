@@ -75,3 +75,20 @@ exports.getPanditReviews = async (req, res, next) => {
     next(err);
   }
 };
+
+// @desc    Get latest reviews across platform (for home page)
+// @route   GET /api/reviews/latest
+// @access  Public
+exports.getLatestReviews = async (req, res, next) => {
+  try {
+    const reviews = await Review.find({ comment: { $exists: true, $ne: '' } })
+      .populate('devotee', 'firstName lastName avatar')
+      .populate('booking', 'pujaType')
+      .sort('-createdAt')
+      .limit(6);
+
+    res.status(200).json({ success: true, count: reviews.length, data: reviews });
+  } catch (err) {
+    next(err);
+  }
+};

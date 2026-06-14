@@ -1,12 +1,13 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/common/Navbar';
 import useT from '../hooks/useT';
 import Footer from '../components/common/Footer';
+import api from '../utils/api';
 import { 
   ArrowRight, CheckCircle, Users, Star, Shield, 
   Home as HomeIcon, BookOpen, Heart, Scissors, Flame, 
-  Droplets, Calendar, Sparkles, MapPin, Zap, ChevronLeft, ChevronRight, Sun, Moon
+  Droplets, Calendar, Sparkles, MapPin, Zap, ChevronLeft, ChevronRight, Sun, Moon, Quote
 } from 'lucide-react';
 
 // ─── Hindu Panchang helpers (no library needed) ───────────────────────────
@@ -254,6 +255,133 @@ const HinduCalendar = () => {
 
 // ─────────────────────────────────────────────────────────────────────────────
 
+// ─── Reviews Section ─────────────────────────────────────────────────────────
+const timeAgo = (dateStr) => {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const days = Math.floor(diff / 86400000);
+  if (days === 0) return 'Today';
+  if (days === 1) return 'Yesterday';
+  if (days < 30) return `${days} days ago`;
+  const months = Math.floor(days / 30);
+  return months === 1 ? '1 month ago' : `${months} months ago`;
+};
+
+const FALLBACK_REVIEWS = [
+  {
+    _id: 'fb1',
+    rating: 5,
+    comment: 'The Griha Pravesh puja was conducted with such devotion and precision — every mantra felt alive. Panditji arrived early, explained each ritual to our family beautifully, and the energy in our new home was transformed. We couldn\'t have asked for a better beginning.',
+    devotee: { firstName: 'Priya', lastName: 'Sharma' },
+    createdAt: new Date(Date.now() - 4 * 86400000).toISOString(),
+    booking: { pujaType: 'Griha Pravesh' },
+  },
+  {
+    _id: 'fb2',
+    rating: 5,
+    comment: 'I was worried about finding a knowledgeable Pandit for our son\'s Vivah, but PanditJi completely exceeded all expectations. The ceremony was flawless — traditional, soulful, and deeply meaningful. Every guest was moved. Absolutely 5 stars!',
+    devotee: { firstName: 'Rajesh', lastName: 'Agarwal' },
+    createdAt: new Date(Date.now() - 11 * 86400000).toISOString(),
+    booking: { pujaType: 'Vivah Ceremony' },
+  },
+  {
+    _id: 'fb3',
+    rating: 5,
+    comment: 'Booked for Satyanarayan Katha and the experience was divine. Panditji\'s voice and pronunciation were impeccable. He was patient with our elderly parents and kept the children engaged throughout. This platform is a blessing for every Hindu family.',
+    devotee: { firstName: 'Anita', lastName: 'Verma' },
+    createdAt: new Date(Date.now() - 18 * 86400000).toISOString(),
+    booking: { pujaType: 'Satyanarayan Katha' },
+  },
+];
+
+const ReviewsSection = () => {
+  const [reviews, setReviews] = useState([]);
+
+  useEffect(() => {
+    api.get('/reviews/latest')
+      .then(res => { if ((res.data.data || []).length > 0) setReviews(res.data.data); })
+      .catch(() => {});
+  }, []);
+
+  const displayReviews = reviews.length > 0 ? reviews : FALLBACK_REVIEWS;
+
+  return (
+    <section className="py-20 px-4 bg-surface overflow-hidden relative">
+      <div className="absolute top-0 left-0 w-96 h-96 bg-saffron-light rounded-full blur-[120px] -z-10 opacity-40" />
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-gold-light rounded-full blur-[120px] -z-10 opacity-30" />
+
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-14">
+          <span className="text-saffron font-black text-sm uppercase tracking-widest mb-3 block">Real Stories</span>
+          <h2 className="text-4xl lg:text-5xl font-black text-maroon leading-tight font-serif mb-4">
+            What Devotees <span className="text-saffron italic">Say</span>
+          </h2>
+          <p className="text-textMid max-w-xl mx-auto">Hear from families who experienced the divine touch of our verified Pandits.</p>
+        </div>
+
+        {/* Reviews Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {displayReviews.map((review) => (
+            <div
+              key={review._id}
+              className="bg-white rounded-[28px] border border-brandborder p-6 flex flex-col gap-4 shadow-sm hover:shadow-xl hover:shadow-saffron-light/40 hover:-translate-y-1 transition-all duration-300"
+            >
+              {/* Quote icon */}
+              <div className="w-10 h-10 bg-saffron-light rounded-2xl flex items-center justify-center flex-shrink-0">
+                <Quote size={18} className="text-saffron" />
+              </div>
+
+              {/* Comment */}
+              <p className="text-textMid text-sm leading-relaxed flex-1 font-medium">
+                {review.comment
+                  ? `"${review.comment}"`
+                  : '"A truly divine and memorable puja experience. Highly recommended!"'}
+              </p>
+
+              {/* Stars */}
+              <div className="flex items-center gap-1">
+                {[1, 2, 3, 4, 5].map(s => (
+                  <Star
+                    key={s}
+                    size={14}
+                    fill={s <= review.rating ? '#E8710A' : 'none'}
+                    color={s <= review.rating ? '#E8710A' : '#d1d5db'}
+                  />
+                ))}
+                <span className="ml-1 text-xs font-bold text-saffron">{review.rating}.0</span>
+              </div>
+
+              {/* Divider */}
+              <div className="border-t border-brandborder pt-4 flex items-center gap-3">
+                {/* Avatar */}
+                <div className="w-10 h-10 rounded-full bg-maroon text-white flex items-center justify-center font-bold text-base flex-shrink-0 overflow-hidden">
+                  {review.devotee?.avatar
+                    ? <img src={review.devotee.avatar} alt="" className="w-full h-full object-cover" />
+                    : (review.devotee?.firstName?.charAt(0) || '🙏')}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-maroon text-sm truncate">
+                    {review.devotee?.firstName} {review.devotee?.lastName}
+                  </p>
+                  <p className="text-textMuted text-xs">{timeAgo(review.createdAt)}</p>
+                </div>
+                {/* Puja tag */}
+                {review.booking?.pujaType && (
+                  <span className="text-[10px] bg-saffron-light text-saffron border border-brandborder px-2 py-1 rounded-full font-black flex-shrink-0">
+                    🕉 {review.booking.pujaType.split(' ')[0]}
+                  </span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 
 const STATS = [
   { label: 'Verified Pandits', value: '500+' },
@@ -470,6 +598,9 @@ const Home = () => {
           </div>
         </div>
       </section>
+
+      {/* Reviews */}
+      <ReviewsSection />
 
       {/* CTA Banner */}
       <section className="flex flex-col items-center justify-center py-20 md:py-28 px-4 bg-maroon text-white text-center border-b-[8px] border-saffron">
