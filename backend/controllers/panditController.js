@@ -168,7 +168,7 @@ exports.getMyProfile = async (req, res, next) => {
 // @access  Private/Pandit
 exports.updateProfile = async (req, res, next) => {
   try {
-    const { firstName, lastName, phone, city, specializations, experience, bio, feePerPuja } = req.body;
+    const { firstName, lastName, phone, city, specializations, experience, bio, feePerPuja, bankDetails } = req.body;
     
     // Update user details
     const userUpdates = {};
@@ -191,6 +191,15 @@ exports.updateProfile = async (req, res, next) => {
         const { geocodeCity } = require('../utils/geocoder');
         const coords = await geocodeCity(city, user.state || '');
         panditUpdates.location = { type: 'Point', coordinates: coords };
+      }
+      if (bankDetails) {
+        panditUpdates.bankDetails = {
+          accountNumber: bankDetails.accountNumber || '',
+          ifscCode: bankDetails.ifscCode || '',
+          bankName: bankDetails.bankName || '',
+          accountHolderName: bankDetails.accountHolderName || '',
+          upiId: bankDetails.upiId || ''
+        };
       }
 
       await Pandit.findByIdAndUpdate(user.panditProfile, panditUpdates, { new: true, runValidators: true });

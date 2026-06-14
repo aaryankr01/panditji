@@ -1009,6 +1009,18 @@ const AdminDashboard = () => {
                           </div>
                           <div className="text-xs text-gray-400">{p.pandit?.email}</div>
                           <div className="text-xs text-gray-400">{p.pandit?.phone}</div>
+                          {p.pandit?.panditProfile?.bankDetails && (p.pandit.panditProfile.bankDetails.accountNumber || p.pandit.panditProfile.bankDetails.upiId) ? (
+                            <div className="mt-2 p-2 bg-gray-50 border border-gray-100 rounded-lg text-[11px] text-gray-600 space-y-0.5">
+                              <div className="font-bold text-gray-700">Bank Details:</div>
+                              {p.pandit.panditProfile.bankDetails.bankName && <div><strong>Bank:</strong> {p.pandit.panditProfile.bankDetails.bankName}</div>}
+                              {p.pandit.panditProfile.bankDetails.accountHolderName && <div><strong>Name:</strong> {p.pandit.panditProfile.bankDetails.accountHolderName}</div>}
+                              {p.pandit.panditProfile.bankDetails.accountNumber && <div><strong>A/C:</strong> {p.pandit.panditProfile.bankDetails.accountNumber}</div>}
+                              {p.pandit.panditProfile.bankDetails.ifscCode && <div><strong>IFSC:</strong> {p.pandit.panditProfile.bankDetails.ifscCode}</div>}
+                              {p.pandit.panditProfile.bankDetails.upiId && <div><strong>UPI:</strong> {p.pandit.panditProfile.bankDetails.upiId}</div>}
+                            </div>
+                          ) : (
+                            <div className="mt-2 text-[10px] text-red-500 italic font-semibold">⚠️ Bank details not provided yet</div>
+                          )}
                         </td>
                         <td className="p-4">
                           <div className="font-medium text-gray-700">{p.booking?.pujaType || 'Puja'}</div>

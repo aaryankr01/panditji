@@ -99,7 +99,23 @@ const PanditDashboard = () => {
   const [requestingOtp, setRequestingOtp] = useState(false);
 
   // Profile Edit State
-  const [editForm, setEditForm] = useState({ firstName: '', lastName: '', phone: '', city: '', bio: '', experience: 0, feePerPuja: 1500, specializations: [] });
+  const [editForm, setEditForm] = useState({ 
+    firstName: '', 
+    lastName: '', 
+    phone: '', 
+    city: '', 
+    bio: '', 
+    experience: 0, 
+    feePerPuja: 1500, 
+    specializations: [],
+    bankDetails: {
+      accountNumber: '',
+      ifscCode: '',
+      bankName: '',
+      accountHolderName: '',
+      upiId: ''
+    }
+  });
   const [savingProfile, setSavingProfile] = useState(false);
 
   // Aadhar Upload State
@@ -145,7 +161,14 @@ const PanditDashboard = () => {
           bio: data.panditProfile?.bio || '',
           experience: data.panditProfile?.experience || 0,
           feePerPuja: data.panditProfile?.feePerPuja || 1500,
-          specializations: data.panditProfile?.specializations || []
+          specializations: data.panditProfile?.specializations || [],
+          bankDetails: {
+            accountNumber: data.panditProfile?.bankDetails?.accountNumber || '',
+            ifscCode: data.panditProfile?.bankDetails?.ifscCode || '',
+            bankName: data.panditProfile?.bankDetails?.bankName || '',
+            accountHolderName: data.panditProfile?.bankDetails?.accountHolderName || '',
+            upiId: data.panditProfile?.bankDetails?.upiId || ''
+          }
         });
 
         const sub = data.panditProfile?.subscription;
@@ -1207,6 +1230,80 @@ const PanditDashboard = () => {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6, gridColumn: '1 / -1' }}>
                     <label style={{ fontSize: 13, fontWeight: 700, color: C.textMid }}>{t('pd_bio') || 'Bio / About'}</label>
                     <textarea rows="4" value={editForm.bio} onChange={e => setEditForm({ ...editForm, bio: e.target.value })} style={{ padding: 12, borderRadius: 8, border: `1px solid ${C.border}`, outline: 'none', resize: 'vertical' }} />
+                  </div>
+
+                  {/* Bank Details Section */}
+                  <div style={{ gridColumn: '1 / -1', marginTop: 12, borderTop: `1px solid ${C.border}`, paddingTop: 20 }}>
+                    <h3 style={{ fontFamily: "'Playfair Display',serif", fontSize: 16, fontWeight: 700, color: C.maroon, marginBottom: 16 }}>
+                      🏦 {t('pd_bank_details_title') || 'Bank & Payout Details'}
+                    </h3>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        <label style={{ fontSize: 13, fontWeight: 700, color: C.textMid }}>{t('pd_bank_name') || 'Bank Name'}</label>
+                        <input 
+                          type="text" 
+                          value={editForm.bankDetails?.bankName || ''} 
+                          onChange={e => setEditForm({ 
+                            ...editForm, 
+                            bankDetails: { ...editForm.bankDetails, bankName: e.target.value } 
+                          })} 
+                          placeholder="e.g. State Bank of India"
+                          style={{ padding: 12, borderRadius: 8, border: `1px solid ${C.border}`, outline: 'none' }} 
+                        />
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        <label style={{ fontSize: 13, fontWeight: 700, color: C.textMid }}>{t('pd_account_holder_name') || 'Account Holder Name'}</label>
+                        <input 
+                          type="text" 
+                          value={editForm.bankDetails?.accountHolderName || ''} 
+                          onChange={e => setEditForm({ 
+                            ...editForm, 
+                            bankDetails: { ...editForm.bankDetails, accountHolderName: e.target.value } 
+                          })} 
+                          placeholder="e.g. Pt. Ramesh Sharma"
+                          style={{ padding: 12, borderRadius: 8, border: `1px solid ${C.border}`, outline: 'none' }} 
+                        />
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        <label style={{ fontSize: 13, fontWeight: 700, color: C.textMid }}>{t('pd_account_number') || 'Account Number'}</label>
+                        <input 
+                          type="text" 
+                          value={editForm.bankDetails?.accountNumber || ''} 
+                          onChange={e => setEditForm({ 
+                            ...editForm, 
+                            bankDetails: { ...editForm.bankDetails, accountNumber: e.target.value } 
+                          })} 
+                          placeholder="Enter account number"
+                          style={{ padding: 12, borderRadius: 8, border: `1px solid ${C.border}`, outline: 'none' }} 
+                        />
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        <label style={{ fontSize: 13, fontWeight: 700, color: C.textMid }}>{t('pd_ifsc_code') || 'IFSC Code'}</label>
+                        <input 
+                          type="text" 
+                          value={editForm.bankDetails?.ifscCode || ''} 
+                          onChange={e => setEditForm({ 
+                            ...editForm, 
+                            bankDetails: { ...editForm.bankDetails, ifscCode: e.target.value.toUpperCase() } 
+                          })} 
+                          placeholder="e.g. SBIN0001234"
+                          style={{ padding: 12, borderRadius: 8, border: `1px solid ${C.border}`, outline: 'none' }} 
+                        />
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, gridColumn: '1 / -1' }}>
+                        <label style={{ fontSize: 13, fontWeight: 700, color: C.textMid }}>{t('pd_upi_id') || 'UPI ID (Optional)'}</label>
+                        <input 
+                          type="text" 
+                          value={editForm.bankDetails?.upiId || ''} 
+                          onChange={e => setEditForm({ 
+                            ...editForm, 
+                            bankDetails: { ...editForm.bankDetails, upiId: e.target.value } 
+                          })} 
+                          placeholder="e.g. ramesh@okaxis"
+                          style={{ padding: 12, borderRadius: 8, border: `1px solid ${C.border}`, outline: 'none' }} 
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
 

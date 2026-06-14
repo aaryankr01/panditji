@@ -57,6 +57,13 @@ const panditSchema = new mongoose.Schema(
       razorpaySubId: { type: String },
     },
     adminNotes: { type: String }, // admin can add notes
+    bankDetails: {
+      accountNumber: { type: String, default: '' },
+      ifscCode: { type: String, default: '' },
+      bankName: { type: String, default: '' },
+      accountHolderName: { type: String, default: '' },
+      upiId: { type: String, default: '' },
+    },
   },
   { timestamps: true }
 );

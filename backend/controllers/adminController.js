@@ -318,7 +318,14 @@ exports.getPayouts = async (req, res, next) => {
           { path: 'pandit', select: 'firstName lastName email phone' }
         ]
       })
-      .populate('pandit', 'firstName lastName email phone')
+      .populate({
+        path: 'pandit',
+        select: 'firstName lastName email phone panditProfile',
+        populate: {
+          path: 'panditProfile',
+          select: 'bankDetails'
+        }
+      })
       .populate('devotee', 'firstName lastName email phone')
       .sort('-createdAt');
 
