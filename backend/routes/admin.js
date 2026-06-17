@@ -1,5 +1,5 @@
 const express = require('express');
-const { getUsers, getConversation, getStats, getAllBookings, getAllPayments, approvePandit, rejectPandit, approveCancellation, rejectCancellation, broadcastNotification } = require('../controllers/adminController');
+const { getUsers, getConversation, getStats, getAllBookings, getAllPayments, approvePandit, rejectPandit, approveCancellation, rejectCancellation, broadcastNotification, getPayouts, processPayout } = require('../controllers/adminController');
 const { getAllTickets, updateTicket, deleteTicket } = require('../controllers/supportController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
@@ -14,6 +14,8 @@ router.get('/users', getUsers);
 router.get('/stats', getStats);
 router.get('/bookings', getAllBookings);
 router.get('/payments', getAllPayments);
+router.get('/payouts', getPayouts);
+router.post('/payouts/:id/pay', processPayout);
 router.get('/conversations/:user1Id/:user2Id', getConversation);
 
 // Support tickets

@@ -9,22 +9,23 @@ const seedAdmin = async () => {
   await connectDB();
   
   try {
-    const adminExists = await Admin.findOne({ email: 'admin@panditji.com' });
-    
-    if (adminExists) {
-      console.log('Admin already exists');
-      process.exit();
+    const adminsToSeed = [
+      { name: 'Super Admin', email: 'admin@panditji.com', password: 'password123', role: 'admin' },
+      { name: 'Admin One', email: 'admin1@panditji.com', password: 'password123', role: 'admin' },
+      { name: 'Admin Two', email: 'admin2@panditji.com', password: 'password123', role: 'admin' }
+    ];
+
+    for (const adminData of adminsToSeed) {
+      const exists = await Admin.findOne({ email: adminData.email });
+      if (!exists) {
+        await Admin.create(adminData);
+        console.log(`Admin ${adminData.email} seeded successfully!`);
+      } else {
+        console.log(`Admin ${adminData.email} already exists`);
+      }
     }
     
-    await Admin.create({
-      name: 'Super Admin',
-      email: 'admin@panditji.com',
-      password: 'password123',
-      role: 'admin'
-    });
-    
-    console.log('Admin seeded successfully!');
-    process.exit();
+    process.exit(0);
   } catch (error) {
     console.error(error);
     process.exit(1);

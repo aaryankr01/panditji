@@ -33,8 +33,12 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      removeToken();
-      window.location.href = '/login';
+      const isLoginRequest = error.config?.url?.includes('/auth/login') || error.config?.url?.includes('/auth/admin/login');
+      if (!isLoginRequest) {
+        removeToken();
+        const isAdminRoute = window.location.pathname.startsWith('/admin');
+        window.location.href = isAdminRoute ? '/admin/login' : '/login';
+      }
     }
     return Promise.reject(error);
   }

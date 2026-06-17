@@ -188,6 +188,14 @@ exports.approveCancellation = async (req, res, next) => {
       refundAmount = (booking.fee * 100) - retainedAmount;
     }
 
+    // Add refund to devotee's wallet/UPI Lite balance
+    const refundAmountInRupees = refundAmount / 100;
+    const devoteeUser = await User.findById(booking.devotee._id || booking.devotee);
+    if (devoteeUser) {
+      devoteeUser.walletBalance = (devoteeUser.walletBalance || 0) + refundAmountInRupees;
+      await devoteeUser.save();
+    }
+
     // Notify Devotee and Pandit via socket
     if (global.io) {
       const devoteeSocketId = global.activeUsers?.get(booking.devotee._id.toString());
@@ -292,6 +300,95 @@ exports.broadcastNotification = async (req, res, next) => {
 
     const targetLabel = audience === 'all' ? 'everyone' : `${audience}s`;
     res.status(200).json({ success: true, message: `Notification broadcasted to ${targetLabel} successfully` });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Get all payouts
+// @route   GET /api/admin/payouts
+// @access  Private/Admin
+exports.getPayouts = async (req, res, next) => {
+  try {
+    const payments = await Payment.find({ type: 'booking_fee', status: 'completed' })
+      .populate({
+        path: 'booking',
+        populate: [
+          { path: 'devotee', select: 'firstName lastName email phone' },
+          { path: 'pandit', select: 'firstName lastName email phone' }
+        ]
+      })
+      .populate({
+        path: 'pandit',
+        select: 'firstName lastName email phone panditProfile',
+        populate: {
+          path: 'panditProfile',
+          select: 'bankDetails'
+        }
+      })
+      .populate('devotee', 'firstName lastName email phone')
+      .sort('-createdAt');
+
+    const payouts = payments.map(payment => {
+      const p = payment.toObject();
+      if (p.booking && p.booking.status === 'completed') {
+        const completedAt = p.booking.completedAt || p.booking.updatedAt;
+        const diffTime = Math.abs(new Date() - new Date(completedAt));
+        const diffDays = diffTime / (1000 * 60 * 60 * 24);
+        p.daysRemaining = Math.max(0, Math.ceil(15 - diffDays));
+        p.isEligible = diffDays >= 15 && p.payoutStatus === 'pending';
+      } else {
+        p.daysRemaining = 15;
+        p.isEligible = false;
+      }
+      return p;
+    });
+
+    res.status(200).json({ success: true, count: payouts.length, data: payouts });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Process payout
+// @route   POST /api/admin/payouts/:id/pay
+// @access  Private/Admin
+exports.processPayout = async (req, res, next) => {
+  try {
+    const payment = await Payment.findById(req.params.id).populate('booking');
+    if (!payment) {
+      return res.status(404).json({ success: false, message: 'Payment record not found' });
+    }
+
+    if (payment.type !== 'booking_fee') {
+      return res.status(400).json({ success: false, message: 'Invalid payment type for payout' });
+    }
+
+    if (payment.payoutStatus === 'paid') {
+      return res.status(400).json({ success: false, message: 'Payout already processed' });
+    }
+
+    if (!payment.booking || payment.booking.status !== 'completed') {
+      return res.status(400).json({ success: false, message: 'Booking is not completed yet' });
+    }
+
+    const completedAt = payment.booking.completedAt || payment.booking.updatedAt;
+    const diffTime = Math.abs(new Date() - new Date(completedAt));
+    const diffDays = diffTime / (1000 * 60 * 60 * 24);
+    if (diffDays < 15) {
+      return res.status(400).json({
+        success: false,
+        message: `Payout is locked. ${Math.ceil(15 - diffDays)} days remaining.`
+      });
+    }
+
+    const crypto = require('crypto');
+    payment.payoutStatus = 'paid';
+    payment.payoutDate = new Date();
+    payment.payoutTransactionId = req.body.transactionId || `PO-${crypto.randomBytes(6).toString('hex').toUpperCase()}`;
+    await payment.save();
+
+    res.status(200).json({ success: true, message: 'Payout processed successfully', data: payment });
   } catch (err) {
     next(err);
   }

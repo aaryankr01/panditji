@@ -32,7 +32,8 @@ const bookingSchema = new mongoose.Schema(
     cancelledBy: { type: String, enum: ['devotee', 'pandit', 'admin'] },
     completedAt: { type: Date },
     completionOtp: { type: String, default: null },
-    otpGeneratedAt: { type: Date, default: null }
+    otpGeneratedAt: { type: Date, default: null },
+    reviewed: { type: Boolean, default: false }
   },
   { timestamps: true }
 );

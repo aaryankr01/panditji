@@ -190,6 +190,34 @@ exports.updateBookingStatus = async (req, res, next) => {
 
     if (!booking) return res.status(404).json({ success: false, message: 'Booking not found' });
 
+    if (['cancelled', 'completed', 'rejected'].includes(booking.status)) {
+      return res.status(400).json({ success: false, message: `Booking is already ${booking.status}` });
+    }
+
+    // If status changes to rejected or cancelled, and it is a paid booking, refund devotee
+    if ((status === 'rejected' || status === 'cancelled') && booking.paymentStatus === 'paid') {
+      booking.paymentStatus = 'refunded';
+      
+      // Credit devotee wallet with 100% of booking fee
+      const refundAmount = booking.fee;
+      const devoteeUser = await User.findById(booking.devotee._id || booking.devotee);
+      if (devoteeUser) {
+        devoteeUser.walletBalance = (devoteeUser.walletBalance || 0) + refundAmount;
+        await devoteeUser.save();
+      }
+
+      // Find and update associated payment record
+      const Payment = require('../models/Payment');
+      const payment = await Payment.findOne({ booking: booking._id });
+      if (payment) {
+        payment.status = 'refunded';
+        payment.panditEarnings = 0;
+        payment.companyEarnings = 0;
+        payment.description = `Refunded 100% to devotee due to booking status update to ${status}: ₹${refundAmount.toFixed(2)}`;
+        await payment.save();
+      }
+    }
+
     booking.status = status;
     await booking.save();
 

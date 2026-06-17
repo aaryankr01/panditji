@@ -1,12 +1,14 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/common/Navbar';
 import useT from '../hooks/useT';
 import Footer from '../components/common/Footer';
+import api from '../utils/api';
+import useAuthStore from '../store/useAuthStore';
 import { 
   ArrowRight, CheckCircle, Users, Star, Shield, 
   Home as HomeIcon, BookOpen, Heart, Scissors, Flame, 
-  Droplets, Calendar, Sparkles, MapPin, Zap, ChevronLeft, ChevronRight, Sun, Moon
+  Droplets, Calendar, Sparkles, MapPin, Zap, ChevronLeft, ChevronRight, Sun, Moon, Quote, X, MessageSquare
 } from 'lucide-react';
 
 // ─── Hindu Panchang helpers (no library needed) ───────────────────────────
@@ -241,13 +243,418 @@ const HinduCalendar = () => {
               </div>
             ))}
 
-            {/* CTA */}
             <Link to="/pujas" className="flex items-center justify-center gap-2 bg-maroon text-white font-black py-4 px-6 rounded-2xl hover:bg-saffron transition-all duration-300 shadow-lg shadow-maroon/20">
               <Calendar size={18} /> {t('panchang_book_date')} <ArrowRight size={16} />
             </Link>
           </div>
         </div>
       </div>
+    </section>
+  );
+};
+
+// ─── Reviews Section ─────────────────────────────────────────────────────────
+const ReviewsSection = () => {
+  const t = useT();
+  const { user, token } = useAuthStore();
+  const [reviews, setReviews] = useState([]);
+  const [showModal, setShowModal] = useState(false);
+  const [showAllModal, setShowAllModal] = useState(false);
+  const [rating, setRating] = useState(5);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [comment, setComment] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+
+  const timeAgo = (dateStr) => {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const days = Math.floor(diff / 86400000);
+    if (days === 0) return t('time_today');
+    if (days === 1) return t('time_yesterday');
+    if (days < 30) return t('time_days_ago', { count: days });
+    const months = Math.floor(days / 30);
+    return months === 1 ? t('time_month_ago') : t('time_months_ago', { count: months });
+  };
+
+  const APP_REVIEWS = [
+    {
+      _id: 'ar1',
+      rating: 5,
+      comment: t('rev_ar1_comment'),
+      devotee: { firstName: t('rev_ar1_fname'), lastName: t('rev_ar1_lname') },
+      tag: t('rev_verified_user'),
+      date: t('rev_ar1_date')
+    },
+    {
+      _id: 'ar2',
+      rating: 5,
+      comment: t('rev_ar2_comment'),
+      devotee: { firstName: t('rev_ar2_fname'), lastName: t('rev_ar2_lname') },
+      tag: t('rev_verified_devotee'),
+      date: t('rev_ar2_date')
+    },
+    {
+      _id: 'ar3',
+      rating: 5,
+      comment: t('rev_ar3_comment'),
+      devotee: { firstName: t('rev_ar3_fname'), lastName: t('rev_ar3_lname') },
+      tag: t('rev_verified_devotee'),
+      date: t('rev_ar3_date')
+    }
+  ];
+
+  const fetchReviews = useCallback(async () => {
+    try {
+      const res = await api.get('/reviews/app');
+      if (res.data && res.data.data) {
+        setReviews(res.data.data);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchReviews();
+  }, [fetchReviews]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!comment.trim()) {
+      setError(t('rev_please_enter_comment') || 'Please enter your feedback comment');
+      return;
+    }
+    setSubmitting(true);
+    setError('');
+    try {
+      await api.post('/reviews/app', { rating, comment }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setShowModal(false);
+      setComment('');
+      setRating(5);
+      fetchReviews();
+    } catch (err) {
+      setError(err.response?.data?.message || t('rev_submit_fail') || 'Failed to submit review');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // Convert DB user reviews to display format
+  const dbReviewsFormatted = reviews.map(r => ({
+    _id: r._id,
+    rating: r.rating,
+    comment: r.comment,
+    devotee: {
+      firstName: r.user?.firstName || 'User',
+      lastName: r.user?.lastName || ''
+    },
+    tag: r.user?.role === 'pandit' ? t('rev_verified_pandit') : t('rev_verified_devotee'),
+    date: t('time_today')
+  }));
+
+  // Merge so we show user reviews first, then fallback reviews
+  const displayReviews = [...dbReviewsFormatted, ...APP_REVIEWS];
+  const featuredReviews = displayReviews.slice(0, 3); // Display only top 3 on home page
+
+  // Calculate stats for Flipkart / Play Store style breakdown
+  const totalCount = displayReviews.length;
+  const sumRatings = displayReviews.reduce((sum, r) => sum + r.rating, 0);
+  const averageRating = totalCount > 0 ? (sumRatings / totalCount).toFixed(1) : '0.0';
+
+  const starCounts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+  displayReviews.forEach(r => {
+    const rounded = Math.min(5, Math.max(1, Math.round(r.rating)));
+    starCounts[rounded] = (starCounts[rounded] || 0) + 1;
+  });
+
+  return (
+    <section className="py-20 px-4 bg-surface overflow-hidden relative">
+      <div className="absolute top-0 left-0 w-96 h-96 bg-saffron-light rounded-full blur-[120px] -z-10 opacity-40" />
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-gold-light rounded-full blur-[120px] -z-10 opacity-30" />
+
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-14 relative">
+          <span className="text-saffron font-black text-sm uppercase tracking-widest mb-3 block">{t('rev_app_experience')}</span>
+          <h2 className="text-4xl lg:text-5xl font-black text-maroon leading-tight font-serif mb-4">
+            {t('rev_what_devotees_say_title')}
+          </h2>
+          <p className="text-textMid max-w-xl mx-auto mb-6">{t('rev_what_devotees_say_desc')}</p>
+          
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            {user ? (
+              <button
+                onClick={() => { setShowModal(true); setError(''); }}
+                className="bg-saffron hover:bg-saffron-dark text-white font-bold px-6 py-3 rounded-full shadow-md hover:-translate-y-0.5 active:translate-y-0 transition-all text-sm flex items-center gap-2"
+              >
+                <MessageSquare size={16} /> {t('rev_write_app_review')}
+              </button>
+            ) : (
+              <p className="text-xs text-textMuted bg-saffron-light/50 px-4 py-2 rounded-full border border-brandborder/50">
+                {t('rev_logged_in_share')}
+              </p>
+            )}
+
+            <button
+              onClick={() => setShowAllModal(true)}
+              className="border-2 border-maroon text-maroon hover:bg-maroon hover:text-white font-bold px-6 py-2.5 rounded-full transition-all text-sm flex items-center gap-2"
+            >
+              {t('rev_see_all_reviews', { count: totalCount })}
+            </button>
+          </div>
+        </div>
+
+        {/* Featured Reviews Grid (Showing top 3) */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {featuredReviews.map((review) => (
+            <div
+              key={review._id}
+              className="bg-white rounded-[28px] border border-brandborder p-6 flex flex-col gap-4 shadow-sm hover:shadow-xl hover:shadow-saffron-light/40 hover:-translate-y-1 transition-all duration-300"
+            >
+              {/* Quote icon */}
+              <div className="w-10 h-10 bg-saffron-light rounded-2xl flex items-center justify-center flex-shrink-0">
+                <Quote size={18} className="text-saffron" />
+              </div>
+
+              {/* Comment */}
+              <p className="text-textMid text-sm leading-relaxed flex-1 font-medium">
+                "{review.comment}"
+              </p>
+
+              {/* Stars */}
+              <div className="flex items-center gap-1">
+                {[1, 2, 3, 4, 5].map(s => (
+                  <Star
+                    key={s}
+                    size={14}
+                    fill={s <= review.rating ? '#E8710A' : 'none'}
+                    color={s <= review.rating ? '#E8710A' : '#d1d5db'}
+                  />
+                ))}
+                <span className="ml-1 text-xs font-bold text-saffron">{review.rating}.0</span>
+              </div>
+
+              {/* Divider */}
+              <div className="border-t border-brandborder pt-4 flex items-center gap-3">
+                {/* Avatar */}
+                <div className="w-10 h-10 rounded-full bg-maroon text-white flex items-center justify-center font-bold text-base flex-shrink-0 overflow-hidden">
+                  {review.devotee.firstName ? review.devotee.firstName.charAt(0) : '?'}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-maroon text-sm truncate">
+                    {review.devotee.firstName} {review.devotee.lastName}
+                  </p>
+                  <p className="text-textMuted text-xs">{review.date}</p>
+                </div>
+                {/* Tag */}
+                <span className="text-[10px] bg-saffron-light text-saffron border border-brandborder px-2 py-1 rounded-full font-black flex-shrink-0">
+                  {review.tag}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Write App Review Modal */}
+      {showModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(44,26,14,0.72)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+          <div style={{ background: '#fff', borderRadius: 18, maxWidth: 440, width: '100%', overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
+            {/* Header */}
+            <div style={{ background: 'linear-gradient(135deg, #7B1D0E 0%, #E8710A 100%)', padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', marginBottom: 2, textTransform: 'uppercase', letterSpacing: '0.6px' }}>{t('rev_app_experience')}</div>
+                <h2 style={{ fontFamily: "'Playfair Display',serif", color: '#fff', fontWeight: 900, fontSize: 18 }}>
+                  {t('rev_write_app_review')}
+                </h2>
+              </div>
+              <button
+                onClick={() => setShowModal(false)}
+                style={{ background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#fff' }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} style={{ padding: '22px 24px' }}>
+              {/* Stars Selection */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, marginBottom: 24 }}>
+                <label style={{ fontSize: 12, fontWeight: 700, color: '#6B4C3B' }}>{t('rev_rate_experience')}</label>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setRating(star)}
+                      onMouseEnter={() => setHoverRating(star)}
+                      onMouseLeave={() => setHoverRating(0)}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                    >
+                      <Star
+                        size={32}
+                        color="#E8710A"
+                        fill={(hoverRating || rating) >= star ? '#E8710A' : 'none'}
+                        strokeWidth={2}
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Comment */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 20 }}>
+                <label style={{ fontSize: 12, fontWeight: 700, color: '#6B4C3B' }}>{t('dd_comment')}</label>
+                <textarea
+                  value={comment}
+                  onChange={e => setComment(e.target.value)}
+                  placeholder={t('rev_comment_placeholder')}
+                  rows={4}
+                  maxLength={500}
+                  style={{ width: '100%', padding: 12, borderRadius: 10, border: '1.5px solid #EAD9CC', fontSize: 13, outline: 'none', resize: 'none', fontFamily: 'inherit' }}
+                />
+              </div>
+
+              {error && (
+                <p style={{ color: '#7B1D0E', fontSize: 12, fontWeight: 600, marginBottom: 16, textAlign: 'center' }}>
+                  {error}
+                </p>
+              )}
+
+              {/* Action buttons */}
+              <div style={{ display: 'flex', gap: 12 }}>
+                <button
+                  type="button"
+                  onClick={() => setShowModal(false)}
+                  disabled={submitting}
+                  style={{ flex: 1, padding: '11px', borderRadius: 10, border: '1.5px solid #EAD9CC', background: '#f5f0eb', color: '#6B4C3B', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}
+                >
+                  {t('dd_cancel')}
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  style={{ flex: 2, padding: '11px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #7B1D0E, #E8710A)', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+                >
+                  {submitting ? t('rev_submitting') : t('rev_submit_review')}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Flipkart / Play Store Style "See All Reviews" Modal */}
+      {showAllModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(44,26,14,0.72)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+          <div style={{ background: '#fff', borderRadius: 24, maxWidth: 880, width: '100%', overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.3)', display: 'flex', flexDirection: 'column', maxHeight: '90vh' }}>
+            {/* Header */}
+            <div style={{ background: 'linear-gradient(135deg, #7B1D0E 0%, #E8710A 100%)', padding: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+              <div>
+                <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.75)', textTransform: 'uppercase', fontWeight: 900, letterSpacing: '1px' }}>{t('rev_feedback_center')}</span>
+                <h2 style={{ fontFamily: "'Playfair Display',serif", color: '#fff', fontWeight: 900, fontSize: 22, marginTop: 2 }}>
+                  {t('rev_app_experience_reviews')}
+                </h2>
+              </div>
+              <button
+                onClick={() => setShowAllModal(false)}
+                style={{ background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: '50%', width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#fff' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Split Content */}
+            <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', overflowY: 'auto', flex: 1, padding: 24, gap: 24 }}>
+              {/* Left Side: Rating Breakdown */}
+              <div style={{ flex: '1 1 280px', display: 'flex', flexDirection: 'column', gap: 16, borderRight: '1px solid #F2DFD8', paddingRight: 24 }}>
+                <h3 style={{ fontSize: 16, fontWeight: 900, color: '#7B1D0E' }}>{t('rev_overall_ratings')}</h3>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+                  <span style={{ fontSize: 48, fontWeight: 900, color: '#E8710A', lineHeight: 1 }}>{averageRating}</span>
+                  <span style={{ fontSize: 14, color: '#6B4C3B', fontWeight: 700 }}>{t('rev_out_of_5')}</span>
+                </div>
+
+                {/* Stars row */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  {[1, 2, 3, 4, 5].map((s) => (
+                    <Star
+                      key={s}
+                      size={20}
+                      fill={s <= Math.round(Number(averageRating)) ? '#E8710A' : 'none'}
+                      color={s <= Math.round(Number(averageRating)) ? '#E8710A' : '#d1d5db'}
+                    />
+                  ))}
+                  <span style={{ fontSize: 12, color: '#6B4C3B', marginLeft: 4, fontWeight: 700 }}>{t('rev_reviews_count', { count: totalCount })}</span>
+                </div>
+
+                {/* Rating bars */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
+                  {[5, 4, 3, 2, 1].map((stars) => {
+                    const count = starCounts[stars] || 0;
+                    const percent = totalCount > 0 ? Math.round((count / totalCount) * 100) : 0;
+                    return (
+                      <div key={stars} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: '#6B4C3B', width: 12 }}>{stars}</span>
+                        <Star size={12} fill="#E8710A" color="#E8710A" />
+                        <div style={{ flex: 1, height: 8, background: '#F9F4F0', borderRadius: 4, overflow: 'hidden' }}>
+                          <div style={{ width: `${percent}%`, height: '100%', background: 'linear-gradient(90deg, #E8710A, #7B1D0E)', borderRadius: 4 }} />
+                        </div>
+                        <span style={{ fontSize: 11, color: '#6B4C3B', width: 24, textAlign: 'right', fontWeight: 600 }}>{percent}%</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Right Side: Scrollable List of All Reviews */}
+              <div style={{ flex: '2 2 400px', display: 'flex', flexDirection: 'column', gap: 16, maxHeight: 420, overflowY: 'auto', paddingRight: 8 }}>
+                {displayReviews.map((review) => (
+                  <div
+                    key={review._id}
+                    style={{ background: '#FAF6F2', border: '1px solid #F2DFD8', borderRadius: 18, padding: 18, display: 'flex', flexDirection: 'column', gap: 10 }}
+                  >
+                    {/* Header: Name, Stars, Tag */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#7B1D0E', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 14 }}>
+                          {review.devotee.firstName ? review.devotee.firstName.charAt(0) : '?'}
+                        </div>
+                        <div>
+                          <p style={{ fontWeight: 800, color: '#7B1D0E', fontSize: 13, margin: 0 }}>
+                            {review.devotee.firstName} {review.devotee.lastName}
+                          </p>
+                          <p style={{ fontSize: 11, color: '#6B4C3B', margin: 0, opacity: 0.8 }}>{review.date}</p>
+                        </div>
+                      </div>
+                      <span style={{ fontSize: 10, background: '#FFF0E5', color: '#E8710A', border: '1px solid #FFD9C2', padding: '3px 8px', borderRadius: 12, fontWeight: 900 }}>
+                        {review.tag}
+                      </span>
+                    </div>
+
+                    {/* Stars */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                      {[1, 2, 3, 4, 5].map(s => (
+                        <Star
+                          key={s}
+                          size={12}
+                          fill={s <= review.rating ? '#E8710A' : 'none'}
+                          color={s <= review.rating ? '#E8710A' : '#d1d5db'}
+                        />
+                      ))}
+                    </div>
+
+                    {/* Comment */}
+                    <p style={{ fontSize: 13, color: '#6B4C3B', margin: 0, lineHeight: 1.5, fontWeight: 500 }}>
+                      "{review.comment}"
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 };
@@ -470,6 +877,9 @@ const Home = () => {
           </div>
         </div>
       </section>
+
+      {/* Reviews */}
+      <ReviewsSection />
 
       {/* CTA Banner */}
       <section className="flex flex-col items-center justify-center py-20 md:py-28 px-4 bg-maroon text-white text-center border-b-[8px] border-saffron">

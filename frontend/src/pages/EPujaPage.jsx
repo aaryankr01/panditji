@@ -846,22 +846,7 @@ export default function EPujaPage() {
         position: "relative",
         overflow: "hidden",
       }}>
-        {/* Top strip */}
-        <div style={{
-          background: "rgba(0,0,0,0.18)",
-          padding: "8px 32px",
-          display: "flex",
-          alignItems: "center",
-          gap: 6,
-          fontSize: 12,
-          color: "rgba(255,255,255,0.85)",
-        }}>
-          <span>Home</span>
-          <ChevronRight size={12} />
-          <span>Puja Services</span>
-          <ChevronRight size={12} />
-          <span style={{ color: "#fff", fontWeight: 600 }}>E-Puja</span>
-        </div>
+
 
         <div style={{
           maxWidth: 1200,

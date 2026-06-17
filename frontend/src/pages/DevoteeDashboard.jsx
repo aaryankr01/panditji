@@ -353,6 +353,114 @@ const CancelContactModal = ({ booking, onClose, onGoToChat, onRequestCancel }) =
   );
 };
 
+const ReviewModal = ({ booking, onClose, onSubmitReview }) => {
+  const t = useT();
+  const [rating, setRating] = useState(5);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [comment, setComment] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  if (!booking) return null;
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    await onSubmitReview(booking._id, rating, comment);
+    setSubmitting(false);
+  };
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(44,26,14,0.72)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+      <div style={{ background: '#fff', borderRadius: 18, maxWidth: 440, width: '100%', overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
+        {/* Header */}
+        <div style={{ background: 'linear-gradient(135deg, #7B1D0E 0%, #E8710A 100%)', padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', marginBottom: 2, textTransform: 'uppercase', letterSpacing: '0.6px' }}>{t('dd_write_review') || 'Rate & Review'}</div>
+            <h2 style={{ fontFamily: "'Playfair Display',serif", color: '#fff', fontWeight: 900, fontSize: 18 }}>
+              🕉 {booking.pujaType}
+            </h2>
+          </div>
+          <button onClick={onClose}
+            style={{ background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#fff' }}>
+            <X size={18} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} style={{ padding: '22px 24px' }}>
+          {/* Pandit Name */}
+          {booking.pandit && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20, background: '#fcfaf7', border: `1px solid ${C.border}`, borderRadius: 12, padding: 12 }}>
+              <div style={{ width: 40, height: 40, borderRadius: '50%', background: C.saffronLt, color: C.saffron, fontWeight: 800, fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {booking.pandit.firstName?.charAt(0)}
+              </div>
+              <div>
+                <div style={{ fontSize: 11, color: C.textMuted }}>{t('dd_pandit_reviewed') || 'Reviewing Pandit'}</div>
+                <div style={{ fontWeight: 700, color: C.maroon, fontSize: 14 }}>Pt. {booking.pandit.firstName} {booking.pandit.lastName}</div>
+              </div>
+            </div>
+          )}
+
+          {/* Stars Selection */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, marginBottom: 24 }}>
+            <label style={{ fontSize: 12, fontWeight: 700, color: C.textMid }}>{t('dd_select_rating') || 'How was your puja experience?'}</label>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  type="button"
+                  onClick={() => setRating(star)}
+                  onMouseEnter={() => setHoverRating(star)}
+                  onMouseLeave={() => setHoverRating(0)}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                >
+                  <Star
+                    size={32}
+                    color={C.saffron}
+                    fill={(hoverRating || rating) >= star ? C.saffron : 'none'}
+                    strokeWidth={2}
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Comment */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 24 }}>
+            <label style={{ fontSize: 12, fontWeight: 700, color: C.textMid }}>{t('dd_comment') || 'Comment / Feedbacks'}</label>
+            <textarea
+              value={comment}
+              onChange={e => setComment(e.target.value)}
+              placeholder={t('dd_review_placeholder') || 'Write about your experience, timing, and decoration...'}
+              rows={4}
+              maxLength={500}
+              style={{ width: '100%', padding: 12, borderRadius: 10, border: `1.5px solid ${C.border}`, fontSize: 13, outline: 'none', resize: 'none', fontFamily: 'inherit' }}
+            />
+          </div>
+
+          {/* Action buttons */}
+          <div style={{ display: 'flex', gap: 12 }}>
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={submitting}
+              style={{ flex: 1, padding: '11px', borderRadius: 10, border: `1.5px solid ${C.border}`, background: '#f5f0eb', color: C.textMid, fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 13, cursor: 'pointer' }}
+            >
+              {t('dd_cancel') || 'Cancel'}
+            </button>
+            <button
+              type="submit"
+              disabled={submitting}
+              style={{ flex: 2, padding: '11px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #7B1D0E, #E8710A)', color: '#fff', fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+            >
+              {submitting ? (t('rev_submitting') || 'Submitting...') : (t('dd_submit_review') || 'Submit Review')}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 const DevoteeDashboard = () => {
   const { user, token, logout, updateUser, isInitialized } = useAuthStore();
   const t = useT();
@@ -374,7 +482,9 @@ const DevoteeDashboard = () => {
   const [bookingModal, setBookingModal] = useState({ isOpen: false, pandit: null });
   const [cancelContactModal, setCancelContactModal] = useState(null);
   const [cancelConfirmModal, setCancelConfirmModal] = useState(null); // unpaid cancel confirm
+  const [reviewModal, setReviewModal] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [walletBalance, setWalletBalance] = useState(0);
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const intentCity = searchParams.get('city');
@@ -490,6 +600,42 @@ const DevoteeDashboard = () => {
     } catch (err) { console.error(err); }
   }, [token]);
 
+  const fetchWalletBalance = useCallback(async () => {
+    try {
+      const res = await api.get('/auth/me', { headers: { Authorization: `Bearer ${token}` } });
+      if (res.data.success && res.data.data) {
+        setWalletBalance(res.data.data.walletBalance || 0);
+      }
+    } catch (err) {
+      console.error('Error fetching wallet balance:', err);
+    }
+  }, [token]);
+
+  const handlePayWithWallet = async (booking) => {
+    if (!window.confirm(`Are you sure you want to pay ₹${booking.fee} using your UPI Lite Wallet balance?`)) return;
+    try {
+      setLoading(true);
+      const res = await api.post('/payments/pay-with-wallet', { bookingId: booking._id }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.data.success) {
+        alert('Payment Successful! You can now chat with the Pandit.');
+        setAcceptedBooking(null);
+        fetchMyBookings();
+        fetchMyPayments();
+        fetchConversations();
+        fetchWalletBalance();
+        setSelectedChatUser(booking.pandit);
+        setMobileChatView('chat');
+        setActiveTab('chat');
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Error processing wallet payment');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (!isInitialized || !token || user?.role !== 'devotee') return;
     fetchPandits();
@@ -501,6 +647,7 @@ const DevoteeDashboard = () => {
     fetchConversations();
     fetchMyBookings();
     fetchMyPayments();
+    fetchWalletBalance();
 
     const socket = io(import.meta.env.VITE_SOCKET_URL || 'https://panditji-1tf8.onrender.com', { transports: ['websocket'] });
     socketRef.current = socket;
@@ -526,7 +673,7 @@ const DevoteeDashboard = () => {
       setBookings(prev => prev.map(b => b._id === bookingId ? { ...b, completionOtp } : b));
     });
     return () => socket.disconnect();
-  }, [token, user, isInitialized, navigate, fetchConversations, fetchMyBookings, fetchMyPayments]);
+  }, [token, user, isInitialized, navigate, fetchConversations, fetchMyBookings, fetchMyPayments, fetchWalletBalance]);
 
   const handleLogout = () => { logout(); navigate('/'); };
   const startChat = (pandit) => { setSelectedChatUser(pandit); setMobileChatView('chat'); setActiveTab('chat'); };
@@ -611,6 +758,22 @@ const DevoteeDashboard = () => {
       setCancelContactModal(null);
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to submit cancellation request. Please try again.');
+    }
+  };
+
+  const submitReview = async (bookingId, rating, comment) => {
+    try {
+      await axios.post(
+        'https://panditji-1tf8.onrender.com/api/reviews',
+        { bookingId, rating, comment },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setBookings(prev => prev.map(b => b._id === bookingId ? { ...b, reviewed: true } : b));
+      alert(t('rev_submit_success') || 'Thank you! Your review has been submitted successfully.');
+      setReviewModal(null);
+      fetchPandits();
+    } catch (err) {
+      alert(err.response?.data?.message || t('rev_submit_fail') || 'Failed to submit review. Please try again.');
     }
   };
 
@@ -761,6 +924,15 @@ const DevoteeDashboard = () => {
             onClose={() => setCancelContactModal(null)}
             onGoToChat={(pandit) => { setSelectedChatUser(pandit); setMobileChatView('chat'); setActiveTab('chat'); }}
             onRequestCancel={requestCancelBooking}
+          />
+        )}
+
+        {/* Review modal */}
+        {reviewModal && (
+          <ReviewModal
+            booking={reviewModal}
+            onClose={() => setReviewModal(null)}
+            onSubmitReview={submitReview}
           />
         )}
 
@@ -923,7 +1095,7 @@ const DevoteeDashboard = () => {
                 <X size={16} />
               </button>
             </div>
-            <div className="dd-profile-area">
+            <div className="dd-profile-area" style={{ paddingBottom: 15 }}>
               <div className="dd-avatar-wrap">
                 {user?.avatar
                   ? <img src={user.avatar} alt="Profile" className="dd-avatar-img" />
@@ -935,6 +1107,25 @@ const DevoteeDashboard = () => {
               </div>
               <div className="dd-user-name">{user?.firstName} {user?.lastName}</div>
               {user?.city && <div className="dd-user-city"><MapPin size={11} /> {user.city}</div>}
+              
+              {/* UPI Lite Wallet Card */}
+              <div style={{
+                marginTop: 18,
+                padding: '12px 14px',
+                background: 'linear-gradient(135deg, #7B1D0E 0%, #E8710A 100%)',
+                borderRadius: 12,
+                color: '#fff',
+                width: '88%',
+                boxShadow: '0 4px 10px rgba(123, 29, 14, 0.25)',
+                textAlign: 'left'
+              }}>
+                <div style={{ fontSize: 9, opacity: 0.8, textTransform: 'uppercase', tracking: '0.5px', fontWeight: 700 }}>
+                  ⚡ {t('dd_upi_lite_wallet') || 'UPI Lite Wallet'}
+                </div>
+                <div style={{ fontSize: 20, fontWeight: 900, marginTop: 4, fontFamily: "'Playfair Display', serif" }}>
+                  ₹{walletBalance.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                </div>
+              </div>
             </div>
           </div>
           <nav className="dd-nav">
@@ -1035,7 +1226,7 @@ const DevoteeDashboard = () => {
                             )}
                           </div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 4, background: C.surface, color: C.maroon, padding: '4px 8px', borderRadius: 8, fontSize: 12, fontWeight: 700, border: `1px solid ${C.border}` }}>
-                            <Star size={12} fill="#C8960C" color="#C8960C" /> 4.8
+                            <Star size={12} fill={C.saffron} color={C.saffron} /> {pandit.panditProfile?.rating || 3.8}
                           </div>
                         </div>
 
@@ -1223,12 +1414,22 @@ const DevoteeDashboard = () => {
                           </>
                         )}
 
-                        {/* CASE 3: completed → Chat */}
-                        {booking.status === 'completed' && booking.pandit && (
-                          <button className="dd-btn dd-btn-ghost" style={{ fontSize: 12, justifyContent: 'center' }}
-                            onClick={() => startChat(booking.pandit)}>
-                            <MessageSquare size={14} /> {t('dd_chat')}
-                          </button>
+                        {/* CASE 3: completed → Chat & Review */}
+                        {booking.status === 'completed' && (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                            {booking.pandit && (
+                              <button className="dd-btn dd-btn-ghost" style={{ fontSize: 12, justifyContent: 'center' }}
+                                onClick={() => startChat(booking.pandit)}>
+                                <MessageSquare size={14} /> {t('dd_chat')}
+                              </button>
+                            )}
+                            {!booking.reviewed && (
+                              <button className="dd-btn dd-btn-primary" style={{ fontSize: 12, justifyContent: 'center', background: C.saffron, color: '#fff' }}
+                                onClick={() => setReviewModal(booking)}>
+                                <Star size={14} fill="#fff" color="#fff" /> {t('dd_rate_pandit') || 'Rate Pandit'}
+                              </button>
+                            )}
+                          </div>
                         )}
 
                         {/* CASE 4: pending → Cancel only if still upcoming */}
@@ -1357,9 +1558,31 @@ const DevoteeDashboard = () => {
                         <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 24, fontWeight: 900, color: C.maroon, marginBottom: 8 }}>
                           ₹{booking.fee?.toLocaleString() || '1,500'}
                         </div>
-                        <button className="dd-btn dd-btn-primary" onClick={() => handlePayment(booking)} disabled={loading}>
-                          {loading ? (t('dd_processing') || 'Processing...') : (t('dd_pay_now') || 'Pay Now')}
-                        </button>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-end' }}>
+                          <button className="dd-btn dd-btn-primary" onClick={() => handlePayment(booking)} disabled={loading} style={{ width: '100%' }}>
+                            {loading ? (t('dd_processing') || 'Processing...') : (t('dd_pay_now') || 'Pay Now')}
+                          </button>
+                          {walletBalance >= booking.fee && (
+                            <button 
+                              className="dd-btn" 
+                              onClick={() => handlePayWithWallet(booking)} 
+                              disabled={loading}
+                              style={{ 
+                                background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)', 
+                                color: '#fff', 
+                                border: 'none',
+                                fontSize: 11,
+                                fontWeight: 800,
+                                padding: '6px 12px',
+                                borderRadius: 8,
+                                cursor: 'pointer',
+                                width: '100%'
+                              }}
+                            >
+                              {loading ? (t('dd_processing') || 'Processing...') : (t('dd_pay_with_wallet') || '⚡ Pay with Wallet')}
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))}

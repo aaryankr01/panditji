@@ -233,3 +233,95 @@ exports.verifySubscription = async (req, res, next) => {
     next(err);
   }
 };
+
+// @desc    Pay booking fee using devotee wallet balance (UPI Lite style)
+// @route   POST /api/payments/pay-with-wallet
+// @access  Private/Devotee
+exports.payWithWallet = async (req, res, next) => {
+  try {
+    const { bookingId } = req.body;
+    const devoteeId = req.user.id;
+
+    const booking = await Booking.findById(bookingId);
+    if (!booking) {
+      return res.status(404).json({ success: false, message: 'Booking not found' });
+    }
+    if (booking.devotee.toString() !== devoteeId) {
+      return res.status(403).json({ success: false, message: 'Not authorized to pay for this booking' });
+    }
+    if (!booking.pandit) {
+      return res.status(400).json({ success: false, message: 'Cannot pay before a Pandit is assigned' });
+    }
+    if (booking.paymentStatus === 'paid') {
+      return res.status(400).json({ success: false, message: 'Booking is already paid' });
+    }
+
+    const User = require('../models/User');
+    const devoteeUser = await User.findById(devoteeId);
+    if (!devoteeUser) {
+      return res.status(404).json({ success: false, message: 'Devotee user not found' });
+    }
+
+    const requiredFee = booking.fee; // in Rupees
+    if ((devoteeUser.walletBalance || 0) < requiredFee) {
+      return res.status(400).json({
+        success: false,
+        message: `Insufficient wallet balance. Required: ₹${requiredFee}, Available: ₹${devoteeUser.walletBalance || 0}`
+      });
+    }
+
+    // Deduct from wallet
+    devoteeUser.walletBalance = (devoteeUser.walletBalance || 0) - requiredFee;
+    await devoteeUser.save();
+
+    const amountInPaise = requiredFee * 100;
+    const panditEarnings = Math.round(amountInPaise * 0.9);
+    const companyEarnings = Math.round(amountInPaise * 0.1);
+
+    let panditProfileId = booking.panditProfile;
+    if (!panditProfileId) {
+      const Pandit = require('../models/Pandit');
+      const profile = await Pandit.findOne({ user: booking.pandit });
+      panditProfileId = profile ? profile._id : null;
+    }
+
+    const crypto = require('crypto');
+    const transactionId = `WL-${crypto.randomBytes(6).toString('hex').toUpperCase()}`;
+
+    // Create payment record
+    const payment = await Payment.create({
+      pandit: booking.pandit,
+      panditProfile: panditProfileId,
+      booking: bookingId,
+      devotee: devoteeId,
+      type: 'booking_fee',
+      amount: amountInPaise,
+      panditEarnings: panditEarnings,
+      companyEarnings: companyEarnings,
+      currency: 'INR',
+      status: 'completed',
+      paymentMethod: 'wallet',
+      transactionId: transactionId,
+      razorpayPaymentId: transactionId, // duplicate for compatibility with lists
+    });
+
+    // Update booking status
+    booking.paymentStatus = 'paid';
+    booking.status = 'confirmed';
+    booking.paymentId = transactionId;
+    await booking.save();
+
+    // Notify Pandit that payment is complete
+    if (global.io) {
+      const pId = booking.pandit.toString();
+      const panditSocketId = global.activeUsers?.get(pId);
+      if (panditSocketId) {
+        global.io.to(panditSocketId).emit('paymentConfirmed', { bookingId: booking._id.toString() });
+      }
+    }
+
+    res.status(200).json({ success: true, message: 'Paid successfully with wallet balance', data: payment });
+  } catch (err) {
+    next(err);
+  }
+};

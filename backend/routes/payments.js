@@ -1,5 +1,5 @@
 const express = require('express');
-const { createOrder, verifyPayment, getPayments, createSubscriptionOrder, verifySubscription } = require('../controllers/paymentController');
+const { createOrder, verifyPayment, getPayments, createSubscriptionOrder, verifySubscription, payWithWallet } = require('../controllers/paymentController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
 const router = express.Router();
@@ -8,6 +8,7 @@ router.use(protect);
 
 router.post('/create-order', authorize('devotee'), createOrder);
 router.post('/verify', authorize('devotee'), verifyPayment);
+router.post('/pay-with-wallet', authorize('devotee'), payWithWallet);
 router.get('/', getPayments);
 
 router.post('/create-subscription-order', authorize('pandit'), createSubscriptionOrder);

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../../store/useAuthStore';
 import api from '../../utils/api';
-import { Users, MessageSquare, LayoutDashboard, LogOut, Headphones, RefreshCw, Inbox, CheckCircle, Clock, XCircle, Send, Trash2, Eye, Megaphone } from 'lucide-react';
+import { Users, MessageSquare, LayoutDashboard, LogOut, Headphones, RefreshCw, Inbox, CheckCircle, Clock, XCircle, Send, Trash2, Eye, Megaphone, Banknote } from 'lucide-react';
 
 const AdminDashboard = () => {
   const { user, token, logout } = useAuthStore();
@@ -25,6 +25,9 @@ const AdminDashboard = () => {
   const [broadcastLoading, setBroadcastLoading] = useState(false);
   const [broadcastTarget, setBroadcastTarget] = useState('all');
   const [broadcastHistory, setBroadcastHistory] = useState([]);
+  const [payoutsList, setPayoutsList] = useState([]);
+  const [payoutTabFilter, setPayoutTabFilter] = useState('pending');
+  const [processingPayoutId, setProcessingPayoutId] = useState(null);
 
   useEffect(() => {
     if (!token || user?.role !== 'admin') {
@@ -58,6 +61,11 @@ const AdminDashboard = () => {
           headers: { Authorization: `Bearer ${token}` }
         });
         setBookingsList(bookingsRes.data.data || []);
+
+        const payoutsRes = await api.get('/admin/payouts', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setPayoutsList(payoutsRes.data.data || []);
       } catch (err) {
         console.error(err);
       }
@@ -102,6 +110,31 @@ const AdminDashboard = () => {
       alert(err.response?.data?.message || 'Failed to send broadcast');
     } finally {
       setBroadcastLoading(false);
+    }
+  };
+
+  const handleProcessPayout = async (paymentId) => {
+    if (!window.confirm('Are you sure you want to release this payout to Pandit Ji?')) return;
+    setProcessingPayoutId(paymentId);
+    try {
+      await api.post(`/admin/payouts/${paymentId}/pay`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      alert('Payout processed successfully!');
+      
+      const payoutsRes = await api.get('/admin/payouts', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setPayoutsList(payoutsRes.data.data || []);
+      
+      const statsRes = await api.get('/admin/stats', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setStats(statsRes.data.data);
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to process payout');
+    } finally {
+      setProcessingPayoutId(null);
     }
   };
 
@@ -272,6 +305,18 @@ const AdminDashboard = () => {
             <Megaphone size={20} />
             Broadcast
           </button>
+          <button
+            onClick={() => setActiveTab('payouts')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'payouts' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
+          >
+            <Banknote size={20} />
+            Payouts
+            {payoutsList.filter(p => p.isEligible && p.payoutStatus === 'pending').length > 0 && (
+              <span className="ml-auto bg-green-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                {payoutsList.filter(p => p.isEligible && p.payoutStatus === 'pending').length}
+              </span>
+            )}
+          </button>
         </nav>
         <div className="p-4 border-t border-gray-800">
           <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-xl transition-colors">
@@ -290,6 +335,7 @@ const AdminDashboard = () => {
             {activeTab === 'financials' && 'Financial Records'}
             {activeTab === 'support' && 'Support Tickets'}
             {activeTab === 'broadcast' && '📢 Broadcast Notifications'}
+            {activeTab === 'payouts' && 'Pandit Payouts (15-day Hold)'}
           </h2>
           {activeTab === 'users' && (
             <div className="flex gap-3 flex-wrap">
@@ -889,6 +935,140 @@ const AdminDashboard = () => {
                   ))}
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'payouts' && (
+          <div className="space-y-6">
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                <p className="text-gray-400 text-sm font-medium">Total Pending Payouts</p>
+                <h3 className="text-2xl font-bold text-gray-800 mt-2">
+                  ₹{(payoutsList.filter(p => p.payoutStatus === 'pending').reduce((sum, p) => sum + p.panditEarnings, 0) / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                </h3>
+              </div>
+              <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                <p className="text-gray-400 text-sm font-medium">Eligible Payouts (Ready)</p>
+                <h3 className="text-2xl font-bold text-green-600 mt-2">
+                  ₹{(payoutsList.filter(p => p.isEligible).reduce((sum, p) => sum + p.panditEarnings, 0) / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                </h3>
+              </div>
+              <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                <p className="text-gray-400 text-sm font-medium">Total Paid Out</p>
+                <h3 className="text-2xl font-bold text-blue-600 mt-2">
+                  ₹{(payoutsList.filter(p => p.payoutStatus === 'paid').reduce((sum, p) => sum + p.panditEarnings, 0) / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                </h3>
+              </div>
+            </div>
+
+            {/* Filter Tabs */}
+            <div className="flex border-b border-gray-200">
+              <button
+                className={`py-3 px-6 font-semibold border-b-2 transition-all ${payoutTabFilter === 'pending' ? 'border-orange-500 text-orange-500' : 'border-transparent text-gray-400 hover:text-gray-600'}`}
+                onClick={() => setPayoutTabFilter('pending')}
+              >
+                Pending Payouts ({payoutsList.filter(p => p.payoutStatus === 'pending').length})
+              </button>
+              <button
+                className={`py-3 px-6 font-semibold border-b-2 transition-all ${payoutTabFilter === 'paid' ? 'border-orange-500 text-orange-500' : 'border-transparent text-gray-400 hover:text-gray-600'}`}
+                onClick={() => setPayoutTabFilter('paid')}
+              >
+                Paid History ({payoutsList.filter(p => p.payoutStatus === 'paid').length})
+              </button>
+            </div>
+
+            {/* Table */}
+            <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-gray-50 border-b border-gray-100">
+                    <th className="p-4 font-semibold text-gray-600 text-sm">Pandit Name & Details</th>
+                    <th className="p-4 font-semibold text-gray-600 text-sm">Booking Details</th>
+                    <th className="p-4 font-semibold text-gray-600 text-sm">Puja Amount</th>
+                    <th className="p-4 font-semibold text-gray-600 text-sm">Pandit Earnings (90%)</th>
+                    <th className="p-4 font-semibold text-gray-600 text-sm">Commission (10%)</th>
+                    <th className="p-4 font-semibold text-gray-600 text-sm">Status / Lock</th>
+                    <th className="p-4 font-semibold text-gray-600 text-sm">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {payoutsList.filter(p => p.payoutStatus === payoutTabFilter).length === 0 ? (
+                    <tr>
+                      <td colSpan="7" className="p-8 text-center text-gray-400">
+                        No payout records found in this category.
+                      </td>
+                    </tr>
+                  ) : (
+                    payoutsList.filter(p => p.payoutStatus === payoutTabFilter).map(p => (
+                      <tr key={p._id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                        <td className="p-4">
+                          <div className="font-semibold text-gray-800">
+                            Pt. {p.pandit?.firstName} {p.pandit?.lastName}
+                          </div>
+                          <div className="text-xs text-gray-400">{p.pandit?.email}</div>
+                          <div className="text-xs text-gray-400">{p.pandit?.phone}</div>
+                          {p.pandit?.panditProfile?.bankDetails && (p.pandit.panditProfile.bankDetails.accountNumber || p.pandit.panditProfile.bankDetails.upiId) ? (
+                            <div className="mt-2 p-2 bg-gray-50 border border-gray-100 rounded-lg text-[11px] text-gray-600 space-y-0.5">
+                              <div className="font-bold text-gray-700">Bank Details:</div>
+                              {p.pandit.panditProfile.bankDetails.bankName && <div><strong>Bank:</strong> {p.pandit.panditProfile.bankDetails.bankName}</div>}
+                              {p.pandit.panditProfile.bankDetails.accountHolderName && <div><strong>Name:</strong> {p.pandit.panditProfile.bankDetails.accountHolderName}</div>}
+                              {p.pandit.panditProfile.bankDetails.accountNumber && <div><strong>A/C:</strong> {p.pandit.panditProfile.bankDetails.accountNumber}</div>}
+                              {p.pandit.panditProfile.bankDetails.ifscCode && <div><strong>IFSC:</strong> {p.pandit.panditProfile.bankDetails.ifscCode}</div>}
+                              {p.pandit.panditProfile.bankDetails.upiId && <div><strong>UPI:</strong> {p.pandit.panditProfile.bankDetails.upiId}</div>}
+                            </div>
+                          ) : (
+                            <div className="mt-2 text-[10px] text-red-500 italic font-semibold">⚠️ Bank details not provided yet</div>
+                          )}
+                        </td>
+                        <td className="p-4">
+                          <div className="font-medium text-gray-700">{p.booking?.pujaType || 'Puja'}</div>
+                          <div className="text-xs text-gray-400">
+                            Completed: {p.booking?.completedAt ? new Date(p.booking.completedAt).toLocaleDateString('en-IN') : 'N/A'}
+                          </div>
+                        </td>
+                        <td className="p-4 font-medium text-gray-800">₹{(p.amount / 100).toLocaleString('en-IN')}</td>
+                        <td className="p-4 font-semibold text-gray-800">₹{(p.panditEarnings / 100).toLocaleString('en-IN')}</td>
+                        <td className="p-4 text-gray-500">₹{(p.companyEarnings / 100).toLocaleString('en-IN')}</td>
+                        <td className="p-4">
+                          {p.payoutStatus === 'paid' ? (
+                            <div>
+                              <span className="inline-block bg-green-50 text-green-700 text-xs font-bold px-2.5 py-1 rounded-full">
+                                ✓ Paid
+                              </span>
+                              <div className="text-[10px] text-gray-400 mt-1">Txn: {p.payoutTransactionId}</div>
+                              <div className="text-[10px] text-gray-400">{new Date(p.payoutDate).toLocaleDateString()}</div>
+                            </div>
+                          ) : p.isEligible ? (
+                            <span className="inline-block bg-green-100 text-green-800 text-xs font-bold px-2.5 py-1 rounded-full">
+                              Eligible (Ready)
+                            </span>
+                          ) : (
+                            <div>
+                              <span className="inline-block bg-yellow-100 text-yellow-800 text-xs font-bold px-2.5 py-1 rounded-full">
+                                Locked
+                              </span>
+                              <div className="text-[10px] text-gray-400 mt-1">{p.daysRemaining} days remaining</div>
+                            </div>
+                          )}
+                        </td>
+                        <td className="p-4">
+                          {p.payoutStatus === 'pending' && (
+                            <button
+                              disabled={!p.isEligible || processingPayoutId === p._id}
+                              onClick={() => handleProcessPayout(p._id)}
+                              className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${p.isEligible ? 'bg-orange-500 hover:bg-orange-600 text-white shadow-sm' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
+                            >
+                              {processingPayoutId === p._id ? 'Processing...' : 'Pay Pandit'}
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
         )}

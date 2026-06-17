@@ -39,7 +39,7 @@ const panditSchema = new mongoose.Schema(
       type: { type: String, enum: ['Point'], default: 'Point' },
       coordinates: { type: [Number], default: [0, 0] }, // [lng, lat]
     },
-    rating: { type: Number, default: 0, min: 0, max: 5 },
+    rating: { type: Number, default: 3.8, min: 0, max: 5 },
     totalReviews: { type: Number, default: 0 },
     totalBookings: { type: Number, default: 0 },
     isApproved: { type: Boolean, default: false },
@@ -57,6 +57,13 @@ const panditSchema = new mongoose.Schema(
       razorpaySubId: { type: String },
     },
     adminNotes: { type: String }, // admin can add notes
+    bankDetails: {
+      accountNumber: { type: String, default: '' },
+      ifscCode: { type: String, default: '' },
+      bankName: { type: String, default: '' },
+      accountHolderName: { type: String, default: '' },
+      upiId: { type: String, default: '' },
+    },
   },
   { timestamps: true }
 );
