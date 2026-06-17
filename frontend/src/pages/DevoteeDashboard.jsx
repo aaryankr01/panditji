@@ -23,7 +23,7 @@ const loadRazorpayScript = () =>
 const PUJA_PRICES = {
   'Rudrabhishek': 3100,
   'Sunderkand Path': 3500,
-  'Griha Pravesh': 5100,
+  'Griha Pravesh': 11,
   'Vivah Ceremony': 11000,
   'Satyanarayan Katha': 2100,
   'Mundan Ceremony': 2100,

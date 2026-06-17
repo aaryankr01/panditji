@@ -20,7 +20,7 @@ const pujas = [
   { name: "Godh Bharai Puja", price: 2100, originalPrice: 5100, discount: 59, rating: 4.5, category: "Celebration", duration: "1.5 hrs", description: "Online Godh Bharai Puja performed by verified pandits." },
   { name: "Navagraha Shanti Puja", price: 5100, originalPrice: 8100, discount: 37, rating: 4.4, category: "Remedial", duration: "1.5 hrs", description: "Online Navagraha Shanti Puja performed by verified pandits." },
   { name: "Vastu Shanti Puja", price: 1100, originalPrice: 4100, discount: 73, rating: 4.2, category: "Remedial", tag: "Best Value", duration: "1.5 hrs", description: "Online Vastu Shanti Puja performed by verified pandits." },
-  { name: "Griha Pravesh Puja", price: 5100, originalPrice: 8500, discount: 40, rating: 4.6, category: "Celebration", duration: "1.5 hrs", description: "Online Griha Pravesh Puja performed by verified pandits." },
+  { name: "Griha Pravesh Puja", price: 11, originalPrice: 8500, discount: 40, rating: 4.6, category: "Celebration", duration: "1.5 hrs", description: "Online Griha Pravesh Puja performed by verified pandits." },
   { name: "Guru Chandal Dosh Puja", price: 7100, originalPrice: 9100, discount: 22, rating: 4.4, category: "Remedial", duration: "1.5 hrs", description: "Online Guru Chandal Dosh Puja performed by verified pandits." },
   { name: "Mahamrityunjaya Jaap", price: 51000, originalPrice: 70000, discount: 27, rating: 4.3, category: "Devotional", tag: "Premium", duration: "1.5 hrs", description: "Online Mahamrityunjaya Jaap performed by verified pandits." },
   { name: "Hanuman Chalisa Path", price: 3100, originalPrice: 5100, discount: 39, rating: 4.5, category: "Devotional", duration: "1.5 hrs", description: "Online Hanuman Chalisa Path performed by verified pandits." },
