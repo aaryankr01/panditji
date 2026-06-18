@@ -14,6 +14,8 @@ const AdminDashboard = () => {
   const [usersList, setUsersList] = useState([]);
   const [paymentsList, setPaymentsList] = useState([]);
   const [activeTab, setActiveTab] = useState('overview');
+  const [autoRefundRunning, setAutoRefundRunning] = useState(false);
+  const [autoRefundResult, setAutoRefundResult] = useState(null);
 
   useEffect(() => {
     if (location.pathname === '/admin/chats') {
@@ -417,6 +419,47 @@ const AdminDashboard = () => {
 
         {activeTab === 'overview' && (
           <>
+            {/* Auto-Refund Quick Action Banner */}
+            <div className="mb-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-2xl flex items-center justify-between flex-wrap gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center text-green-700 text-xl">💰</div>
+                <div>
+                  <div className="font-bold text-green-800 text-sm">Auto-Refund Job</div>
+                  <div className="text-green-600 text-xs">Refunds paid bookings where OTP was never shared within 5 days of scheduled date → credits devotee wallet</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                {autoRefundResult && (
+                  <div className="text-xs font-semibold text-green-700 bg-green-100 px-3 py-1.5 rounded-lg">
+                    ✅ {autoRefundResult.processed} refunded{autoRefundResult.errors > 0 ? `, ⚠️ ${autoRefundResult.errors} errors` : ''}
+                  </div>
+                )}
+                <button
+                  onClick={async () => {
+                    if (!window.confirm('Run auto-refund job now? This will process all eligible stale bookings.')) return;
+                    setAutoRefundRunning(true);
+                    setAutoRefundResult(null);
+                    try {
+                      const res = await api.post('/admin/run-auto-refund', {}, { headers: { Authorization: `Bearer ${token}` } });
+                      setAutoRefundResult({ processed: res.data.processed || 0, errors: res.data.errors || 0 });
+                    } catch (err) {
+                      alert('Error: ' + (err.response?.data?.message || err.message));
+                    } finally {
+                      setAutoRefundRunning(false);
+                    }
+                  }}
+                  disabled={autoRefundRunning}
+                  className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                >
+                  {autoRefundRunning ? (
+                    <><RefreshCw size={14} className="animate-spin" /> Running...</>
+                  ) : (
+                    <><RefreshCw size={14} /> Run Now</>
+                  )}
+                </button>
+              </div>
+            </div>
+
             {/* Stats */}
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
               <StatCard title="Total Users" value={stats.totalUsers} icon={<Users size={24} />} color="blue" />

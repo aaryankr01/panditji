@@ -485,6 +485,7 @@ const DevoteeDashboard = () => {
   const [reviewModal, setReviewModal] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [walletBalance, setWalletBalance] = useState(0);
+  const [refundAlert, setRefundAlert] = useState(null); // { amount, newBalance, pujaType }
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const intentCity = searchParams.get('city');
@@ -671,6 +672,17 @@ const DevoteeDashboard = () => {
     });
     socket.on('bookingCompletionOtpGenerated', ({ bookingId, completionOtp }) => {
       setBookings(prev => prev.map(b => b._id === bookingId ? { ...b, completionOtp } : b));
+    });
+    socket.on('autoRefundProcessed', ({ bookingId, pujaType, refundAmount, walletBalance: newBalance }) => {
+      // Update wallet balance live
+      setWalletBalance(newBalance);
+      // Update the booking status in list
+      setBookings(prev => prev.map(b =>
+        b._id === bookingId ? { ...b, status: 'cancelled', paymentStatus: 'refunded' } : b
+      ));
+      // Show a prominent in-page alert (toast-style)
+      setRefundAlert({ amount: refundAmount, newBalance, pujaType });
+      setTimeout(() => setRefundAlert(null), 8000);
     });
     return () => socket.disconnect();
   }, [token, user, isInitialized, navigate, fetchConversations, fetchMyBookings, fetchMyPayments, fetchWalletBalance]);
@@ -982,6 +994,37 @@ const DevoteeDashboard = () => {
                   onClick={() => { alert('Chat disabled until payment is complete.'); setAcceptedBooking(null); }}>
                   Later
                 </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Auto-Refund credited toast */}
+        {refundAlert && (
+          <div style={{
+            position: 'fixed', top: 16, left: '50%', transform: 'translateX(-50%)',
+            zIndex: 300, background: '#fff', borderRadius: 16,
+            boxShadow: '0 12px 40px rgba(0,0,0,0.22)', border: '2px solid #16a34a',
+            maxWidth: 380, width: 'calc(100% - 32px)', overflow: 'hidden',
+            animation: 'ddSlideDown 0.4s cubic-bezier(0.4,0,0.2,1)',
+          }}>
+            <style>{`@keyframes ddSlideDown{from{opacity:0;transform:translateX(-50%) translateY(-20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}`}</style>
+            <div style={{ background: 'linear-gradient(135deg, #16a34a, #15803d)', padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontSize: 24 }}>💰</span>
+              <div>
+                <div style={{ color: '#fff', fontWeight: 800, fontSize: 15 }}>Refund Credited to Wallet!</div>
+                <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12 }}>Your {refundAlert.pujaType} puja</div>
+              </div>
+              <button onClick={() => setRefundAlert(null)}
+                style={{ marginLeft: 'auto', background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: '50%', width: 28, height: 28, cursor: 'pointer', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>✕</button>
+            </div>
+            <div style={{ padding: '14px 18px' }}>
+              <div style={{ fontSize: 28, fontWeight: 900, color: '#16a34a', marginBottom: 4 }}>₹{refundAlert.amount.toLocaleString()}</div>
+              <div style={{ fontSize: 13, color: '#374151', marginBottom: 10 }}>
+                Added to your <strong>PanditJi Wallet (UPI Lite)</strong> because the puja was not completed within 5 days.
+              </div>
+              <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8, padding: '8px 12px', fontSize: 12, color: '#15803d', fontWeight: 600 }}>
+                ✅ New Wallet Balance: <strong>₹{refundAlert.newBalance.toLocaleString()}</strong> — Use it instantly on your next booking!
               </div>
             </div>
           </div>

@@ -12,6 +12,7 @@ require('dotenv').config();
 const connectDB = require('./config/db');
 const errorHandler = require('./middleware/errorHandler');
 const initSocket = require('./socket');
+const { runAutoRefundJob } = require('./jobs/autoRefundJob');
 
 // Route imports
 const authRoutes = require('./routes/auth');
@@ -28,7 +29,12 @@ const pujaRoutes = require('./routes/pujas');
 const notificationRoutes = require('./routes/notifications');
 
 // Connect DB
-connectDB();
+connectDB().then(() => {
+  // Run auto-refund job on startup, then every 24 hours
+  runAutoRefundJob().catch(console.error);
+  setInterval(() => runAutoRefundJob().catch(console.error), 24 * 60 * 60 * 1000);
+  console.log('⏰ Auto-refund job scheduled (runs every 24 hours)');
+});
 
 const app = express();
 app.set('trust proxy', true); // Trust reverse proxy headers (Vercel, Render, Cloudflare, etc.) to get correct client IPs
