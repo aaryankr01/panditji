@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import useAuthStore from '../../store/useAuthStore';
 import api from '../../utils/api';
-import { Users, MessageSquare, LayoutDashboard, LogOut, Headphones, RefreshCw, Inbox, CheckCircle, Clock, XCircle, Send, Trash2, Eye, Megaphone, Banknote, BookOpen } from 'lucide-react';
+import { Users, MessageSquare, LayoutDashboard, LogOut, Headphones, RefreshCw, Inbox, CheckCircle, Clock, XCircle, Send, Trash2, Eye, Megaphone, Banknote, BookOpen, Building, Sparkles } from 'lucide-react';
 import BookingsTab from './components/BookingsTab';
 import ChatTrackerTab from './components/ChatTrackerTab';
 
@@ -17,13 +17,40 @@ const AdminDashboard = () => {
   const [autoRefundRunning, setAutoRefundRunning] = useState(false);
   const [autoRefundResult, setAutoRefundResult] = useState(null);
 
+  // Temple states
+  const [templesList, setTemplesList] = useState([]);
+  const [templeOrdersList, setTempleOrdersList] = useState([]);
+  const [templeSubTab, setTempleSubTab] = useState('list'); // 'list' | 'orders'
+  const [templeSearchQuery, setTempleSearchQuery] = useState('');
+  const [templeOrderSearchQuery, setTempleOrderSearchQuery] = useState('');
+  const [templeOrderTypeFilter, setTempleOrderTypeFilter] = useState('all');
+  const [templeOrderStatusFilter, setTempleOrderStatusFilter] = useState('all');
+  
+  const [isTempleModalOpen, setIsTempleModalOpen] = useState(false);
+  const [editingTemple, setEditingTemple] = useState(null);
+  const [templeForm, setTempleForm] = useState({
+    name: '',
+    deity: '',
+    location: '',
+    state: '',
+    image: '',
+    description: '',
+    chadavaEnabled: true,
+    prasadEnabled: true,
+    chadavaPresets: '51, 101, 251, 501, 1001',
+    prasadItemName: 'Prasad',
+    prasadItemPrice: 151,
+    prasadDeliveryDays: 7
+  });
+  const [isSubmittingTemple, setIsSubmittingTemple] = useState(false);
+
   useEffect(() => {
     if (location.pathname === '/admin/chats') {
       setActiveTab('chats');
     } else if (location.pathname === '/admin/bookings') {
       setActiveTab('bookings');
     } else {
-      const dashboardTabs = ['overview', 'users', 'financials', 'support', 'broadcast', 'payouts'];
+      const dashboardTabs = ['overview', 'users', 'financials', 'support', 'broadcast', 'payouts', 'templeManagement'];
       if (!dashboardTabs.includes(activeTab)) {
         setActiveTab('overview');
       }
@@ -91,6 +118,16 @@ const AdminDashboard = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       setPayoutsList(payoutsRes.data.data || []);
+
+      const templesRes = await api.get('/admin/temples', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setTemplesList(templesRes.data.data || []);
+
+      const templeOrdersRes = await api.get('/admin/temple-orders', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setTempleOrdersList(templeOrdersRes.data.data || []);
     } catch (err) {
       console.error(err);
     }
@@ -113,6 +150,78 @@ const AdminDashboard = () => {
     window._adminFetchTickets = fetchTickets;
     fetchData();
   }, [token, user, navigate, fetchData]);
+
+  const handleDeleteTemple = async (templeId) => {
+    if (!window.confirm('Are you sure you want to deactivate this temple?')) return;
+    try {
+      await api.delete(`/admin/temples/${templeId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      alert('Temple deactivated successfully');
+      fetchData();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to deactivate temple');
+    }
+  };
+
+  const handleTempleFormSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmittingTemple(true);
+    try {
+      const presets = templeForm.chadavaPresets
+        .split(',')
+        .map(p => Number(p.trim()))
+        .filter(p => !isNaN(p) && p > 0);
+
+      const payload = {
+        name: templeForm.name,
+        deity: templeForm.deity,
+        location: templeForm.location,
+        state: templeForm.state,
+        image: templeForm.image,
+        description: templeForm.description,
+        chadavaEnabled: templeForm.chadavaEnabled,
+        prasadEnabled: templeForm.prasadEnabled,
+        chadavaPresets: presets,
+        prasadItem: {
+          name: templeForm.prasadItemName,
+          price: Number(templeForm.prasadItemPrice),
+          deliveryDays: Number(templeForm.prasadDeliveryDays)
+        }
+      };
+
+      if (editingTemple) {
+        await api.put(`/admin/temples/${editingTemple._id}`, payload, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        alert('Temple updated successfully');
+      } else {
+        await api.post('/admin/temples', payload, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        alert('Temple added successfully');
+      }
+      setIsTempleModalOpen(false);
+      setEditingTemple(null);
+      fetchData();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to save temple');
+    } finally {
+      setIsSubmittingTemple(false);
+    }
+  };
+
+  const handleUpdateOrderStatus = async (orderId, updates) => {
+    try {
+      await api.patch(`/admin/temple-orders/${orderId}`, updates, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      alert('Order status updated successfully');
+      fetchData();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to update order status');
+    }
+  };
 
   const handleLogout = () => {
     logout();
@@ -358,6 +467,13 @@ const AdminDashboard = () => {
               </span>
             )}
           </button>
+          <button
+            onClick={() => handleTabClick('templeManagement')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'templeManagement' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
+          >
+            <Building size={20} />
+            Temple Management
+          </button>
         </nav>
         <div className="p-4 border-t border-gray-800">
           <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-xl transition-colors">
@@ -382,7 +498,92 @@ const AdminDashboard = () => {
                 {activeTab === 'support' && 'Support Tickets'}
                 {activeTab === 'broadcast' && '📢 Broadcast Notifications'}
                 {activeTab === 'payouts' && 'Pandit Payouts (15-day Hold)'}
+                {activeTab === 'templeManagement' && '🛕 Temple Seva Management'}
               </h2>
+          {activeTab === 'templeManagement' && (
+            <div className="flex gap-3 flex-wrap items-center">
+              {/* Sub-tab switcher */}
+              <div className="bg-gray-100 p-1 rounded-xl flex gap-1 border border-gray-200">
+                <button
+                  onClick={() => setTempleSubTab('list')}
+                  className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${templeSubTab === 'list' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-800'}`}
+                >
+                  🏫 Temples ({templesList.length})
+                </button>
+                <button
+                  onClick={() => setTempleSubTab('orders')}
+                  className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${templeSubTab === 'orders' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-800'}`}
+                >
+                  📦 Orders & Chadava ({templeOrdersList.length})
+                </button>
+              </div>
+
+              {templeSubTab === 'list' ? (
+                <>
+                  <input
+                    type="text"
+                    placeholder="Search temples..."
+                    className="p-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 outline-none w-48"
+                    value={templeSearchQuery}
+                    onChange={(e) => setTempleSearchQuery(e.target.value)}
+                  />
+                  <button
+                    onClick={() => {
+                      setEditingTemple(null);
+                      setTempleForm({
+                        name: '',
+                        deity: '',
+                        location: '',
+                        state: '',
+                        image: '',
+                        description: '',
+                        chadavaEnabled: true,
+                        prasadEnabled: true,
+                        chadavaPresets: '51, 101, 251, 501, 1001',
+                        prasadItemName: 'Prasad',
+                        prasadItemPrice: 151,
+                        prasadDeliveryDays: 7
+                      });
+                      setIsTempleModalOpen(true);
+                    }}
+                    className="flex items-center gap-1.5 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold rounded-xl transition-all shadow-sm animate-pulse"
+                  >
+                    <Sparkles size={14} /> Add Temple
+                  </button>
+                </>
+              ) : (
+                <>
+                  <input
+                    type="text"
+                    placeholder="Search orders..."
+                    className="p-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 outline-none w-48"
+                    value={templeOrderSearchQuery}
+                    onChange={(e) => setTempleOrderSearchQuery(e.target.value)}
+                  />
+                  <select
+                    className="p-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 outline-none"
+                    value={templeOrderTypeFilter}
+                    onChange={(e) => setTempleOrderTypeFilter(e.target.value)}
+                  >
+                    <option value="all">All Types</option>
+                    <option value="chadava">🪙 Chadava (Donation)</option>
+                    <option value="prasad">📦 Prasad Order</option>
+                  </select>
+                  <select
+                    className="p-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 outline-none"
+                    value={templeOrderStatusFilter}
+                    onChange={(e) => setTempleOrderStatusFilter(e.target.value)}
+                  >
+                    <option value="all">All Deliveries</option>
+                    <option value="placed">Placed</option>
+                    <option value="processing">Processing</option>
+                    <option value="shipped">Shipped</option>
+                    <option value="delivered">Delivered</option>
+                  </select>
+                </>
+              )}
+            </div>
+          )}
           {activeTab === 'users' && (
             <div className="flex gap-3 flex-wrap">
               <input
@@ -1161,12 +1362,377 @@ const AdminDashboard = () => {
           </div>
         )}
 
+        {activeTab === 'templeManagement' && (
+          <div className="space-y-6">
+            {templeSubTab === 'list' ? (
+              <>
+                {/* Temples Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                  {templesList
+                    .filter(t => !templeSearchQuery || t.name.toLowerCase().includes(templeSearchQuery.toLowerCase()) || t.deity.toLowerCase().includes(templeSearchQuery.toLowerCase()) || t.location.toLowerCase().includes(templeSearchQuery.toLowerCase()))
+                    .map(temple => (
+                      <div key={temple._id} className={`bg-white rounded-2xl border shadow-sm overflow-hidden transition-all hover:shadow-md ${!temple.isActive ? 'opacity-60 border-red-200' : 'border-gray-100'}`}>
+                        {/* Temple Image */}
+                        <div className="relative h-36 bg-orange-50 overflow-hidden">
+                          {temple.image ? (
+                            <img src={temple.image} alt={temple.name} className="w-full h-full object-cover" onError={e => { e.target.style.display = 'none'; }} />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-5xl">🛕</div>
+                          )}
+                          <div className="absolute top-2 right-2 flex gap-1">
+                            {!temple.isActive && (
+                              <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">Inactive</span>
+                            )}
+                            {temple.chadavaEnabled && (
+                              <span className="bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">🪙 Chadava</span>
+                            )}
+                            {temple.prasadEnabled && (
+                              <span className="bg-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">📦 Prasad</span>
+                            )}
+                          </div>
+                        </div>
+                        {/* Info */}
+                        <div className="p-4">
+                          <h3 className="font-bold text-gray-800 text-base">{temple.name}</h3>
+                          <p className="text-xs text-orange-600 font-semibold">{temple.deity}</p>
+                          <p className="text-xs text-gray-400 mt-0.5">📍 {temple.location}, {temple.state}</p>
+                          {temple.description && (
+                            <p className="text-xs text-gray-500 mt-2 line-clamp-2">{temple.description}</p>
+                          )}
+                          {/* Chadava Presets */}
+                          {temple.chadavaEnabled && temple.chadavaPresets?.length > 0 && (
+                            <div className="mt-3">
+                              <p className="text-[10px] text-gray-400 font-bold uppercase mb-1">Chadava Presets</p>
+                              <div className="flex flex-wrap gap-1">
+                                {temple.chadavaPresets.map((p, i) => (
+                                  <span key={i} className="bg-amber-50 border border-amber-200 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded-full">₹{p}</span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          {/* Prasad */}
+                          {temple.prasadEnabled && temple.prasadItem && (
+                            <div className="mt-2 bg-orange-50 rounded-xl p-2">
+                              <p className="text-[10px] text-gray-400 font-bold uppercase">Prasad</p>
+                              <p className="text-xs font-semibold text-gray-700">{temple.prasadItem.name}</p>
+                              <p className="text-[10px] text-gray-500">₹{temple.prasadItem.price} · {temple.prasadItem.deliveryDays} days delivery</p>
+                            </div>
+                          )}
+                          {/* Actions */}
+                          <div className="flex gap-2 mt-4">
+                            <button
+                              onClick={() => {
+                                setEditingTemple(temple);
+                                setTempleForm({
+                                  name: temple.name,
+                                  deity: temple.deity,
+                                  location: temple.location,
+                                  state: temple.state,
+                                  image: temple.image || '',
+                                  description: temple.description || '',
+                                  chadavaEnabled: temple.chadavaEnabled,
+                                  prasadEnabled: temple.prasadEnabled,
+                                  chadavaPresets: (temple.chadavaPresets || []).join(', '),
+                                  prasadItemName: temple.prasadItem?.name || 'Prasad',
+                                  prasadItemPrice: temple.prasadItem?.price || 151,
+                                  prasadDeliveryDays: temple.prasadItem?.deliveryDays || 7
+                                });
+                                setIsTempleModalOpen(true);
+                              }}
+                              className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-orange-100 hover:bg-orange-200 text-orange-700 font-bold text-xs rounded-xl transition-colors"
+                            >
+                              ✏️ Edit
+                            </button>
+                            {temple.isActive && (
+                              <button
+                                onClick={() => handleDeleteTemple(temple._id)}
+                                className="flex items-center justify-center gap-1 py-1.5 px-3 bg-red-50 hover:bg-red-100 text-red-600 font-bold text-xs rounded-xl transition-colors"
+                              >
+                                <Trash2 size={12} /> Deactivate
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+                {templesList.filter(t => !templeSearchQuery || t.name.toLowerCase().includes(templeSearchQuery.toLowerCase())).length === 0 && (
+                  <div className="flex flex-col items-center justify-center py-16 text-center bg-white rounded-2xl border border-gray-100">
+                    <div className="text-5xl mb-3">🛕</div>
+                    <p className="text-gray-500 font-medium">No temples found</p>
+                    <p className="text-gray-400 text-sm">Add your first temple using the button above</p>
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                {/* Orders & Chadava Table */}
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-gray-50 border-b border-gray-100">
+                        <th className="p-4 font-semibold text-gray-600 text-sm">Devotee</th>
+                        <th className="p-4 font-semibold text-gray-600 text-sm">Temple & Type</th>
+                        <th className="p-4 font-semibold text-gray-600 text-sm">Amount</th>
+                        <th className="p-4 font-semibold text-gray-600 text-sm">Date</th>
+                        <th className="p-4 font-semibold text-gray-600 text-sm">Delivery Status</th>
+                        <th className="p-4 font-semibold text-gray-600 text-sm">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {templeOrdersList
+                        .filter(o => {
+                          const q = templeOrderSearchQuery.toLowerCase();
+                          const matchSearch = !q || (o.devotee?.firstName + ' ' + o.devotee?.lastName).toLowerCase().includes(q) || (o.templeName || '').toLowerCase().includes(q);
+                          const matchType = templeOrderTypeFilter === 'all' || o.orderType === templeOrderTypeFilter;
+                          const matchStatus = templeOrderStatusFilter === 'all' || o.deliveryStatus === templeOrderStatusFilter;
+                          return matchSearch && matchType && matchStatus;
+                        })
+                        .map(order => (
+                          <tr key={order._id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                            <td className="p-4">
+                              <p className="font-semibold text-gray-800 text-sm">{order.devotee?.firstName} {order.devotee?.lastName}</p>
+                              <p className="text-xs text-gray-400">{order.devotee?.email}</p>
+                              <p className="text-xs text-gray-400">{order.devotee?.phone || '—'}</p>
+                            </td>
+                            <td className="p-4">
+                              <p className="font-semibold text-gray-700 text-sm">{order.templeName}</p>
+                              {order.orderType === 'chadava' ? (
+                                <span className="inline-block bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded-full mt-1">🪙 Chadava (Donation)</span>
+                              ) : (
+                                <div>
+                                  <span className="inline-block bg-orange-100 text-orange-700 text-[10px] font-bold px-2 py-0.5 rounded-full mt-1">📦 Prasad</span>
+                                  {order.prasadItem && <p className="text-xs text-gray-500 mt-0.5">{order.prasadItem}</p>}
+                                </div>
+                              )}
+                              {order.dedicatedTo && (
+                                <p className="text-[10px] text-gray-400 mt-1">👤 For: {order.dedicatedTo}</p>
+                              )}
+                            </td>
+                            <td className="p-4">
+                              <p className="font-bold text-green-700">₹{order.amount?.toLocaleString('en-IN')}</p>
+                              <p className="text-[10px] text-gray-400 mt-0.5">TXN: {order.transactionId}</p>
+                            </td>
+                            <td className="p-4 text-xs text-gray-500">
+                              {new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                            </td>
+                            <td className="p-4">
+                              {order.orderType === 'chadava' ? (
+                                <span className="text-[10px] text-gray-400 italic">N/A — Monetary</span>
+                              ) : (
+                                <div>
+                                  {(() => {
+                                    const colorMap = { placed: 'bg-yellow-100 text-yellow-700', processing: 'bg-blue-100 text-blue-700', shipped: 'bg-purple-100 text-purple-700', delivered: 'bg-green-100 text-green-700' };
+                                    return (
+                                      <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full capitalize ${colorMap[order.deliveryStatus] || 'bg-gray-100 text-gray-600'}`}>
+                                        {order.deliveryStatus || 'placed'}
+                                      </span>
+                                    );
+                                  })()}
+                                  {order.trackingId && <p className="text-[10px] text-gray-400 mt-0.5">Tracking: {order.trackingId}</p>}
+                                  {order.orderType === 'prasad' && (
+                                    <div className="mt-1.5 text-[10px] text-gray-400 space-y-0.5">
+                                      <p className="font-semibold text-gray-500">Delivery To:</p>
+                                      <p>{order.deliveryName}</p>
+                                      <p>{order.deliveryAddress}, {order.deliveryCity} - {order.deliveryPincode}</p>
+                                      <p>📞 {order.deliveryPhone}</p>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </td>
+                            <td className="p-4">
+                              {order.orderType === 'prasad' && (
+                                <div className="space-y-1.5">
+                                  <select
+                                    defaultValue={order.deliveryStatus || 'placed'}
+                                    onChange={e => handleUpdateOrderStatus(order._id, { deliveryStatus: e.target.value })}
+                                    className="text-xs border border-gray-200 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-orange-400 bg-gray-50 w-full"
+                                  >
+                                    <option value="placed">Placed</option>
+                                    <option value="processing">Processing</option>
+                                    <option value="shipped">Shipped</option>
+                                    <option value="delivered">Delivered</option>
+                                  </select>
+                                  <input
+                                    type="text"
+                                    placeholder="Tracking ID..."
+                                    defaultValue={order.trackingId || ''}
+                                    onBlur={e => {
+                                      if (e.target.value !== (order.trackingId || '')) {
+                                        handleUpdateOrderStatus(order._id, { trackingId: e.target.value });
+                                      }
+                                    }}
+                                    className="text-xs border border-gray-200 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-orange-400 bg-gray-50 w-full"
+                                  />
+                                </div>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                  {templeOrdersList.filter(o => {
+                    const q = templeOrderSearchQuery.toLowerCase();
+                    const matchSearch = !q || (o.devotee?.firstName + ' ' + o.devotee?.lastName).toLowerCase().includes(q);
+                    const matchType = templeOrderTypeFilter === 'all' || o.orderType === templeOrderTypeFilter;
+                    const matchStatus = templeOrderStatusFilter === 'all' || o.deliveryStatus === templeOrderStatusFilter;
+                    return matchSearch && matchType && matchStatus;
+                  }).length === 0 && (
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                      <div className="text-4xl mb-2">📦</div>
+                      <p className="text-gray-400 text-sm">No orders found matching your filters</p>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
         {activeTab === 'bookings' && (
           <BookingsTab bookingsList={bookingsList} onSelectBooking={setSelectedBookingModal} />
         )}
       </div>
         )}
       </div>
+
+      {/* Add / Edit Temple Modal */}
+      {isTempleModalOpen && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={() => setIsTempleModalOpen(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[92vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            {/* Header */}
+            <div className="bg-gradient-to-r from-orange-500 to-amber-500 p-6 rounded-t-2xl flex justify-between items-center">
+              <div>
+                <h3 className="text-xl font-bold text-white">{editingTemple ? '✏️ Edit Temple' : '🛕 Add New Temple'}</h3>
+                <p className="text-orange-100 text-sm mt-0.5">{editingTemple ? `Editing: ${editingTemple.name}` : 'Fill in temple details below'}</p>
+              </div>
+              <button onClick={() => setIsTempleModalOpen(false)} className="text-white/70 hover:text-white text-3xl leading-none font-light">&times;</button>
+            </div>
+
+            <form onSubmit={handleTempleFormSubmit} className="p-6 space-y-5">
+              {/* Basic Info */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2">
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Temple Name *</label>
+                  <input required value={templeForm.name} onChange={e => setTempleForm(f => ({ ...f, name: e.target.value }))}
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-400 outline-none"
+                    placeholder="e.g. Tirupati Balaji" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Deity *</label>
+                  <input required value={templeForm.deity} onChange={e => setTempleForm(f => ({ ...f, deity: e.target.value }))}
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-400 outline-none"
+                    placeholder="e.g. Lord Venkateswara" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Location *</label>
+                  <input required value={templeForm.location} onChange={e => setTempleForm(f => ({ ...f, location: e.target.value }))}
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-400 outline-none"
+                    placeholder="e.g. Tirumala" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">State *</label>
+                  <input required value={templeForm.state} onChange={e => setTempleForm(f => ({ ...f, state: e.target.value }))}
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-400 outline-none"
+                    placeholder="e.g. Andhra Pradesh" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Image URL</label>
+                  <input value={templeForm.image} onChange={e => setTempleForm(f => ({ ...f, image: e.target.value }))}
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-400 outline-none"
+                    placeholder="https://..." />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Description</label>
+                  <textarea rows={2} value={templeForm.description} onChange={e => setTempleForm(f => ({ ...f, description: e.target.value }))}
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-400 outline-none resize-none"
+                    placeholder="Brief description of this temple..." />
+                </div>
+              </div>
+
+              <hr className="border-gray-100" />
+
+              {/* Chadava Section */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-bold text-gray-700 text-sm">🪙 Chadava (Donations)</p>
+                    <p className="text-xs text-gray-400">Allow devotees to make monetary offerings</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" checked={templeForm.chadavaEnabled} onChange={e => setTempleForm(f => ({ ...f, chadavaEnabled: e.target.checked }))} className="sr-only peer" />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
+                  </label>
+                </div>
+                {templeForm.chadavaEnabled && (
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Quick-Select Preset Amounts (₹, comma-separated)</label>
+                    <input value={templeForm.chadavaPresets} onChange={e => setTempleForm(f => ({ ...f, chadavaPresets: e.target.value }))}
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-400 outline-none"
+                      placeholder="51, 101, 251, 501, 1001" />
+                    <p className="text-[10px] text-gray-400 mt-1">These will appear as preset buttons for devotees on the temple page</p>
+                  </div>
+                )}
+              </div>
+
+              <hr className="border-gray-100" />
+
+              {/* Prasad Section */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-bold text-gray-700 text-sm">📦 Prasad Delivery</p>
+                    <p className="text-xs text-gray-400">Allow devotees to order prasad from this temple</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" checked={templeForm.prasadEnabled} onChange={e => setTempleForm(f => ({ ...f, prasadEnabled: e.target.checked }))} className="sr-only peer" />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
+                  </label>
+                </div>
+                {templeForm.prasadEnabled && (
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="col-span-3 md:col-span-1">
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Prasad Item Name</label>
+                      <input value={templeForm.prasadItemName} onChange={e => setTempleForm(f => ({ ...f, prasadItemName: e.target.value }))}
+                        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-400 outline-none"
+                        placeholder="e.g. Ladoo Box" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Price (₹)</label>
+                      <input type="number" min="1" value={templeForm.prasadItemPrice} onChange={e => setTempleForm(f => ({ ...f, prasadItemPrice: e.target.value }))}
+                        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-400 outline-none" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Delivery Days</label>
+                      <input type="number" min="1" value={templeForm.prasadDeliveryDays} onChange={e => setTempleForm(f => ({ ...f, prasadDeliveryDays: e.target.value }))}
+                        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-400 outline-none" />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <hr className="border-gray-100" />
+
+              {/* Actions */}
+              <div className="flex gap-3 justify-end">
+                <button type="button" onClick={() => setIsTempleModalOpen(false)}
+                  className="px-5 py-2.5 border border-gray-200 text-gray-600 font-semibold rounded-xl hover:bg-gray-50 transition-colors text-sm">
+                  Cancel
+                </button>
+                <button type="submit" disabled={isSubmittingTemple}
+                  className="flex items-center gap-2 px-6 py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl transition-all shadow-sm disabled:opacity-60 text-sm">
+                  {isSubmittingTemple ? (
+                    <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Saving...</>
+                  ) : (
+                    <><Sparkles size={15} /> {editingTemple ? 'Save Changes' : 'Add Temple'}</>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* User Profile Modal */}
       {selectedUserModal && (

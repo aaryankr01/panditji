@@ -33,6 +33,7 @@ const Navbar = () => {
       <Link to="/pujas"   onClick={onClick} className="text-sm font-bold text-textMid hover:text-saffron transition-colors whitespace-nowrap">{t('nav_book_puja')}</Link>
       <Link to="/pandits" onClick={onClick} className="text-sm font-bold text-textMid hover:text-saffron transition-colors whitespace-nowrap">{t('nav_find_pandits')}</Link>
       <Link to="/e-puja"  onClick={onClick} className="text-sm font-bold text-textMid hover:text-saffron transition-colors whitespace-nowrap">{t('nav_e_puja')}</Link>
+      <Link to="/temple"  onClick={onClick} className="text-sm font-bold text-textMid hover:text-saffron transition-colors whitespace-nowrap">{t('nav_temple')}</Link>
       <a href="/#about"   onClick={onClick} className="text-sm font-bold text-textMid hover:text-saffron transition-colors whitespace-nowrap">{t('nav_about')}</a>
     </>
   );

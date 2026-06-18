@@ -23,6 +23,7 @@ const TermsOfService  = lazy(() => import('./pages/TermsOfService'));
 const PrivacyPolicy   = lazy(() => import('./pages/PrivacyPolicy'));
 const Guidelines      = lazy(() => import('./pages/Guidelines'));
 const EPujaPage       = lazy(() => import('./pages/EPujaPage'));
+const TemplePage      = lazy(() => import('./pages/TemplePage'));
 const DevoteeDashboard = lazy(() => import('./pages/DevoteeDashboard'));
 const PanditDashboard  = lazy(() => import('./pages/PanditDashboard'));
 const BookingPage      = lazy(() => import('./pages/BookingPage'));
@@ -73,6 +74,7 @@ function App() {
           <Route path="/privacy"     element={<PrivacyPolicy />} />
           <Route path="/guidelines"  element={<Guidelines />} />
           <Route path="/e-puja"      element={<EPujaPage />} />
+          <Route path="/temple"      element={<TemplePage />} />
 
           {/* Auth Routes */}
           <Route path="/login"          element={isAuthenticated ? <Navigate to="/" /> : <Login />} />

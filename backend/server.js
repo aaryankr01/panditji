@@ -27,6 +27,8 @@ const userRoutes = require('./routes/users');
 const supportRoutes = require('./routes/support');
 const pujaRoutes = require('./routes/pujas');
 const notificationRoutes = require('./routes/notifications');
+const templeRoutes = require('./routes/temple');
+const { seedTemples } = require('./controllers/templeController');
 
 // Connect DB
 connectDB().then(() => {
@@ -34,6 +36,8 @@ connectDB().then(() => {
   runAutoRefundJob().catch(console.error);
   setInterval(() => runAutoRefundJob().catch(console.error), 24 * 60 * 60 * 1000);
   console.log('⏰ Auto-refund job scheduled (runs every 24 hours)');
+  // Seed default temples if DB is empty
+  seedTemples();
 });
 
 const app = express();
@@ -142,6 +146,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/support', supportRoutes);
 app.use('/api/pujas', pujaRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/temple', templeRoutes);
 
 // Inject io into bookingController for real-time broadcasts
 const bookingController = require('./controllers/bookingController');

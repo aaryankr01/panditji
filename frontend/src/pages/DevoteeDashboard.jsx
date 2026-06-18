@@ -473,6 +473,7 @@ const DevoteeDashboard = () => {
   const [activeTab, setActiveTab] = useState('bookings');
   const [payments, setPayments] = useState([]);
   const [bookings, setBookings] = useState([]);
+  const [templeOrders, setTempleOrders] = useState([]);
   const [selectedChatUser, setSelectedChatUser] = useState(null);
   const [mobileChatView, setMobileChatView] = useState('list'); // 'list' | 'chat'
   const [conversations, setConversations] = useState([]);
@@ -601,6 +602,13 @@ const DevoteeDashboard = () => {
     } catch (err) { console.error(err); }
   }, [token]);
 
+  const fetchMyTempleOrders = useCallback(async () => {
+    try {
+      const res = await api.get('/temple/my-orders', { headers: { Authorization: `Bearer ${token}` } });
+      setTempleOrders(res.data.data || []);
+    } catch (err) { console.error(err); }
+  }, [token]);
+
   const fetchWalletBalance = useCallback(async () => {
     try {
       const res = await api.get('/auth/me', { headers: { Authorization: `Bearer ${token}` } });
@@ -648,6 +656,7 @@ const DevoteeDashboard = () => {
     fetchConversations();
     fetchMyBookings();
     fetchMyPayments();
+    fetchMyTempleOrders();
     fetchWalletBalance();
 
     const socket = io(import.meta.env.VITE_SOCKET_URL || 'https://panditji-1tf8.onrender.com', { transports: ['websocket'] });
@@ -1176,6 +1185,7 @@ const DevoteeDashboard = () => {
             <NavItem icon={<Calendar size={16} />} label={t('dd_my_bookings')} tab="bookings" activeTab={activeTab} setActiveTab={setActiveTab} onClick={() => setIsMobileSidebarOpen(false)} />
             <NavItem icon={<MessageSquare size={16} />} label={t('dd_messages')} tab="chat" activeTab={activeTab} setActiveTab={setActiveTab} onClick={() => setIsMobileSidebarOpen(false)} />
             <NavItem icon={<CheckCircle size={16} />} label={t('dd_bookings_payments')} tab="payments" activeTab={activeTab} setActiveTab={setActiveTab} onClick={() => setIsMobileSidebarOpen(false)} />
+            <NavItem icon={<span style={{ fontSize: 16 }}>🛕</span>} label={t('dd_temple_orders') || 'Temple Seva'} tab="templeOrders" activeTab={activeTab} setActiveTab={setActiveTab} onClick={() => setIsMobileSidebarOpen(false)} />
             <NavItem icon={<Headphones size={16} />} label={t('dd_support')} tab="support" activeTab={activeTab} setActiveTab={setActiveTab} onClick={() => setIsMobileSidebarOpen(false)} />
           </nav>
           <div className="dd-logout" style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -1200,6 +1210,7 @@ const DevoteeDashboard = () => {
               {activeTab === 'bookings' && t('dd_my_bookings')}
               {activeTab === 'chat' && t('dd_messages')}
               {activeTab === 'payments' && t('dd_bookings_payments')}
+              {activeTab === 'templeOrders' && (t('dd_temple_orders') || 'Temple Seva Orders')}
               {activeTab === 'support' && t('dd_support')}
             </div>
             <LanguageToggle />
@@ -1659,6 +1670,117 @@ const DevoteeDashboard = () => {
                     </div>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {activeTab === 'templeOrders' && (
+              <div style={{ maxWidth: 860, margin: '0 auto', width: '100%', display: 'flex', flexDirection: 'column', gap: 20 }}>
+                <SectionTitle>{t('dd_temple_orders') || 'Temple Seva Orders'}</SectionTitle>
+                {templeOrders.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '60px 20px', background: '#fff', borderRadius: 14, border: `1px solid ${C.border}` }}>
+                    <div style={{ fontSize: 56, marginBottom: 16 }}>🛕</div>
+                    <p style={{ fontWeight: 700, color: C.maroon, fontSize: 16 }}>{t('dd_no_temple_orders') || 'No temple offerings or prasad ordered yet.'}</p>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                    {templeOrders.map(order => (
+                      <div key={order._id} style={{ background: '#fff', borderRadius: 14, border: `1px solid ${C.border}`, overflow: 'hidden', boxShadow: '0 2px 8px rgba(123,29,14,0.04)' }}>
+                        <div style={{ height: 4, background: order.orderType === 'chadava' ? 'linear-gradient(90deg, #E8710A, #C8960C)' : 'linear-gradient(90deg, #5B2D8E, #E8710A)' }} />
+                        <div style={{ padding: '18px 20px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 10, marginBottom: 12 }}>
+                            <div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                                <span style={{ fontSize: 18 }}>{order.orderType === 'chadava' ? '🪙' : '📦'}</span>
+                                <h3 style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: 16, color: C.maroon, margin: 0 }}>
+                                  {order.templeName}
+                                </h3>
+                                <span style={{
+                                  fontSize: 10,
+                                  fontWeight: 800,
+                                  textTransform: 'uppercase',
+                                  padding: '2px 8px',
+                                  borderRadius: 4,
+                                  background: order.orderType === 'chadava' ? C.saffronLt : C.purpleLt,
+                                  color: order.orderType === 'chadava' ? C.saffron : C.purple,
+                                  letterSpacing: '0.5px'
+                                }}>
+                                  {order.orderType === 'chadava' ? 'Chadava Offering' : 'Prasad Delivery'}
+                                </span>
+                              </div>
+                              <p style={{ fontSize: 11, color: C.textMuted, marginTop: 4 }}>
+                                Ordered on: {new Date(order.createdAt).toLocaleDateString('en-IN')} at {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </p>
+                            </div>
+                            <div style={{ textAlign: 'right' }}>
+                              <span style={{ fontSize: 20, fontWeight: 900, color: C.maroon, fontFamily: "'Playfair Display', serif" }}>
+                                ₹{order.amount?.toLocaleString() || order.amount}
+                              </span>
+                              <div style={{ marginTop: 4 }}>
+                                <span className={`dd-badge dd-badge-${order.paymentStatus === 'paid' ? 'confirmed' : order.paymentStatus}`}>
+                                  {order.paymentStatus}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {order.orderType === 'chadava' && order.dedicatedTo && (
+                            <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: '10px 14px', fontSize: 12, color: C.textMid, marginTop: 8 }}>
+                              <span style={{ fontWeight: 700, color: C.maroon }}>Dedicated to:</span> {order.dedicatedTo}
+                            </div>
+                          )}
+
+                          {order.orderType === 'prasad' && (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: 14, marginTop: 8 }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, borderBottom: `1px solid ${C.border}`, paddingBottom: 8 }}>
+                                <div>
+                                  <span style={{ fontSize: 11, color: C.textMuted, textTransform: 'uppercase', fontWeight: 700 }}>Prasad Item</span>
+                                  <div style={{ fontSize: 13, fontWeight: 700, color: C.maroon }}>{order.prasadItem}</div>
+                                </div>
+                                <div>
+                                  <span style={{ fontSize: 11, color: C.textMuted, textTransform: 'uppercase', fontWeight: 700 }}>Delivery Status</span>
+                                  <div style={{ marginTop: 2 }}>
+                                    <span style={{
+                                      fontSize: 11,
+                                      fontWeight: 800,
+                                      textTransform: 'uppercase',
+                                      padding: '3px 8px',
+                                      borderRadius: 4,
+                                      background: order.deliveryStatus === 'delivered' ? C.successLt : order.deliveryStatus === 'shipped' ? '#E0F2FE' : '#FEF3C7',
+                                      color: order.deliveryStatus === 'delivered' ? C.success : order.deliveryStatus === 'shipped' ? '#0369A1' : '#B45309'
+                                    }}>
+                                      {order.deliveryStatus}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10, fontSize: 12, color: C.textMid }}>
+                                <div>
+                                  <span style={{ fontWeight: 700, color: C.maroon }}>Ship To:</span> {order.deliveryName} ({order.deliveryPhone})
+                                </div>
+                                <div>
+                                  <span style={{ fontWeight: 700, color: C.maroon }}>Address:</span> {order.deliveryAddress}, {order.deliveryCity} - {order.deliveryPincode}
+                                </div>
+                              </div>
+
+                              {order.trackingId && (
+                                <div style={{ fontSize: 12, background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: 8, padding: '8px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: '#1E40AF', fontWeight: 600 }}>
+                                  <span>Tracking ID: {order.trackingId}</span>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {order.transactionId && (
+                            <div style={{ fontSize: 10, color: C.textMuted, marginTop: 10, textAlign: 'right' }}>
+                              Txn ID: {order.transactionId}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 

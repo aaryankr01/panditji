@@ -3,6 +3,10 @@ const { getUsers, getConversation, getStats, getAllBookings, getAllPayments, app
 const { getAllTickets, updateTicket, deleteTicket } = require('../controllers/supportController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 const { runAutoRefundJob } = require('../jobs/autoRefundJob');
+const {
+  adminGetAllTemples, adminCreateTemple, adminUpdateTemple, adminDeleteTemple,
+  adminGetAllOrders, adminUpdateOrderStatus
+} = require('../controllers/templeController');
 
 const router = express.Router();
 
@@ -41,5 +45,15 @@ router.post('/run-auto-refund', async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 });
+
+// Temple Management
+router.get('/temples', adminGetAllTemples);
+router.post('/temples', adminCreateTemple);
+router.put('/temples/:id', adminUpdateTemple);
+router.delete('/temples/:id', adminDeleteTemple);
+
+// Temple Orders (Chadava + Prasad)
+router.get('/temple-orders', adminGetAllOrders);
+router.patch('/temple-orders/:id', adminUpdateOrderStatus);
 
 module.exports = router;
