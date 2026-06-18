@@ -6,6 +6,31 @@ import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
 import api from '../utils/api';
 
+// ── Static image map: name keywords → local asset path ─────────
+const TEMPLE_IMAGE_MAP = {
+  'shirdi':        '/pictures/temples/sai_baba.jpg',
+  'sai baba':      '/pictures/temples/sai_baba.jpg',
+  'kedarnath':     '/pictures/temples/kedarnath.jpg',
+  'somnath':       '/pictures/temples/somnath.jpg',
+  'kashi':         '/pictures/temples/kashi_vishwanath.jpg',
+  'vishwanath':    '/pictures/temples/kashi_vishwanath.jpg',
+  'siddhivinayak': '/pictures/temples/siddhivinayak.jpg',
+  'jagannath':     '/pictures/temples/jagannath.jpg',
+  'puri':          '/pictures/temples/jagannath.jpg',
+  'tirupati':      '/pictures/temples/tirupati.jpg',
+  'balaji':        '/pictures/temples/tirupati.jpg',
+  'vaishno':       '/pictures/temples/vaishno_devi.jpg',
+};
+
+/** Resolve the best image for a temple: prefer local map, then DB value */
+function resolveTempleImage(temple) {
+  const nameLower = (temple.name || '').toLowerCase();
+  for (const [keyword, path] of Object.entries(TEMPLE_IMAGE_MAP)) {
+    if (nameLower.includes(keyword)) return path;
+  }
+  return temple.image || '/pictures/temples/sai_baba.jpg';
+}
+
 const DELIVERY_STATUS_CONFIG = {
   placed:     { label: 'Order Placed',   cls: 'bg-blue-100 text-blue-700'   },
   processing: { label: 'Processing',     cls: 'bg-yellow-100 text-yellow-700' },
@@ -377,9 +402,9 @@ function TempleCard({ temple, actionLabel, actionColor, onAction, badge, subLabe
     <div onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
       style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', border: `2px solid ${hovered ? actionColor : '#e5e7eb'}`, boxShadow: hovered ? `0 8px 24px rgba(0,0,0,0.1)` : '0 1px 4px rgba(0,0,0,0.05)', transition: 'all 0.2s' }}>
       <div style={{ position: 'relative', height: 180, background: '#f3f4f6', overflow: 'hidden' }}>
-        <img src={temple.image || 'https://via.placeholder.com/300x180?text=Temple'} alt={temple.name}
+        <img src={resolveTempleImage(temple)} alt={temple.name}
           style={{ width: '100%', height: '100%', objectFit: 'cover', transform: hovered ? 'scale(1.04)' : 'scale(1)', transition: 'transform 0.4s' }}
-          onError={e => { e.target.src = 'https://via.placeholder.com/300x180?text=' + encodeURIComponent(temple.name); }} />
+          onError={e => { e.target.src = '/pictures/temples/sai_baba.jpg'; }} />
         <div style={{ position: 'absolute', top: 10, right: 10, background: 'rgba(0,0,0,0.55)', color: '#fff', fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 20 }}>
           {temple.state}
         </div>

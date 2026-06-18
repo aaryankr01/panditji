@@ -6,6 +6,18 @@ import { Users, MessageSquare, LayoutDashboard, LogOut, Headphones, RefreshCw, I
 import BookingsTab from './components/BookingsTab';
 import ChatTrackerTab from './components/ChatTrackerTab';
 
+// ── Preset temple images (stored in /public/pictures/temples/) ──
+const TEMPLE_PRESET_IMAGES = [
+  { key: 'sai_baba',       label: 'Shirdi Sai Baba',    src: '/pictures/temples/sai_baba.jpg' },
+  { key: 'kedarnath',     label: 'Kedarnath',           src: '/pictures/temples/kedarnath.jpg' },
+  { key: 'somnath',       label: 'Somnath',             src: '/pictures/temples/somnath.jpg' },
+  { key: 'kashi',         label: 'Kashi Vishwanath',    src: '/pictures/temples/kashi_vishwanath.jpg' },
+  { key: 'siddhivinayak', label: 'Siddhivinayak',       src: '/pictures/temples/siddhivinayak.jpg' },
+  { key: 'jagannath',     label: 'Jagannath Puri',      src: '/pictures/temples/jagannath.jpg' },
+  { key: 'tirupati',      label: 'Tirupati Balaji',     src: '/pictures/temples/tirupati.jpg' },
+  { key: 'vaishno_devi',  label: 'Vaishno Devi',        src: '/pictures/temples/vaishno_devi.jpg' },
+];
+
 const AdminDashboard = () => {
   const { user, token, logout } = useAuthStore();
   const navigate = useNavigate();
@@ -28,12 +40,12 @@ const AdminDashboard = () => {
   
   const [isTempleModalOpen, setIsTempleModalOpen] = useState(false);
   const [editingTemple, setEditingTemple] = useState(null);
+  const [selectedTempleImage, setSelectedTempleImage] = useState('');
   const [templeForm, setTempleForm] = useState({
     name: '',
     deity: '',
     location: '',
     state: '',
-    image: '',
     description: '',
     chadavaEnabled: true,
     prasadEnabled: true,
@@ -178,7 +190,7 @@ const AdminDashboard = () => {
         deity: templeForm.deity,
         location: templeForm.location,
         state: templeForm.state,
-        image: templeForm.image,
+        image: selectedTempleImage,
         description: templeForm.description,
         chadavaEnabled: templeForm.chadavaEnabled,
         prasadEnabled: templeForm.prasadEnabled,
@@ -203,6 +215,7 @@ const AdminDashboard = () => {
       }
       setIsTempleModalOpen(false);
       setEditingTemple(null);
+      setSelectedTempleImage('');
       fetchData();
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to save temple');
@@ -530,12 +543,12 @@ const AdminDashboard = () => {
                   <button
                     onClick={() => {
                       setEditingTemple(null);
+                      setSelectedTempleImage('');
                       setTempleForm({
                         name: '',
                         deity: '',
                         location: '',
                         state: '',
-                        image: '',
                         description: '',
                         chadavaEnabled: true,
                         prasadEnabled: true,
@@ -1423,12 +1436,12 @@ const AdminDashboard = () => {
                             <button
                               onClick={() => {
                                 setEditingTemple(temple);
+                                setSelectedTempleImage(temple.image || '');
                                 setTempleForm({
                                   name: temple.name,
                                   deity: temple.deity,
                                   location: temple.location,
                                   state: temple.state,
-                                  image: temple.image || '',
                                   description: temple.description || '',
                                   chadavaEnabled: temple.chadavaEnabled,
                                   prasadEnabled: temple.prasadEnabled,
@@ -1637,18 +1650,48 @@ const AdminDashboard = () => {
                     className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-400 outline-none"
                     placeholder="e.g. Andhra Pradesh" />
                 </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Image URL</label>
-                  <input value={templeForm.image} onChange={e => setTempleForm(f => ({ ...f, image: e.target.value }))}
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-400 outline-none"
-                    placeholder="https://..." />
-                </div>
                 <div className="col-span-2">
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Description</label>
                   <textarea rows={2} value={templeForm.description} onChange={e => setTempleForm(f => ({ ...f, description: e.target.value }))}
                     className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-400 outline-none resize-none"
                     placeholder="Brief description of this temple..." />
                 </div>
+              </div>
+
+              {/* Temple Image Selector */}
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Select Temple Image *</label>
+                <div className="grid grid-cols-4 gap-2">
+                  {TEMPLE_PRESET_IMAGES.map(img => (
+                    <div
+                      key={img.key}
+                      onClick={() => setSelectedTempleImage(img.src)}
+                      className={`relative cursor-pointer rounded-xl overflow-hidden border-2 transition-all ${
+                        selectedTempleImage === img.src
+                          ? 'border-orange-500 shadow-lg scale-105'
+                          : 'border-gray-200 hover:border-orange-300'
+                      }`}
+                    >
+                      <img src={img.src} alt={img.label} className="w-full h-16 object-cover" />
+                      <div className={`absolute inset-0 flex items-end justify-center pb-1 ${
+                        selectedTempleImage === img.src ? 'bg-orange-500/30' : 'bg-black/20 hover:bg-black/30'
+                      }`}>
+                        <span className="text-white text-[9px] font-bold text-center leading-tight px-1">{img.label}</span>
+                      </div>
+                      {selectedTempleImage === img.src && (
+                        <div className="absolute top-1 right-1 w-4 h-4 bg-orange-500 rounded-full flex items-center justify-center">
+                          <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                {!selectedTempleImage && (
+                  <p className="text-[10px] text-amber-600 font-semibold mt-2">⚠️ Please select an image for this temple</p>
+                )}
+                {selectedTempleImage && (
+                  <p className="text-[10px] text-green-600 font-semibold mt-2">✓ Image selected</p>
+                )}
               </div>
 
               <hr className="border-gray-100" />
