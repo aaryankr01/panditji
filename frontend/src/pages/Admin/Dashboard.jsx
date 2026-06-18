@@ -1,16 +1,45 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import useAuthStore from '../../store/useAuthStore';
 import api from '../../utils/api';
-import { Users, MessageSquare, LayoutDashboard, LogOut, Headphones, RefreshCw, Inbox, CheckCircle, Clock, XCircle, Send, Trash2, Eye, Megaphone, Banknote } from 'lucide-react';
+import { Users, MessageSquare, LayoutDashboard, LogOut, Headphones, RefreshCw, Inbox, CheckCircle, Clock, XCircle, Send, Trash2, Eye, Megaphone, Banknote, BookOpen } from 'lucide-react';
+import BookingsTab from './components/BookingsTab';
+import ChatTrackerTab from './components/ChatTrackerTab';
 
 const AdminDashboard = () => {
   const { user, token, logout } = useAuthStore();
   const navigate = useNavigate();
+  const location = useLocation();
   const [stats, setStats] = useState({ totalUsers: 0, totalPandits: 0, totalDevotees: 0, totalMessages: 0, totalRevenue: 0, totalCompanyEarnings: 0 });
   const [usersList, setUsersList] = useState([]);
   const [paymentsList, setPaymentsList] = useState([]);
   const [activeTab, setActiveTab] = useState('overview');
+
+  useEffect(() => {
+    if (location.pathname === '/admin/chats') {
+      setActiveTab('chats');
+    } else if (location.pathname === '/admin/bookings') {
+      setActiveTab('bookings');
+    } else {
+      const dashboardTabs = ['overview', 'users', 'financials', 'support', 'broadcast', 'payouts'];
+      if (!dashboardTabs.includes(activeTab)) {
+        setActiveTab('overview');
+      }
+    }
+  }, [location.pathname]);
+
+  const handleTabClick = (tab) => {
+    if (tab === 'chats') {
+      navigate('/admin/chats');
+    } else if (tab === 'bookings') {
+      navigate('/admin/bookings');
+    } else {
+      setActiveTab(tab);
+      if (location.pathname !== '/admin/dashboard') {
+        navigate('/admin/dashboard');
+      }
+    }
+  };
   const [filters, setFilters] = useState({ search: '', role: '', verification: 'all' });
   const [selectedUserModal, setSelectedUserModal] = useState(null);
   const [bookingsList, setBookingsList] = useState([]);
@@ -262,32 +291,42 @@ const AdminDashboard = () => {
         </div>
         <nav className="flex-1 p-4 space-y-2">
           <button
-            onClick={() => setActiveTab('overview')}
+            onClick={() => handleTabClick('overview')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'overview' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
           >
             <LayoutDashboard size={20} />
             Overview
           </button>
           <button
-            onClick={() => setActiveTab('users')}
+            onClick={() => handleTabClick('users')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'users' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
           >
             <Users size={20} />
             Users
           </button>
           <button
-            onClick={() => setActiveTab('financials')}
+            onClick={() => handleTabClick('bookings')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'bookings' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
+          >
+            <BookOpen size={20} />
+            Bookings
+          </button>
+          <button
+            onClick={() => handleTabClick('financials')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'financials' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
             Financials
           </button>
-          <button onClick={() => navigate('/admin/chats')} className="w-full flex items-center gap-3 px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-white rounded-xl transition-colors">
+          <button
+            onClick={() => handleTabClick('chats')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'chats' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
+          >
             <MessageSquare size={20} />
             Chat Tracker
           </button>
           <button
-            onClick={() => setActiveTab('support')}
+            onClick={() => handleTabClick('support')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'support' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
           >
             <Headphones size={20} />
@@ -299,14 +338,14 @@ const AdminDashboard = () => {
             )}
           </button>
           <button
-            onClick={() => setActiveTab('broadcast')}
+            onClick={() => handleTabClick('broadcast')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'broadcast' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
           >
             <Megaphone size={20} />
             Broadcast
           </button>
           <button
-            onClick={() => setActiveTab('payouts')}
+            onClick={() => handleTabClick('payouts')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'payouts' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
           >
             <Banknote size={20} />
@@ -327,16 +366,21 @@ const AdminDashboard = () => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-auto p-8">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">
-            {activeTab === 'overview' && 'Dashboard Overview'}
-            {activeTab === 'users' && 'Manage Users'}
-            {activeTab === 'financials' && 'Financial Records'}
-            {activeTab === 'support' && 'Support Tickets'}
-            {activeTab === 'broadcast' && '📢 Broadcast Notifications'}
-            {activeTab === 'payouts' && 'Pandit Payouts (15-day Hold)'}
-          </h2>
+      <div className="flex-1 overflow-hidden flex flex-col">
+        {activeTab === 'chats' ? (
+          <ChatTrackerTab />
+        ) : (
+          <div className="flex-1 overflow-auto p-8">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-800">
+                {activeTab === 'overview' && 'Dashboard Overview'}
+                {activeTab === 'users' && 'Manage Users'}
+                {activeTab === 'bookings' && 'All Bookings'}
+                {activeTab === 'financials' && 'Financial Records'}
+                {activeTab === 'support' && 'Support Tickets'}
+                {activeTab === 'broadcast' && '📢 Broadcast Notifications'}
+                {activeTab === 'payouts' && 'Pandit Payouts (15-day Hold)'}
+              </h2>
           {activeTab === 'users' && (
             <div className="flex gap-3 flex-wrap">
               <input
@@ -1071,6 +1115,12 @@ const AdminDashboard = () => {
               </table>
             </div>
           </div>
+        )}
+
+        {activeTab === 'bookings' && (
+          <BookingsTab bookingsList={bookingsList} onSelectBooking={setSelectedBookingModal} />
+        )}
+      </div>
         )}
       </div>
 

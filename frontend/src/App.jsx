@@ -29,12 +29,6 @@ const BookingPage      = lazy(() => import('./pages/BookingPage'));
 const ChatPage         = lazy(() => import('./pages/ChatPage'));
 const AdminLogin       = lazy(() => import('./pages/Admin/AdminLogin'));
 const AdminDashboard   = lazy(() => import('./pages/Admin/Dashboard'));
-const ChatTracker      = lazy(() => import('./pages/Admin/ChatTracker'));
-const ManagePandits    = lazy(() => import('./admin/ManagePandits'));
-const ManageDevotees   = lazy(() => import('./admin/ManageDevotees'));
-const AllBookings      = lazy(() => import('./admin/AllBookings'));
-const Payments         = lazy(() => import('./admin/Payments'));
-const Analytics        = lazy(() => import('./admin/Analytics'));
 
 // Simple loading spinner shown while a page chunk is downloading
 const PageLoader = () => (
@@ -106,12 +100,12 @@ function App() {
           {/* Admin Routes */}
           <Route path="/admin/login"      element={<AdminLogin />} />
           <Route path="/admin/dashboard"  element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-          <Route path="/admin/chats"      element={<AdminRoute><ChatTracker /></AdminRoute>} />
-          <Route path="/admin/pandits"    element={<AdminRoute><ManagePandits /></AdminRoute>} />
-          <Route path="/admin/devotees"   element={<AdminRoute><ManageDevotees /></AdminRoute>} />
-          <Route path="/admin/bookings"   element={<AdminRoute><AllBookings /></AdminRoute>} />
-          <Route path="/admin/payments"   element={<AdminRoute><Payments /></AdminRoute>} />
-          <Route path="/admin/analytics"  element={<AdminRoute><Analytics /></AdminRoute>} />
+          <Route path="/admin/chats"      element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+          <Route path="/admin/bookings"   element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+          <Route path="/admin/pandits"    element={<Navigate to="/admin/dashboard" replace />} />
+          <Route path="/admin/devotees"   element={<Navigate to="/admin/dashboard" replace />} />
+          <Route path="/admin/payments"   element={<Navigate to="/admin/dashboard" replace />} />
+          <Route path="/admin/analytics"  element={<Navigate to="/admin/dashboard" replace />} />
 
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" />} />
