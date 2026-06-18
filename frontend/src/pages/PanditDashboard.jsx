@@ -144,7 +144,12 @@ const PanditDashboard = () => {
     api.get('/payments')
       .then(r => {
         const payments = r.data.data;
-        const sum = payments.reduce((acc, curr) => acc + (curr.panditEarnings || 0), 0);
+        const sum = payments.reduce((acc, curr) => {
+          if (curr.type === 'booking_fee' && (!curr.booking || curr.booking.status !== 'completed')) {
+            return acc;
+          }
+          return acc + (curr.panditEarnings || 0);
+        }, 0);
         setTotalEarnings(sum / 100);
       }).catch(console.error);
 
@@ -330,6 +335,18 @@ const PanditDashboard = () => {
       const res = await api.post(`/bookings/${completionModal._id}/verify-completion`, { otp: otpInput });
       if (res.data.success) {
         setBookings(prev => prev.map(b => b._id === completionModal._id ? res.data.data : b));
+        // Refresh total earnings
+        api.get('/payments')
+          .then(r => {
+            const payments = r.data.data;
+            const sum = payments.reduce((acc, curr) => {
+              if (curr.type === 'booking_fee' && (!curr.booking || curr.booking.status !== 'completed')) {
+                return acc;
+              }
+              return acc + (curr.panditEarnings || 0);
+            }, 0);
+            setTotalEarnings(sum / 100);
+          }).catch(console.error);
         alert('Puja completed and verified successfully!');
         setCompletionModal(null);
       }

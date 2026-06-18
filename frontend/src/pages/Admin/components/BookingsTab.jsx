@@ -20,6 +20,7 @@ const BookingsTab = ({ bookingsList, onSelectBooking }) => {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [modeFilter, setModeFilter] = useState('all');
+  const [paymentFilter, setPaymentFilter] = useState('all');
 
   const filtered = bookingsList.filter(b => {
     const q = search.toLowerCase();
@@ -32,7 +33,8 @@ const BookingsTab = ({ bookingsList, onSelectBooking }) => {
       (b.city || '').toLowerCase().includes(q);
     const matchesStatus = statusFilter === 'all' || b.status === statusFilter;
     const matchesMode = modeFilter === 'all' || b.pujaMode === modeFilter;
-    return matchesSearch && matchesStatus && matchesMode;
+    const matchesPayment = paymentFilter === 'all' || b.paymentStatus === paymentFilter;
+    return matchesSearch && matchesStatus && matchesMode && matchesPayment;
   });
 
   // Stats
@@ -88,6 +90,16 @@ const BookingsTab = ({ bookingsList, onSelectBooking }) => {
           <option value="all">All Modes</option>
           <option value="in-person">In-Person</option>
           <option value="online">Online</option>
+        </select>
+        <select 
+          value={paymentFilter} 
+          onChange={e => setPaymentFilter(e.target.value)}
+          className="px-4 py-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-orange-400 bg-white"
+        >
+          <option value="all">All Payment Statuses</option>
+          <option value="pending">Pending (Unpaid)</option>
+          <option value="paid">Paid</option>
+          <option value="refunded">Refunded</option>
         </select>
         <span className="text-sm text-gray-500 self-center ml-auto font-medium">{filtered.length} bookings found</span>
       </div>

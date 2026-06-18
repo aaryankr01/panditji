@@ -60,47 +60,47 @@ const AdminDashboard = () => {
   const [payoutTabFilter, setPayoutTabFilter] = useState('pending');
   const [processingPayoutId, setProcessingPayoutId] = useState(null);
 
+  const fetchData = useCallback(async () => {
+    try {
+      const statsRes = await api.get('/admin/stats', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setStats(statsRes.data.data);
+
+      const usersRes = await api.get('/admin/users', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setUsersList(usersRes.data.data);
+
+      const paymentsRes = await api.get('/admin/payments', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setPaymentsList(paymentsRes.data.data);
+
+      const ticketsRes = await api.get('/admin/support', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setTickets(ticketsRes.data.data);
+
+      const bookingsRes = await api.get('/admin/bookings', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setBookingsList(bookingsRes.data.data || []);
+
+      const payoutsRes = await api.get('/admin/payouts', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setPayoutsList(payoutsRes.data.data || []);
+    } catch (err) {
+      console.error(err);
+    }
+  }, [token]);
+
   useEffect(() => {
     if (!token || user?.role !== 'admin') {
       navigate('/admin/login');
       return;
     }
-
-    const fetchData = async () => {
-      try {
-        const statsRes = await api.get('/admin/stats', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setStats(statsRes.data.data);
-
-        const usersRes = await api.get('/admin/users', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setUsersList(usersRes.data.data);
-
-        const paymentsRes = await api.get('/admin/payments', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setPaymentsList(paymentsRes.data.data);
-
-        const ticketsRes = await api.get('/admin/support', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setTickets(ticketsRes.data.data);
-
-        const bookingsRes = await api.get('/admin/bookings', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setBookingsList(bookingsRes.data.data || []);
-
-        const payoutsRes = await api.get('/admin/payouts', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setPayoutsList(payoutsRes.data.data || []);
-      } catch (err) {
-        console.error(err);
-      }
-    };
 
     const fetchTickets = async () => {
       try {
@@ -112,7 +112,7 @@ const AdminDashboard = () => {
     };
     window._adminFetchTickets = fetchTickets;
     fetchData();
-  }, [token, user, navigate]);
+  }, [token, user, navigate, fetchData]);
 
   const handleLogout = () => {
     logout();
@@ -425,7 +425,7 @@ const AdminDashboard = () => {
                 <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center text-green-700 text-xl">💰</div>
                 <div>
                   <div className="font-bold text-green-800 text-sm">Auto-Refund Job</div>
-                  <div className="text-green-600 text-xs">Refunds paid bookings where OTP was never shared within 5 days of scheduled date → credits devotee wallet</div>
+                  <div className="text-green-600 text-xs">Refunds paid bookings where OTP was never shared within 5 days of scheduled date → refunds to devotee's UPI Lite Wallet</div>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -442,6 +442,7 @@ const AdminDashboard = () => {
                     try {
                       const res = await api.post('/admin/run-auto-refund', {}, { headers: { Authorization: `Bearer ${token}` } });
                       setAutoRefundResult({ processed: res.data.processed || 0, errors: res.data.errors || 0 });
+                      await fetchData(); // Refresh all stats/listings
                     } catch (err) {
                       alert('Error: ' + (err.response?.data?.message || err.message));
                     } finally {
@@ -1333,8 +1334,26 @@ const AdminDashboard = () => {
                 <div className="bg-gray-50 rounded-xl p-3">
                   <p className="text-xs text-gray-400 mb-1">Fee & Payment</p>
                   <p className="font-bold text-green-700 text-sm">₹{(selectedBookingModal.fee || 0).toLocaleString()}</p>
-                  <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full capitalize ${selectedBookingModal.paymentStatus === 'paid' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{selectedBookingModal.paymentStatus}</span>
+                  <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full capitalize ${
+                    selectedBookingModal.paymentStatus === 'paid' ? 'bg-green-100 text-green-700' :
+                    selectedBookingModal.paymentStatus === 'refunded' ? 'bg-purple-100 text-purple-700' :
+                    'bg-yellow-100 text-yellow-700'
+                  }`}>{selectedBookingModal.paymentStatus}</span>
                 </div>
+                {selectedBookingModal.paymentStatus === 'paid' &&
+                 ['confirmed', 'in-progress'].includes(selectedBookingModal.status) &&
+                 !selectedBookingModal.completionOtp &&
+                 selectedBookingModal.scheduledDate &&
+                 (new Date() - new Date(selectedBookingModal.scheduledDate)) / (1000 * 60 * 60 * 24) >= 5 && (
+                  <div className="col-span-2 bg-amber-50 border border-amber-200 rounded-xl p-3 space-y-2">
+                    <div className="flex items-center gap-2 text-amber-800 font-bold text-xs uppercase">
+                      <span>⚠️ Stale booking (Overdue 5+ Days)</span>
+                    </div>
+                    <p className="text-xs text-gray-600">
+                      This booking has been paid but not completed or verified via OTP for more than 5 days. It is eligible for the auto-refund job, which will refund the booking fee to the devotee's UPI Lite Wallet.
+                    </p>
+                  </div>
+                )}
                 <div className="bg-gray-50 rounded-xl p-3">
                   <p className="text-xs text-gray-400 mb-1">Mode</p>
                   <p className="font-semibold text-gray-800 text-sm capitalize">{selectedBookingModal.pujaMode || 'in-person'}</p>
