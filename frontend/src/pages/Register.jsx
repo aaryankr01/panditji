@@ -13,9 +13,9 @@ const Register = () => {
 
       {/* Mobile top brand banner — visible only on small screens */}
       <div className="lg:hidden bg-gradient-to-r from-maroon to-purpleTheme px-5 py-5 flex items-center gap-3">
-        <div className="bg-white p-1.5 rounded-xl inline-block">
+        <Link to="/" className="bg-white p-1.5 rounded-xl inline-block hover:opacity-90 transition-opacity">
           <BrandWordmark logoSize={32} textClass="text-xl" />
-        </div>
+        </Link>
         <div>
           <p className="text-white font-black text-base leading-tight font-serif">Join thousands of devotees.</p>
           <p className="text-white/70 text-xs mt-0.5">Book verified Pandits for every ceremony.</p>
