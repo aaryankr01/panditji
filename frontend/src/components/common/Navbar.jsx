@@ -142,8 +142,10 @@ const Navbar = () => {
 
         {/* ── Home page mobile: second row with nav links ── */}
         {isHomePage && (
-          <div className="lg:hidden flex items-center justify-center gap-5 pb-2.5 border-t border-brandborder/30 pt-2.5">
-            <NavLinks onClick={() => {}} />
+          <div className="lg:hidden overflow-x-auto scrollbar-hide border-t border-brandborder/30">
+            <div className="flex items-center gap-4 pb-2.5 pt-2.5 px-1 w-max min-w-full justify-center">
+              <NavLinks onClick={() => {}} />
+            </div>
           </div>
         )}
       </div>
