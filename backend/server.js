@@ -12,6 +12,7 @@ require('dotenv').config();
 const connectDB = require('./config/db');
 const errorHandler = require('./middleware/errorHandler');
 const initSocket = require('./socket');
+const { runAutoRefundJob } = require('./jobs/autoRefundJob');
 
 // Route imports
 const authRoutes = require('./routes/auth');
@@ -26,9 +27,18 @@ const userRoutes = require('./routes/users');
 const supportRoutes = require('./routes/support');
 const pujaRoutes = require('./routes/pujas');
 const notificationRoutes = require('./routes/notifications');
+const templeRoutes = require('./routes/temple');
+const { seedTemples } = require('./controllers/templeController');
 
 // Connect DB
-connectDB();
+connectDB().then(() => {
+  // Run auto-refund job on startup, then every 24 hours
+  runAutoRefundJob().catch(console.error);
+  setInterval(() => runAutoRefundJob().catch(console.error), 24 * 60 * 60 * 1000);
+  console.log('⏰ Auto-refund job scheduled (runs every 24 hours)');
+  // Seed default temples if DB is empty
+  seedTemples();
+});
 
 const app = express();
 app.set('trust proxy', true); // Trust reverse proxy headers (Vercel, Render, Cloudflare, etc.) to get correct client IPs
@@ -136,6 +146,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/support', supportRoutes);
 app.use('/api/pujas', pujaRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/temple', templeRoutes);
 
 // Inject io into bookingController for real-time broadcasts
 const bookingController = require('./controllers/bookingController');

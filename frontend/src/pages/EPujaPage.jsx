@@ -53,7 +53,7 @@ function RatingStars({ rating }) {
 /* ─── Puja Card (Flipkart style) ─── */
 function PujaCard({ puja, onBook, clientType, getCalculatedPrice }) {
   const t = useT();
-  const calcPrice = getCalculatedPrice(puja.price);
+  const calcPrice = getCalculatedPrice(puja.price || 0);
   const discount = Math.round(((puja.price - calcPrice) / puja.price) * 100);
   const pujaId = puja._id || puja.id;
   const displayName = t(`puja_${pujaId}_name`) || puja.name;
@@ -157,16 +157,16 @@ function PujaCard({ puja, onBook, clientType, getCalculatedPrice }) {
             {puja.rating}
             <Star size={9} style={{ fill: "#fff", color: "#fff" }} />
           </span>
-          <span style={{ fontSize: 11, color: "#878787" }}>({puja.conducted.toLocaleString()})</span>
+          <span style={{ fontSize: 11, color: "#878787" }}>({(puja.conducted || 0).toLocaleString()})</span>
         </div>
 
         {/* Price row */}
         <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 6 }}>
           <span style={{ fontSize: 17, fontWeight: 700, color: "#212121" }}>
-            &#8377;{calcPrice.toLocaleString("en-IN")}
+            &#8377;{(calcPrice || 0).toLocaleString("en-IN")}
           </span>
           <span style={{ fontSize: 12, color: "#878787", textDecoration: "line-through" }}>
-            &#8377;{puja.price.toLocaleString("en-IN")}
+            &#8377;{(puja.price || 0).toLocaleString("en-IN")}
           </span>
           {clientType !== "international" && discount > 0 && (
             <span style={{ fontSize: 12, color: "#388e3c", fontWeight: 600 }}>{discount}% off</span>
@@ -228,8 +228,8 @@ export default function EPujaPage() {
 
   const categories = [t('bap_cat_all'), t('bap_cat_home'), t('bap_cat_wedding'), t('bap_cat_devotional'), t('bap_cat_festival'), t('bap_cat_ritual'), t('bap_cat_remedial'), t('bap_cat_life_events')];
 
-  const [pujas, setPujas] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [pujas, setPujas] = useState(initialPujas);
+  const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [activeCategoryIndex, setActiveCategoryIndex] = useState(0);
   const [bookedPuja, setBookedPuja] = useState(null);
@@ -319,24 +319,6 @@ export default function EPujaPage() {
   };
 
   useEffect(() => { detectClientType(); }, []);
-
-  useEffect(() => {
-    const fetchPujas = async () => {
-      try {
-        const res = await api.get("/pujas");
-        if (res.data && res.data.success && res.data.data.length > 0) {
-          setPujas(res.data.data);
-        } else {
-          setPujas(initialPujas);
-        }
-      } catch {
-        setPujas(initialPujas);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchPujas();
-  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => setHeroSlide(s => (s + 1) % heroSlides.length), 4000);
@@ -777,10 +759,10 @@ export default function EPujaPage() {
                 <span style={{ fontSize: 13, color: "#555", fontWeight: 600 }}>{t('ep_total_fee') || 'Total Fee'}</span>
                 <div style={{ textAlign: "right" }}>
                   <span style={{ fontSize: 12, color: "#878787", textDecoration: "line-through", marginRight: 8 }}>
-                    &#8377;{selectedPujaForBooking.price.toLocaleString("en-IN")}
+                    &#8377;{(selectedPujaForBooking.price || 0).toLocaleString("en-IN")}
                   </span>
                   <span style={{ fontSize: 18, fontWeight: 700, color: "#212121" }}>
-                    &#8377;{getCalculatedPrice(selectedPujaForBooking.price).toLocaleString("en-IN")}
+                    &#8377;{getCalculatedPrice(selectedPujaForBooking.price || 0).toLocaleString("en-IN")}
                   </span>
                   <div style={{ fontSize: 10, color: clientType === "international" ? "#c62828" : "#388e3c", fontWeight: 700, marginTop: 2 }}>
                     {clientType === "international" ? t('ep_intl_rate') || 'International Rate' : t('ep_dom_rate') || 'Domestic Rate'}

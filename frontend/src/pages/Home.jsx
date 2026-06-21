@@ -701,17 +701,17 @@ const Home = () => {
       <Navbar />
 
       {/* Hero */}
-      <section className="relative overflow-hidden bg-surface min-h-[100dvh] flex flex-col justify-center py-12 px-4">
+      <section className="relative bg-surface min-h-[100dvh] flex flex-col justify-center py-12 px-4 overflow-x-hidden">
         {/* Background Decorative Blobs */}
         <div className="absolute top-0 -right-20 w-96 h-96 bg-saffron-light rounded-full blur-3xl -z-10" />
         <div className="absolute bottom-0 -left-20 w-96 h-96 bg-gold-light rounded-full blur-3xl -z-10 opacity-70" />
         
         <div className="max-w-5xl mx-auto text-center relative">
-          <div className="inline-flex items-center gap-2 bg-saffron-light text-saffron-dark text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] px-4 py-2 rounded-full mb-8 border border-brandborder shadow-sm">
+          <div className="inline-flex items-center gap-2 bg-saffron-light text-saffron-dark text-[9px] sm:text-xs font-black uppercase tracking-[0.15em] sm:tracking-[0.2em] px-3 sm:px-4 py-2 rounded-full mb-8 border border-brandborder shadow-sm">
             <Sparkles size={14} className="animate-pulse" />
             {t('home_badge')}
           </div>
-          <h1 className="text-4xl sm:text-5xl md:text-5xl lg:text-[84px] font-black text-maroon leading-[0.95] tracking-[-0.04em] mb-8 font-serif">
+          <h1 className="text-3xl sm:text-5xl md:text-5xl lg:text-[84px] font-black text-maroon leading-[1] sm:leading-[0.95] tracking-[-0.02em] sm:tracking-[-0.04em] mb-8 font-serif">
             {t('home_h1_line1')}<br />
             <span className="text-saffron relative inline-block">
               {t('home_h1_line2')}
@@ -753,7 +753,7 @@ const Home = () => {
       </section>
 
       {/* Stats Counter Section */}
-      <section className="py-12 px-4 -mt-12 md:-mt-20 relative z-10">
+      <section className="py-12 px-4 -mt-6 md:-mt-20 relative z-10">
         <div className="max-w-6xl mx-auto bg-white/80 backdrop-blur-xl p-8 rounded-[32px] border border-brandborder shadow-xl shadow-saffron-light/50 grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-4 text-center">
           <div>
             <p className="text-4xl font-black text-maroon mb-1 font-serif">500+</p>
@@ -775,12 +775,12 @@ const Home = () => {
       </section>
 
       {/* About Us Section */}
-      <section id="about" className="min-h-[100dvh] flex flex-col justify-center py-12 px-4 bg-white relative">
-        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+      <section id="about" className="py-16 md:py-0 md:min-h-[100dvh] flex flex-col justify-center px-4 bg-white relative">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-center">
           <div className="relative">
             <div className="absolute -top-10 -left-10 w-40 h-40 bg-saffron-light rounded-full blur-3xl" />
             <span className="text-saffron font-black text-sm uppercase tracking-widest mb-4 block">{t('about_label')}</span>
-            <h2 className="text-4xl lg:text-5xl font-black text-maroon mb-8 leading-tight font-serif">{t('about_h2')}</h2>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-maroon mb-8 leading-tight font-serif">{t('about_h2')}</h2>
             <div className="space-y-6 text-textMid text-lg leading-relaxed">
               <p>{t('about_p1')}</p>
               <p>{t('about_p2')}</p>

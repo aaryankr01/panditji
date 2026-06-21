@@ -530,3 +530,18 @@ exports.processManualPayout = async (req, res, next) => {
     next(err);
   }
 };
+
+// @desc    Get all processed payouts
+// @route   GET /api/admin/payouts/processed
+// @access  Private/Admin
+exports.getProcessedPayouts = async (req, res, next) => {
+  try {
+    const Payout = require('../models/Payout');
+    const payouts = await Payout.find()
+      .populate('pandit', 'firstName lastName email phone')
+      .sort('-createdAt');
+    res.status(200).json({ success: true, count: payouts.length, data: payouts });
+  } catch (err) {
+    next(err);
+  }
+};

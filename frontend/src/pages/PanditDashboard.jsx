@@ -130,6 +130,15 @@ const PanditDashboard = () => {
   const [aadharFile, setAadharFile] = useState(null);
   const [verifyingAadhar, setVerifyingAadhar] = useState(false);
 
+  const getStartOfCurrentWeekMonday = () => {
+    const today = new Date();
+    const day = today.getDay();
+    const diff = today.getDate() - day + (day === 0 ? -6 : 1);
+    const monday = new Date(today.setDate(diff));
+    monday.setHours(0, 0, 0, 0);
+    return monday;
+  };
+
   // Switch to device-width viewport so hamburger/drawer works on phones
   useEffect(() => {
     const vp = document.querySelector('meta[name="viewport"]');
@@ -148,27 +157,27 @@ const PanditDashboard = () => {
     api.get('/chat/conversations/list')
       .then(r => setConversations(r.data.data)).catch(console.error);
 
-    const getStartOfCurrentWeekMonday = () => {
-      const today = new Date();
-      const day = today.getDay();
-      const diff = today.getDate() - day + (day === 0 ? -6 : 1);
-      const monday = new Date(today.setDate(diff));
-      monday.setHours(0, 0, 0, 0);
-      return monday;
-    };
-
     api.get('/payments')
       .then(r => {
         const payments = r.data.data || [];
-        const completedPayments = payments.filter(p => p.booking && p.booking.status === 'completed');
+        const completedOrOtherPayments = payments.filter(p => {
+          if (p.type === 'booking_fee') {
+            return p.booking && p.booking.status === 'completed';
+          }
+          return true;
+        });
         
-        // Lifetime Earnings (only completed pujas)
-        const lifetime = completedPayments.reduce((acc, curr) => acc + (curr.panditEarnings || 0), 0);
+        // Lifetime Earnings (only completed pujas or other type payments)
+        const lifetime = completedOrOtherPayments.reduce((acc, curr) => acc + (curr.panditEarnings || 0), 0);
         setTotalEarnings(lifetime / 100);
 
         // Pending weekly payout (completed before current Monday & payoutStatus = pending)
         const mondayCutoff = getStartOfCurrentWeekMonday();
-        const pending = completedPayments.filter(p => p.payoutStatus === 'pending' && new Date(p.booking.completedAt || p.booking.updatedAt) < mondayCutoff);
+        const pending = completedOrOtherPayments.filter(p => {
+          if (p.payoutStatus !== 'pending') return false;
+          const dateToCompare = p.booking ? (p.booking.completedAt || p.booking.updatedAt) : p.createdAt;
+          return new Date(dateToCompare) < mondayCutoff;
+        });
         const pendingSum = pending.reduce((acc, curr) => acc + (curr.panditEarnings || 0), 0);
         setPendingPayout(pendingSum / 100);
       }).catch(console.error);
@@ -365,6 +374,28 @@ const PanditDashboard = () => {
       const res = await api.post(`/bookings/${completionModal._id}/verify-completion`, { otp: otpInput });
       if (res.data.success) {
         setBookings(prev => prev.map(b => b._id === completionModal._id ? res.data.data : b));
+        // Refresh total earnings and weekly pending payout
+        api.get('/payments')
+          .then(r => {
+            const payments = r.data.data || [];
+            const completedOrOtherPayments = payments.filter(p => {
+              if (p.type === 'booking_fee') {
+                return p.booking && p.booking.status === 'completed';
+              }
+              return true;
+            });
+            const lifetime = completedOrOtherPayments.reduce((acc, curr) => acc + (curr.panditEarnings || 0), 0);
+            setTotalEarnings(lifetime / 100);
+
+            const mondayCutoff = getStartOfCurrentWeekMonday();
+            const pending = completedOrOtherPayments.filter(p => {
+              if (p.payoutStatus !== 'pending') return false;
+              const dateToCompare = p.booking ? (p.booking.completedAt || p.booking.updatedAt) : p.createdAt;
+              return new Date(dateToCompare) < mondayCutoff;
+            });
+            const pendingSum = pending.reduce((acc, curr) => acc + (curr.panditEarnings || 0), 0);
+            setPendingPayout(pendingSum / 100);
+          }).catch(console.error);
         alert('Puja completed and verified successfully!');
         setCompletionModal(null);
       }

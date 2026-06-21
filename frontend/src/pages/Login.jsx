@@ -13,9 +13,9 @@ const Login = () => {
 
       {/* Mobile top brand banner — visible only on small screens */}
       <div className="lg:hidden bg-gradient-to-r from-maroon to-purpleTheme px-5 py-5 flex items-center gap-3">
-        <div className="bg-white p-1.5 rounded-xl inline-block">
+        <Link to="/" className="bg-white p-1.5 rounded-xl inline-block hover:opacity-90 transition-opacity">
           <BrandWordmark logoSize={32} textClass="text-xl" />
-        </div>
+        </Link>
         <div>
           <p className="text-white font-black text-base leading-tight font-serif">Welcome back.</p>
           <p className="text-white/70 text-xs mt-0.5">Your devotion awaits.</p>
@@ -45,7 +45,9 @@ const Login = () => {
       <div className="flex-1 flex flex-col justify-center py-8 sm:py-12 px-4 sm:px-8 lg:px-20 bg-surface overflow-y-auto">
         <div className="max-w-md w-full mx-auto bg-white p-6 sm:p-8 lg:p-10 rounded-3xl border border-brandborder shadow-xl shadow-saffron/5">
           <div className="lg:hidden mb-6">
-            <BrandWordmark />
+            <Link to="/" className="inline-block hover:opacity-80 transition-opacity">
+              <BrandWordmark />
+            </Link>
           </div>
           <h2 className="text-2xl sm:text-3xl font-black text-maroon mb-2 font-serif">Sign in</h2>
           <p className="text-sm text-textMid mb-6">

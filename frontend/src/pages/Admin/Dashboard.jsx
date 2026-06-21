@@ -1,16 +1,86 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState, useCallback } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import useAuthStore from '../../store/useAuthStore';
 import api from '../../utils/api';
-import { Users, MessageSquare, LayoutDashboard, LogOut, Headphones, RefreshCw, Inbox, CheckCircle, Clock, XCircle, Send, Trash2, Eye, Megaphone, Banknote } from 'lucide-react';
+import { Users, MessageSquare, LayoutDashboard, LogOut, Headphones, RefreshCw, Inbox, CheckCircle, Clock, XCircle, Send, Trash2, Eye, Megaphone, Banknote, BookOpen, Building, Sparkles, Upload, X, ExternalLink } from 'lucide-react';
+import BookingsTab from './components/BookingsTab';
+import ChatTrackerTab from './components/ChatTrackerTab';
+
+// ── Preset temple images (stored in /public/pictures/temples/) ──
+const TEMPLE_PRESET_IMAGES = [
+  { key: 'sai_baba',       label: 'Shirdi Sai Baba',    src: '/pictures/temples/sai_baba.jpg' },
+  { key: 'kedarnath',     label: 'Kedarnath',           src: '/pictures/temples/kedarnath.jpg' },
+  { key: 'somnath',       label: 'Somnath',             src: '/pictures/temples/somnath.jpg' },
+  { key: 'kashi',         label: 'Kashi Vishwanath',    src: '/pictures/temples/kashi_vishwanath.jpg' },
+  { key: 'siddhivinayak', label: 'Siddhivinayak',       src: '/pictures/temples/siddhivinayak.jpg' },
+  { key: 'jagannath',     label: 'Jagannath Puri',      src: '/pictures/temples/jagannath.jpg' },
+  { key: 'tirupati',      label: 'Tirupati Balaji',     src: '/pictures/temples/tirupati.jpg' },
+  { key: 'vaishno_devi',  label: 'Vaishno Devi',        src: '/pictures/temples/vaishno_devi.jpg' },
+];
 
 const AdminDashboard = () => {
   const { user, token, logout } = useAuthStore();
   const navigate = useNavigate();
+  const location = useLocation();
   const [stats, setStats] = useState({ totalUsers: 0, totalPandits: 0, totalDevotees: 0, totalMessages: 0, totalRevenue: 0, totalCompanyEarnings: 0 });
   const [usersList, setUsersList] = useState([]);
   const [paymentsList, setPaymentsList] = useState([]);
   const [activeTab, setActiveTab] = useState('overview');
+  const [autoRefundRunning, setAutoRefundRunning] = useState(false);
+  const [autoRefundResult, setAutoRefundResult] = useState(null);
+
+  // Temple states
+  const [templesList, setTemplesList] = useState([]);
+  const [templeOrdersList, setTempleOrdersList] = useState([]);
+  const [templeSubTab, setTempleSubTab] = useState('list'); // 'list' | 'orders'
+  const [templeSearchQuery, setTempleSearchQuery] = useState('');
+  const [templeOrderSearchQuery, setTempleOrderSearchQuery] = useState('');
+  const [templeOrderTypeFilter, setTempleOrderTypeFilter] = useState('all');
+  const [templeOrderStatusFilter, setTempleOrderStatusFilter] = useState('all');
+  
+  const [isTempleModalOpen, setIsTempleModalOpen] = useState(false);
+  const [editingTemple, setEditingTemple] = useState(null);
+  const [selectedTempleImage, setSelectedTempleImage] = useState('');
+  const [templeForm, setTempleForm] = useState({
+    name: '',
+    deity: '',
+    location: '',
+    state: '',
+    description: '',
+    chadavaEnabled: true,
+    prasadEnabled: true,
+    chadavaPresets: '51, 101, 251, 501, 1001',
+    prasadItemName: 'Prasad',
+    prasadItemPrice: 151,
+    prasadDeliveryDays: 7
+  });
+  const [isSubmittingTemple, setIsSubmittingTemple] = useState(false);
+
+  useEffect(() => {
+    if (location.pathname === '/admin/chats') {
+      setActiveTab('chats');
+    } else if (location.pathname === '/admin/bookings') {
+      setActiveTab('bookings');
+    } else {
+      const dashboardTabs = ['overview', 'users', 'financials', 'support', 'broadcast', 'payouts', 'templeManagement'];
+      if (!dashboardTabs.includes(activeTab)) {
+        setActiveTab('overview');
+      }
+    }
+  }, [location.pathname]);
+
+  const handleTabClick = (tab) => {
+    if (tab === 'chats') {
+      navigate('/admin/chats');
+    } else if (tab === 'bookings') {
+      navigate('/admin/bookings');
+    } else {
+      setActiveTab(tab);
+      if (location.pathname !== '/admin/dashboard') {
+        navigate('/admin/dashboard');
+      }
+    }
+  };
   const [filters, setFilters] = useState({ search: '', role: '', verification: 'all' });
   const [selectedUserModal, setSelectedUserModal] = useState(null);
   const [bookingsList, setBookingsList] = useState([]);
@@ -27,49 +97,74 @@ const AdminDashboard = () => {
   const [broadcastHistory, setBroadcastHistory] = useState([]);
   const [payoutsList, setPayoutsList] = useState([]);
   const [payoutTabFilter, setPayoutTabFilter] = useState('pending');
-  const [processingPayoutId, setProcessingPayoutId] = useState(null);
+  const [pendingPayouts, setPendingPayouts] = useState([]);
+  const [processedPayoutsList, setProcessedPayoutsList] = useState([]);
+  const [selectedPayout, setSelectedPayout] = useState(null);
+  const [transactionId, setTransactionId] = useState('');
+  const [receiptFile, setReceiptFile] = useState(null);
+  const [processing, setProcessing] = useState(false);
+
+  const fetchData = useCallback(async () => {
+    try {
+      const statsRes = await api.get('/admin/stats', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setStats(statsRes.data.data);
+
+      const usersRes = await api.get('/admin/users', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setUsersList(usersRes.data.data);
+
+      const paymentsRes = await api.get('/admin/payments', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setPaymentsList(paymentsRes.data.data);
+
+      const ticketsRes = await api.get('/admin/support', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setTickets(ticketsRes.data.data);
+
+      const bookingsRes = await api.get('/admin/bookings', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setBookingsList(bookingsRes.data.data || []);
+
+      const payoutsRes = await api.get('/admin/payouts', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setPayoutsList(payoutsRes.data.data || []);
+
+      const pendingPayoutsRes = await api.get('/admin/payouts/pending', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setPendingPayouts(pendingPayoutsRes.data.data || []);
+
+      const processedPayoutsRes = await api.get('/admin/payouts/processed', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setProcessedPayoutsList(processedPayoutsRes.data.data || []);
+
+      const templesRes = await api.get('/admin/temples', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setTemplesList(templesRes.data.data || []);
+
+      const templeOrdersRes = await api.get('/admin/temple-orders', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setTempleOrdersList(templeOrdersRes.data.data || []);
+    } catch (err) {
+      console.error(err);
+    }
+  }, [token]);
 
   useEffect(() => {
     if (!token || user?.role !== 'admin') {
       navigate('/admin/login');
       return;
     }
-
-    const fetchData = async () => {
-      try {
-        const statsRes = await api.get('/admin/stats', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setStats(statsRes.data.data);
-
-        const usersRes = await api.get('/admin/users', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setUsersList(usersRes.data.data);
-
-        const paymentsRes = await api.get('/admin/payments', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setPaymentsList(paymentsRes.data.data);
-
-        const ticketsRes = await api.get('/admin/support', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setTickets(ticketsRes.data.data);
-
-        const bookingsRes = await api.get('/admin/bookings', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setBookingsList(bookingsRes.data.data || []);
-
-        const payoutsRes = await api.get('/admin/payouts', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setPayoutsList(payoutsRes.data.data || []);
-      } catch (err) {
-        console.error(err);
-      }
-    };
 
     const fetchTickets = async () => {
       try {
@@ -81,7 +176,80 @@ const AdminDashboard = () => {
     };
     window._adminFetchTickets = fetchTickets;
     fetchData();
-  }, [token, user, navigate]);
+  }, [token, user, navigate, fetchData]);
+
+  const handleDeleteTemple = async (templeId) => {
+    if (!window.confirm('Are you sure you want to deactivate this temple?')) return;
+    try {
+      await api.delete(`/admin/temples/${templeId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      alert('Temple deactivated successfully');
+      fetchData();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to deactivate temple');
+    }
+  };
+
+  const handleTempleFormSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmittingTemple(true);
+    try {
+      const presets = templeForm.chadavaPresets
+        .split(',')
+        .map(p => Number(p.trim()))
+        .filter(p => !isNaN(p) && p > 0);
+
+      const payload = {
+        name: templeForm.name,
+        deity: templeForm.deity,
+        location: templeForm.location,
+        state: templeForm.state,
+        image: selectedTempleImage,
+        description: templeForm.description,
+        chadavaEnabled: templeForm.chadavaEnabled,
+        prasadEnabled: templeForm.prasadEnabled,
+        chadavaPresets: presets,
+        prasadItem: {
+          name: templeForm.prasadItemName,
+          price: Number(templeForm.prasadItemPrice),
+          deliveryDays: Number(templeForm.prasadDeliveryDays)
+        }
+      };
+
+      if (editingTemple) {
+        await api.put(`/admin/temples/${editingTemple._id}`, payload, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        alert('Temple updated successfully');
+      } else {
+        await api.post('/admin/temples', payload, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        alert('Temple added successfully');
+      }
+      setIsTempleModalOpen(false);
+      setEditingTemple(null);
+      setSelectedTempleImage('');
+      fetchData();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to save temple');
+    } finally {
+      setIsSubmittingTemple(false);
+    }
+  };
+
+  const handleUpdateOrderStatus = async (orderId, updates) => {
+    try {
+      await api.patch(`/admin/temple-orders/${orderId}`, updates, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      alert('Order status updated successfully');
+      fetchData();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to update order status');
+    }
+  };
 
   const handleLogout = () => {
     logout();
@@ -113,28 +281,44 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleProcessPayout = async (paymentId) => {
-    if (!window.confirm('Are you sure you want to release this payout to Pandit Ji?')) return;
-    setProcessingPayoutId(paymentId);
+  const handleProcessPayoutSubmit = async (e) => {
+    if (e) e.preventDefault();
+    if (!transactionId.trim()) {
+      alert('Please enter a Transaction ID');
+      return;
+    }
+    if (!receiptFile) {
+      alert('Please upload a screenshot of the payment receipt');
+      return;
+    }
+
+    setProcessing(true);
+    const formData = new FormData();
+    formData.append('panditId', selectedPayout.pandit._id);
+    formData.append('transactionId', transactionId);
+    formData.append('payoutMethod', selectedPayout.pandit.panditProfile?.bankDetails?.payoutMethod || 'bank_transfer');
+    formData.append('receipt', receiptFile);
+    
+    const paymentIds = selectedPayout.payments.map(p => p._id);
+    formData.append('paymentIds', JSON.stringify(paymentIds));
+
     try {
-      await api.post(`/admin/payouts/${paymentId}/pay`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
+      await api.post('/admin/payouts/process', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${token}`
+        }
       });
       alert('Payout processed successfully!');
-      
-      const payoutsRes = await api.get('/admin/payouts', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setPayoutsList(payoutsRes.data.data || []);
-      
-      const statsRes = await api.get('/admin/stats', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setStats(statsRes.data.data);
+      setSelectedPayout(null);
+      setTransactionId('');
+      setReceiptFile(null);
+      await fetchData();
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to process payout');
+      console.error(err);
+      alert(err.response?.data?.message || 'Failed to process payout.');
     } finally {
-      setProcessingPayoutId(null);
+      setProcessing(false);
     }
   };
 
@@ -262,32 +446,42 @@ const AdminDashboard = () => {
         </div>
         <nav className="flex-1 p-4 space-y-2">
           <button
-            onClick={() => setActiveTab('overview')}
+            onClick={() => handleTabClick('overview')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'overview' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
           >
             <LayoutDashboard size={20} />
             Overview
           </button>
           <button
-            onClick={() => setActiveTab('users')}
+            onClick={() => handleTabClick('users')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'users' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
           >
             <Users size={20} />
             Users
           </button>
           <button
-            onClick={() => setActiveTab('financials')}
+            onClick={() => handleTabClick('bookings')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'bookings' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
+          >
+            <BookOpen size={20} />
+            Bookings
+          </button>
+          <button
+            onClick={() => handleTabClick('financials')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'financials' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
             Financials
           </button>
-          <button onClick={() => navigate('/admin/chats')} className="w-full flex items-center gap-3 px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-white rounded-xl transition-colors">
+          <button
+            onClick={() => handleTabClick('chats')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'chats' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
+          >
             <MessageSquare size={20} />
             Chat Tracker
           </button>
           <button
-            onClick={() => setActiveTab('support')}
+            onClick={() => handleTabClick('support')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'support' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
           >
             <Headphones size={20} />
@@ -299,14 +493,14 @@ const AdminDashboard = () => {
             )}
           </button>
           <button
-            onClick={() => setActiveTab('broadcast')}
+            onClick={() => handleTabClick('broadcast')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'broadcast' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
           >
             <Megaphone size={20} />
             Broadcast
           </button>
           <button
-            onClick={() => setActiveTab('payouts')}
+            onClick={() => handleTabClick('payouts')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'payouts' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
           >
             <Banknote size={20} />
@@ -316,6 +510,13 @@ const AdminDashboard = () => {
                 {payoutsList.filter(p => p.isEligible && p.payoutStatus === 'pending').length}
               </span>
             )}
+          </button>
+          <button
+            onClick={() => handleTabClick('templeManagement')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'templeManagement' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
+          >
+            <Building size={20} />
+            Temple Management
           </button>
         </nav>
         <div className="p-4 border-t border-gray-800">
@@ -327,16 +528,106 @@ const AdminDashboard = () => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-auto p-8">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">
-            {activeTab === 'overview' && 'Dashboard Overview'}
-            {activeTab === 'users' && 'Manage Users'}
-            {activeTab === 'financials' && 'Financial Records'}
-            {activeTab === 'support' && 'Support Tickets'}
-            {activeTab === 'broadcast' && '📢 Broadcast Notifications'}
-            {activeTab === 'payouts' && 'Pandit Payouts (15-day Hold)'}
-          </h2>
+      <div className="flex-1 overflow-hidden flex flex-col">
+        {activeTab === 'chats' ? (
+          <ChatTrackerTab />
+        ) : (
+          <div className="flex-1 overflow-auto p-8">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-800">
+                {activeTab === 'overview' && 'Dashboard Overview'}
+                {activeTab === 'users' && 'Manage Users'}
+                {activeTab === 'bookings' && 'All Bookings'}
+                {activeTab === 'financials' && 'Financial Records'}
+                {activeTab === 'support' && 'Support Tickets'}
+                {activeTab === 'broadcast' && '📢 Broadcast Notifications'}
+                {activeTab === 'payouts' && 'Pandit Payouts (15-day Hold)'}
+                {activeTab === 'templeManagement' && '🛕 Temple Seva Management'}
+              </h2>
+          {activeTab === 'templeManagement' && (
+            <div className="flex gap-3 flex-wrap items-center">
+              {/* Sub-tab switcher */}
+              <div className="bg-gray-100 p-1 rounded-xl flex gap-1 border border-gray-200">
+                <button
+                  onClick={() => setTempleSubTab('list')}
+                  className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${templeSubTab === 'list' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-800'}`}
+                >
+                  🏫 Temples ({templesList.length})
+                </button>
+                <button
+                  onClick={() => setTempleSubTab('orders')}
+                  className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${templeSubTab === 'orders' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-800'}`}
+                >
+                  📦 Orders & Chadava ({templeOrdersList.length})
+                </button>
+              </div>
+
+              {templeSubTab === 'list' ? (
+                <>
+                  <input
+                    type="text"
+                    placeholder="Search temples..."
+                    className="p-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 outline-none w-48"
+                    value={templeSearchQuery}
+                    onChange={(e) => setTempleSearchQuery(e.target.value)}
+                  />
+                  <button
+                    onClick={() => {
+                      setEditingTemple(null);
+                      setSelectedTempleImage('');
+                      setTempleForm({
+                        name: '',
+                        deity: '',
+                        location: '',
+                        state: '',
+                        description: '',
+                        chadavaEnabled: true,
+                        prasadEnabled: true,
+                        chadavaPresets: '51, 101, 251, 501, 1001',
+                        prasadItemName: 'Prasad',
+                        prasadItemPrice: 151,
+                        prasadDeliveryDays: 7
+                      });
+                      setIsTempleModalOpen(true);
+                    }}
+                    className="flex items-center gap-1.5 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold rounded-xl transition-all shadow-sm animate-pulse"
+                  >
+                    <Sparkles size={14} /> Add Temple
+                  </button>
+                </>
+              ) : (
+                <>
+                  <input
+                    type="text"
+                    placeholder="Search orders..."
+                    className="p-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 outline-none w-48"
+                    value={templeOrderSearchQuery}
+                    onChange={(e) => setTempleOrderSearchQuery(e.target.value)}
+                  />
+                  <select
+                    className="p-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 outline-none"
+                    value={templeOrderTypeFilter}
+                    onChange={(e) => setTempleOrderTypeFilter(e.target.value)}
+                  >
+                    <option value="all">All Types</option>
+                    <option value="chadava">🪙 Chadava (Donation)</option>
+                    <option value="prasad">📦 Prasad Order</option>
+                  </select>
+                  <select
+                    className="p-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 outline-none"
+                    value={templeOrderStatusFilter}
+                    onChange={(e) => setTempleOrderStatusFilter(e.target.value)}
+                  >
+                    <option value="all">All Deliveries</option>
+                    <option value="placed">Placed</option>
+                    <option value="processing">Processing</option>
+                    <option value="shipped">Shipped</option>
+                    <option value="delivered">Delivered</option>
+                  </select>
+                </>
+              )}
+            </div>
+          )}
           {activeTab === 'users' && (
             <div className="flex gap-3 flex-wrap">
               <input
@@ -373,6 +664,48 @@ const AdminDashboard = () => {
 
         {activeTab === 'overview' && (
           <>
+            {/* Auto-Refund Quick Action Banner */}
+            <div className="mb-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-2xl flex items-center justify-between flex-wrap gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center text-green-700 text-xl">💰</div>
+                <div>
+                  <div className="font-bold text-green-800 text-sm">Auto-Refund Job</div>
+                  <div className="text-green-600 text-xs">Refunds paid bookings where OTP was never shared within 5 days of scheduled date → refunds to devotee's UPI Lite Wallet</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                {autoRefundResult && (
+                  <div className="text-xs font-semibold text-green-700 bg-green-100 px-3 py-1.5 rounded-lg">
+                    ✅ {autoRefundResult.processed} refunded{autoRefundResult.errors > 0 ? `, ⚠️ ${autoRefundResult.errors} errors` : ''}
+                  </div>
+                )}
+                <button
+                  onClick={async () => {
+                    if (!window.confirm('Run auto-refund job now? This will process all eligible stale bookings.')) return;
+                    setAutoRefundRunning(true);
+                    setAutoRefundResult(null);
+                    try {
+                      const res = await api.post('/admin/run-auto-refund', {}, { headers: { Authorization: `Bearer ${token}` } });
+                      setAutoRefundResult({ processed: res.data.processed || 0, errors: res.data.errors || 0 });
+                      await fetchData(); // Refresh all stats/listings
+                    } catch (err) {
+                      alert('Error: ' + (err.response?.data?.message || err.message));
+                    } finally {
+                      setAutoRefundRunning(false);
+                    }
+                  }}
+                  disabled={autoRefundRunning}
+                  className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                >
+                  {autoRefundRunning ? (
+                    <><RefreshCw size={14} className="animate-spin" /> Running...</>
+                  ) : (
+                    <><RefreshCw size={14} /> Run Now</>
+                  )}
+                </button>
+              </div>
+            </div>
+
             {/* Stats */}
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
               <StatCard title="Total Users" value={stats.totalUsers} icon={<Users size={24} />} color="blue" />
@@ -946,133 +1279,694 @@ const AdminDashboard = () => {
               <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
                 <p className="text-gray-400 text-sm font-medium">Total Pending Payouts</p>
                 <h3 className="text-2xl font-bold text-gray-800 mt-2">
-                  ₹{(payoutsList.filter(p => p.payoutStatus === 'pending').reduce((sum, p) => sum + p.panditEarnings, 0) / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                  ₹{(pendingPayouts.reduce((sum, p) => sum + p.pendingAmount, 0) / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                 </h3>
               </div>
               <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                <p className="text-gray-400 text-sm font-medium">Eligible Payouts (Ready)</p>
+                <p className="text-gray-400 text-sm font-medium">Total Processed (Paid)</p>
                 <h3 className="text-2xl font-bold text-green-600 mt-2">
-                  ₹{(payoutsList.filter(p => p.isEligible).reduce((sum, p) => sum + p.panditEarnings, 0) / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                  ₹{(processedPayoutsList.reduce((sum, p) => sum + p.amount, 0) / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                 </h3>
               </div>
-              <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                <p className="text-gray-400 text-sm font-medium">Total Paid Out</p>
-                <h3 className="text-2xl font-bold text-blue-600 mt-2">
-                  ₹{(payoutsList.filter(p => p.payoutStatus === 'paid').reduce((sum, p) => sum + p.panditEarnings, 0) / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+              <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-center">
+                <p className="text-gray-400 text-sm font-medium">Weekly Cutoff Time</p>
+                <h3 className="text-sm font-semibold text-blue-600 mt-2 flex items-center gap-1.5">
+                  <Clock size={16} /> Every Monday (Completed Pujas)
                 </h3>
               </div>
             </div>
 
             {/* Filter Tabs */}
-            <div className="flex border-b border-gray-200">
+            <div className="flex border-b border-gray-200 mb-4">
               <button
                 className={`py-3 px-6 font-semibold border-b-2 transition-all ${payoutTabFilter === 'pending' ? 'border-orange-500 text-orange-500' : 'border-transparent text-gray-400 hover:text-gray-600'}`}
                 onClick={() => setPayoutTabFilter('pending')}
               >
-                Pending Payouts ({payoutsList.filter(p => p.payoutStatus === 'pending').length})
+                Pending Weekly Payouts ({pendingPayouts.length})
               </button>
               <button
-                className={`py-3 px-6 font-semibold border-b-2 transition-all ${payoutTabFilter === 'paid' ? 'border-orange-500 text-orange-500' : 'border-transparent text-gray-400 hover:text-gray-600'}`}
-                onClick={() => setPayoutTabFilter('paid')}
+                className={`py-3 px-6 font-semibold border-b-2 transition-all ${payoutTabFilter === 'processed' ? 'border-orange-500 text-orange-500' : 'border-transparent text-gray-400 hover:text-gray-600'}`}
+                onClick={() => setPayoutTabFilter('processed')}
               >
-                Paid History ({payoutsList.filter(p => p.payoutStatus === 'paid').length})
+                Processed Payouts History ({processedPayoutsList.length})
               </button>
             </div>
 
             {/* Table */}
-            <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-gray-50 border-b border-gray-100">
-                    <th className="p-4 font-semibold text-gray-600 text-sm">Pandit Name & Details</th>
-                    <th className="p-4 font-semibold text-gray-600 text-sm">Booking Details</th>
-                    <th className="p-4 font-semibold text-gray-600 text-sm">Puja Amount</th>
-                    <th className="p-4 font-semibold text-gray-600 text-sm">Pandit Earnings (90%)</th>
-                    <th className="p-4 font-semibold text-gray-600 text-sm">Commission (10%)</th>
-                    <th className="p-4 font-semibold text-gray-600 text-sm">Status / Lock</th>
-                    <th className="p-4 font-semibold text-gray-600 text-sm">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {payoutsList.filter(p => p.payoutStatus === payoutTabFilter).length === 0 ? (
-                    <tr>
-                      <td colSpan="7" className="p-8 text-center text-gray-400">
-                        No payout records found in this category.
-                      </td>
+            {payoutTabFilter === 'pending' ? (
+              <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-gray-50 border-b border-gray-100 text-gray-600 text-sm">
+                      <th className="p-4 font-semibold">Pandit Name & Details</th>
+                      <th className="p-4 font-semibold">Preferred Payout Method</th>
+                      <th className="p-4 font-semibold">Payment Details / QR</th>
+                      <th className="p-4 font-semibold">Eligible Weekly Amount</th>
+                      <th className="p-4 font-semibold">Action</th>
                     </tr>
-                  ) : (
-                    payoutsList.filter(p => p.payoutStatus === payoutTabFilter).map(p => (
-                      <tr key={p._id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
-                        <td className="p-4">
-                          <div className="font-semibold text-gray-800">
-                            Pt. {p.pandit?.firstName} {p.pandit?.lastName}
-                          </div>
-                          <div className="text-xs text-gray-400">{p.pandit?.email}</div>
-                          <div className="text-xs text-gray-400">{p.pandit?.phone}</div>
-                          {p.pandit?.panditProfile?.bankDetails && (p.pandit.panditProfile.bankDetails.accountNumber || p.pandit.panditProfile.bankDetails.upiId) ? (
-                            <div className="mt-2 p-2 bg-gray-50 border border-gray-100 rounded-lg text-[11px] text-gray-600 space-y-0.5">
-                              <div className="font-bold text-gray-700">Bank Details:</div>
-                              {p.pandit.panditProfile.bankDetails.bankName && <div><strong>Bank:</strong> {p.pandit.panditProfile.bankDetails.bankName}</div>}
-                              {p.pandit.panditProfile.bankDetails.accountHolderName && <div><strong>Name:</strong> {p.pandit.panditProfile.bankDetails.accountHolderName}</div>}
-                              {p.pandit.panditProfile.bankDetails.accountNumber && <div><strong>A/C:</strong> {p.pandit.panditProfile.bankDetails.accountNumber}</div>}
-                              {p.pandit.panditProfile.bankDetails.ifscCode && <div><strong>IFSC:</strong> {p.pandit.panditProfile.bankDetails.ifscCode}</div>}
-                              {p.pandit.panditProfile.bankDetails.upiId && <div><strong>UPI:</strong> {p.pandit.panditProfile.bankDetails.upiId}</div>}
-                            </div>
-                          ) : (
-                            <div className="mt-2 text-[10px] text-red-500 italic font-semibold">⚠️ Bank details not provided yet</div>
-                          )}
-                        </td>
-                        <td className="p-4">
-                          <div className="font-medium text-gray-700">{p.booking?.pujaType || 'Puja'}</div>
-                          <div className="text-xs text-gray-400">
-                            Completed: {p.booking?.completedAt ? new Date(p.booking.completedAt).toLocaleDateString('en-IN') : 'N/A'}
-                          </div>
-                        </td>
-                        <td className="p-4 font-medium text-gray-800">₹{(p.amount / 100).toLocaleString('en-IN')}</td>
-                        <td className="p-4 font-semibold text-gray-800">₹{(p.panditEarnings / 100).toLocaleString('en-IN')}</td>
-                        <td className="p-4 text-gray-500">₹{(p.companyEarnings / 100).toLocaleString('en-IN')}</td>
-                        <td className="p-4">
-                          {p.payoutStatus === 'paid' ? (
-                            <div>
-                              <span className="inline-block bg-green-50 text-green-700 text-xs font-bold px-2.5 py-1 rounded-full">
-                                ✓ Paid
-                              </span>
-                              <div className="text-[10px] text-gray-400 mt-1">Txn: {p.payoutTransactionId}</div>
-                              <div className="text-[10px] text-gray-400">{new Date(p.payoutDate).toLocaleDateString()}</div>
-                            </div>
-                          ) : p.isEligible ? (
-                            <span className="inline-block bg-green-100 text-green-800 text-xs font-bold px-2.5 py-1 rounded-full">
-                              Eligible (Ready)
-                            </span>
-                          ) : (
-                            <div>
-                              <span className="inline-block bg-yellow-100 text-yellow-800 text-xs font-bold px-2.5 py-1 rounded-full">
-                                Locked
-                              </span>
-                              <div className="text-[10px] text-gray-400 mt-1">{p.daysRemaining} days remaining</div>
-                            </div>
-                          )}
-                        </td>
-                        <td className="p-4">
-                          {p.payoutStatus === 'pending' && (
-                            <button
-                              disabled={!p.isEligible || processingPayoutId === p._id}
-                              onClick={() => handleProcessPayout(p._id)}
-                              className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${p.isEligible ? 'bg-orange-500 hover:bg-orange-600 text-white shadow-sm' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
-                            >
-                              {processingPayoutId === p._id ? 'Processing...' : 'Pay Pandit'}
-                            </button>
-                          )}
+                  </thead>
+                  <tbody>
+                    {pendingPayouts.length === 0 ? (
+                      <tr>
+                        <td colSpan="5" className="p-8 text-center text-gray-400">
+                          No pending payouts due.
                         </td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+                    ) : (
+                      pendingPayouts.map(p => (
+                        <tr key={p.pandit?._id || p._id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors text-sm">
+                          <td className="p-4">
+                            <div className="font-semibold text-gray-800">
+                              Pt. {p.pandit?.firstName} {p.pandit?.lastName}
+                            </div>
+                            <div className="text-xs text-gray-400">{p.pandit?.email}</div>
+                            <div className="text-xs text-gray-400">{p.pandit?.phone}</div>
+                          </td>
+                          <td className="p-4 text-gray-600 capitalize">
+                            {p.pandit?.panditProfile?.bankDetails?.payoutMethod?.replace('_', ' ') || 'Bank Transfer'}
+                          </td>
+                          <td className="p-4 text-gray-600">
+                            {p.pandit?.panditProfile?.bankDetails?.payoutMethod === 'upi' ? (
+                              <span className="font-mono text-xs bg-orange-50 text-orange-700 px-2.5 py-1 rounded-lg border border-orange-100">
+                                {p.pandit.panditProfile.bankDetails.upiId}
+                              </span>
+                            ) : p.pandit?.panditProfile?.bankDetails?.payoutMethod === 'qr_code' ? (
+                              p.pandit.panditProfile.bankDetails.qrCode ? (
+                                <a 
+                                  href={p.pandit.panditProfile.bankDetails.qrCode} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 text-orange-600 font-bold hover:underline"
+                                >
+                                  View QR Code <ExternalLink size={12} />
+                                </a>
+                              ) : (
+                                <span className="text-red-500 text-xs font-semibold">No QR Uploaded</span>
+                              )
+                            ) : (
+                              <div className="text-xs leading-normal">
+                                <div><strong>Holder:</strong> {p.pandit?.panditProfile?.bankDetails?.accountHolderName || '-'}</div>
+                                <div><strong>Acc:</strong> {p.pandit?.panditProfile?.bankDetails?.accountNumber || '-'}</div>
+                                <div><strong>Bank:</strong> {p.pandit?.panditProfile?.bankDetails?.bankName || '-'}</div>
+                                <div><strong>IFSC:</strong> {p.pandit?.panditProfile?.bankDetails?.ifscCode || '-'}</div>
+                              </div>
+                            )}
+                          </td>
+                          <td className="p-4 font-bold text-green-700 text-base">
+                            ₹{(p.pendingAmount / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                          </td>
+                          <td className="p-4">
+                            <button
+                              onClick={() => setSelectedPayout(p)}
+                              className="bg-orange-600 hover:bg-orange-700 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-sm transition-all"
+                            >
+                              Process Payout
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-gray-50 border-b border-gray-100 text-gray-600 text-sm">
+                      <th className="p-4 font-semibold">Pandit Name & Details</th>
+                      <th className="p-4 font-semibold">Payout Method</th>
+                      <th className="p-4 font-semibold">Transaction Details</th>
+                      <th className="p-4 font-semibold">Amount Paid</th>
+                      <th className="p-4 font-semibold">Date Processed</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {processedPayoutsList.length === 0 ? (
+                      <tr>
+                        <td colSpan="5" className="p-8 text-center text-gray-400">
+                          No processed payouts history found.
+                        </td>
+                      </tr>
+                    ) : (
+                      processedPayoutsList.map(p => (
+                        <tr key={p._id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors text-sm">
+                          <td className="p-4">
+                            <div className="font-semibold text-gray-800">
+                              Pt. {p.pandit?.firstName} {p.pandit?.lastName}
+                            </div>
+                            <div className="text-xs text-gray-400">{p.pandit?.email}</div>
+                            <div className="text-xs text-gray-400">{p.pandit?.phone}</div>
+                          </td>
+                          <td className="p-4 text-gray-600 capitalize">
+                            {p.payoutMethod?.replace('_', ' ') || 'Bank Transfer'}
+                          </td>
+                          <td className="p-4 text-gray-600">
+                            <div className="text-xs space-y-1">
+                              <div><strong>Txn ID:</strong> <span className="font-mono">{p.transactionId}</span></div>
+                              {p.receiptImage && (
+                                <div>
+                                  <a 
+                                    href={p.receiptImage} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1 text-orange-600 font-bold hover:underline"
+                                  >
+                                    View Receipt <ExternalLink size={12} />
+                                  </a>
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                          <td className="p-4 font-bold text-gray-800 text-base">
+                            ₹{(p.amount / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                          </td>
+                          <td className="p-4 text-gray-500">
+                            {new Date(p.payoutDate || p.createdAt).toLocaleString('en-IN', {
+                              day: 'numeric',
+                              month: 'short',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* Process Payout Modal */}
+            {selectedPayout && (
+              <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                <div className="bg-white rounded-3xl max-w-lg w-full p-8 shadow-2xl relative animate-in fade-in zoom-in duration-200">
+                  <button 
+                    onClick={() => {
+                      setSelectedPayout(null);
+                      setTransactionId('');
+                      setReceiptFile(null);
+                    }}
+                    className="absolute top-6 right-6 p-1 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-all"
+                  >
+                    <X size={20} />
+                  </button>
+                  
+                  <h3 className="text-xl font-bold text-gray-800 mb-2">Process Weekly Payout</h3>
+                  <p className="text-sm text-gray-500 mb-6">Process manual payment details to update the Pandit's earnings ledger.</p>
+                  
+                  <div className="bg-orange-50 border border-orange-100 rounded-2xl p-4 mb-6 text-sm text-gray-700">
+                    <div className="mb-2"><strong>Pandit:</strong> Pt. {selectedPayout.pandit?.firstName} {selectedPayout.pandit?.lastName}</div>
+                    <div className="mb-2"><strong>Payout Sum:</strong> <span className="text-green-700 font-bold">₹{(selectedPayout.pendingAmount / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span></div>
+                    <div className="mb-2"><strong>Method:</strong> <span className="capitalize">{selectedPayout.pandit?.panditProfile?.bankDetails?.payoutMethod?.replace('_', ' ') || 'Bank Transfer'}</span></div>
+                    
+                    {/* Method instructions */}
+                    <div className="mt-3 pt-3 border-t border-orange-200/50">
+                      <p className="font-semibold text-gray-800 mb-1">Transfer Destination Details:</p>
+                      {selectedPayout.pandit?.panditProfile?.bankDetails?.payoutMethod === 'upi' ? (
+                        <div>UPI ID: <span className="font-mono font-bold text-orange-800">{selectedPayout.pandit.panditProfile.bankDetails.upiId}</span></div>
+                      ) : selectedPayout.pandit?.panditProfile?.bankDetails?.payoutMethod === 'qr_code' ? (
+                        <div>
+                          {selectedPayout.pandit.panditProfile.bankDetails.qrCode ? (
+                            <a href={selectedPayout.pandit.panditProfile.bankDetails.qrCode} target="_blank" rel="noopener noreferrer" className="text-orange-700 underline font-bold inline-flex items-center gap-1">
+                              Open Payout QR Link <ExternalLink size={12} />
+                            </a>
+                          ) : (
+                            <span className="text-red-500">No QR Code available. Contact Pandit.</span>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="text-xs space-y-1">
+                          <div><strong>Holder:</strong> {selectedPayout.pandit?.panditProfile?.bankDetails?.accountHolderName || '-'}</div>
+                          <div><strong>Acc:</strong> {selectedPayout.pandit?.panditProfile?.bankDetails?.accountNumber || '-'}</div>
+                          <div><strong>Bank:</strong> {selectedPayout.pandit?.panditProfile?.bankDetails?.bankName || '-'}</div>
+                          <div><strong>IFSC:</strong> {selectedPayout.pandit?.panditProfile?.bankDetails?.ifscCode || '-'}</div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <form onSubmit={handleProcessPayoutSubmit} className="space-y-4">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-gray-600 uppercase">Transaction ID / Reference Number</label>
+                      <input
+                        type="text"
+                        required
+                        value={transactionId}
+                        onChange={e => setTransactionId(e.target.value)}
+                        placeholder="e.g. UTR123456789 or TXN-987654"
+                        className="w-full p-3 border border-gray-200 rounded-xl outline-none focus:border-orange-500 text-sm"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-gray-600 uppercase">Upload Payment Receipt Screenshot</label>
+                      <div className="border-2 border-dashed border-gray-200 hover:border-orange-500/50 rounded-2xl p-4 transition-all relative flex flex-col items-center justify-center bg-gray-50 cursor-pointer">
+                        <input
+                          type="file"
+                          required
+                          accept="image/*"
+                          onChange={e => setReceiptFile(e.target.files[0])}
+                          className="absolute inset-0 opacity-0 cursor-pointer"
+                        />
+                        <Upload size={24} className="text-gray-400 mb-2" />
+                        {receiptFile ? (
+                          <p className="text-xs font-semibold text-green-700">{receiptFile.name}</p>
+                        ) : (
+                          <p className="text-xs text-gray-500 text-center">Click or drag & drop receipt image to upload</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex gap-4 pt-4 border-t border-gray-100 mt-6">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedPayout(null);
+                          setTransactionId('');
+                          setReceiptFile(null);
+                        }}
+                        className="flex-1 p-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl text-sm transition-all"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={processing}
+                        className="flex-1 p-3 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-xl text-sm transition-all shadow-md shadow-orange-600/10 flex items-center justify-center gap-2"
+                      >
+                        {processing ? 'Processing...' : 'Mark as Paid'}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
           </div>
         )}
+
+        {activeTab === 'templeManagement' && (
+          <div className="space-y-6">
+            {templeSubTab === 'list' ? (
+              <>
+                {/* Temples Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                  {templesList
+                    .filter(t => !templeSearchQuery || t.name.toLowerCase().includes(templeSearchQuery.toLowerCase()) || t.deity.toLowerCase().includes(templeSearchQuery.toLowerCase()) || t.location.toLowerCase().includes(templeSearchQuery.toLowerCase()))
+                    .map(temple => (
+                      <div key={temple._id} className={`bg-white rounded-2xl border shadow-sm overflow-hidden transition-all hover:shadow-md ${!temple.isActive ? 'opacity-60 border-red-200' : 'border-gray-100'}`}>
+                        {/* Temple Image */}
+                        <div className="relative h-36 bg-orange-50 overflow-hidden">
+                          {temple.image ? (
+                            <img src={temple.image} alt={temple.name} className="w-full h-full object-cover" onError={e => { e.target.style.display = 'none'; }} />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-5xl">🛕</div>
+                          )}
+                          <div className="absolute top-2 right-2 flex gap-1">
+                            {!temple.isActive && (
+                              <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">Inactive</span>
+                            )}
+                            {temple.chadavaEnabled && (
+                              <span className="bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">🪙 Chadava</span>
+                            )}
+                            {temple.prasadEnabled && (
+                              <span className="bg-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">📦 Prasad</span>
+                            )}
+                          </div>
+                        </div>
+                        {/* Info */}
+                        <div className="p-4">
+                          <h3 className="font-bold text-gray-800 text-base">{temple.name}</h3>
+                          <p className="text-xs text-orange-600 font-semibold">{temple.deity}</p>
+                          <p className="text-xs text-gray-400 mt-0.5">📍 {temple.location}, {temple.state}</p>
+                          {temple.description && (
+                            <p className="text-xs text-gray-500 mt-2 line-clamp-2">{temple.description}</p>
+                          )}
+                          {/* Chadava Presets */}
+                          {temple.chadavaEnabled && temple.chadavaPresets?.length > 0 && (
+                            <div className="mt-3">
+                              <p className="text-[10px] text-gray-400 font-bold uppercase mb-1">Chadava Presets</p>
+                              <div className="flex flex-wrap gap-1">
+                                {temple.chadavaPresets.map((p, i) => (
+                                  <span key={i} className="bg-amber-50 border border-amber-200 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded-full">₹{p}</span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          {/* Prasad */}
+                          {temple.prasadEnabled && temple.prasadItem && (
+                            <div className="mt-2 bg-orange-50 rounded-xl p-2">
+                              <p className="text-[10px] text-gray-400 font-bold uppercase">Prasad</p>
+                              <p className="text-xs font-semibold text-gray-700">{temple.prasadItem.name}</p>
+                              <p className="text-[10px] text-gray-500">₹{temple.prasadItem.price} · {temple.prasadItem.deliveryDays} days delivery</p>
+                            </div>
+                          )}
+                          {/* Actions */}
+                          <div className="flex gap-2 mt-4">
+                            <button
+                              onClick={() => {
+                                setEditingTemple(temple);
+                                setSelectedTempleImage(temple.image || '');
+                                setTempleForm({
+                                  name: temple.name,
+                                  deity: temple.deity,
+                                  location: temple.location,
+                                  state: temple.state,
+                                  description: temple.description || '',
+                                  chadavaEnabled: temple.chadavaEnabled,
+                                  prasadEnabled: temple.prasadEnabled,
+                                  chadavaPresets: (temple.chadavaPresets || []).join(', '),
+                                  prasadItemName: temple.prasadItem?.name || 'Prasad',
+                                  prasadItemPrice: temple.prasadItem?.price || 151,
+                                  prasadDeliveryDays: temple.prasadItem?.deliveryDays || 7
+                                });
+                                setIsTempleModalOpen(true);
+                              }}
+                              className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-orange-100 hover:bg-orange-200 text-orange-700 font-bold text-xs rounded-xl transition-colors"
+                            >
+                              ✏️ Edit
+                            </button>
+                            {temple.isActive && (
+                              <button
+                                onClick={() => handleDeleteTemple(temple._id)}
+                                className="flex items-center justify-center gap-1 py-1.5 px-3 bg-red-50 hover:bg-red-100 text-red-600 font-bold text-xs rounded-xl transition-colors"
+                              >
+                                <Trash2 size={12} /> Deactivate
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+                {templesList.filter(t => !templeSearchQuery || t.name.toLowerCase().includes(templeSearchQuery.toLowerCase())).length === 0 && (
+                  <div className="flex flex-col items-center justify-center py-16 text-center bg-white rounded-2xl border border-gray-100">
+                    <div className="text-5xl mb-3">🛕</div>
+                    <p className="text-gray-500 font-medium">No temples found</p>
+                    <p className="text-gray-400 text-sm">Add your first temple using the button above</p>
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                {/* Orders & Chadava Table */}
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-gray-50 border-b border-gray-100">
+                        <th className="p-4 font-semibold text-gray-600 text-sm">Devotee</th>
+                        <th className="p-4 font-semibold text-gray-600 text-sm">Temple & Type</th>
+                        <th className="p-4 font-semibold text-gray-600 text-sm">Amount</th>
+                        <th className="p-4 font-semibold text-gray-600 text-sm">Date</th>
+                        <th className="p-4 font-semibold text-gray-600 text-sm">Delivery Status</th>
+                        <th className="p-4 font-semibold text-gray-600 text-sm">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {templeOrdersList
+                        .filter(o => {
+                          const q = templeOrderSearchQuery.toLowerCase();
+                          const matchSearch = !q || (o.devotee?.firstName + ' ' + o.devotee?.lastName).toLowerCase().includes(q) || (o.templeName || '').toLowerCase().includes(q);
+                          const matchType = templeOrderTypeFilter === 'all' || o.orderType === templeOrderTypeFilter;
+                          const matchStatus = templeOrderStatusFilter === 'all' || o.deliveryStatus === templeOrderStatusFilter;
+                          return matchSearch && matchType && matchStatus;
+                        })
+                        .map(order => (
+                          <tr key={order._id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                            <td className="p-4">
+                              <p className="font-semibold text-gray-800 text-sm">{order.devotee?.firstName} {order.devotee?.lastName}</p>
+                              <p className="text-xs text-gray-400">{order.devotee?.email}</p>
+                              <p className="text-xs text-gray-400">{order.devotee?.phone || '—'}</p>
+                            </td>
+                            <td className="p-4">
+                              <p className="font-semibold text-gray-700 text-sm">{order.templeName}</p>
+                              {order.orderType === 'chadava' ? (
+                                <span className="inline-block bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded-full mt-1">🪙 Chadava (Donation)</span>
+                              ) : (
+                                <div>
+                                  <span className="inline-block bg-orange-100 text-orange-700 text-[10px] font-bold px-2 py-0.5 rounded-full mt-1">📦 Prasad</span>
+                                  {order.prasadItem && <p className="text-xs text-gray-500 mt-0.5">{order.prasadItem}</p>}
+                                </div>
+                              )}
+                              {order.dedicatedTo && (
+                                <p className="text-[10px] text-gray-400 mt-1">👤 For: {order.dedicatedTo}</p>
+                              )}
+                            </td>
+                            <td className="p-4">
+                              <p className="font-bold text-green-700">₹{order.amount?.toLocaleString('en-IN')}</p>
+                              <p className="text-[10px] text-gray-400 mt-0.5">TXN: {order.transactionId}</p>
+                            </td>
+                            <td className="p-4 text-xs text-gray-500">
+                              {new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                            </td>
+                            <td className="p-4">
+                              {order.orderType === 'chadava' ? (
+                                <span className="text-[10px] text-gray-400 italic">N/A — Monetary</span>
+                              ) : (
+                                <div>
+                                  {(() => {
+                                    const colorMap = { placed: 'bg-yellow-100 text-yellow-700', processing: 'bg-blue-100 text-blue-700', shipped: 'bg-purple-100 text-purple-700', delivered: 'bg-green-100 text-green-700' };
+                                    return (
+                                      <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full capitalize ${colorMap[order.deliveryStatus] || 'bg-gray-100 text-gray-600'}`}>
+                                        {order.deliveryStatus || 'placed'}
+                                      </span>
+                                    );
+                                  })()}
+                                  {order.trackingId && <p className="text-[10px] text-gray-400 mt-0.5">Tracking: {order.trackingId}</p>}
+                                  {order.orderType === 'prasad' && (
+                                    <div className="mt-1.5 text-[10px] text-gray-400 space-y-0.5">
+                                      <p className="font-semibold text-gray-500">Delivery To:</p>
+                                      <p>{order.deliveryName}</p>
+                                      <p>{order.deliveryAddress}, {order.deliveryCity} - {order.deliveryPincode}</p>
+                                      <p>📞 {order.deliveryPhone}</p>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </td>
+                            <td className="p-4">
+                              {order.orderType === 'prasad' && (
+                                <div className="space-y-1.5">
+                                  <select
+                                    defaultValue={order.deliveryStatus || 'placed'}
+                                    onChange={e => handleUpdateOrderStatus(order._id, { deliveryStatus: e.target.value })}
+                                    className="text-xs border border-gray-200 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-orange-400 bg-gray-50 w-full"
+                                  >
+                                    <option value="placed">Placed</option>
+                                    <option value="processing">Processing</option>
+                                    <option value="shipped">Shipped</option>
+                                    <option value="delivered">Delivered</option>
+                                  </select>
+                                  <input
+                                    type="text"
+                                    placeholder="Tracking ID..."
+                                    defaultValue={order.trackingId || ''}
+                                    onBlur={e => {
+                                      if (e.target.value !== (order.trackingId || '')) {
+                                        handleUpdateOrderStatus(order._id, { trackingId: e.target.value });
+                                      }
+                                    }}
+                                    className="text-xs border border-gray-200 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-orange-400 bg-gray-50 w-full"
+                                  />
+                                </div>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                  {templeOrdersList.filter(o => {
+                    const q = templeOrderSearchQuery.toLowerCase();
+                    const matchSearch = !q || (o.devotee?.firstName + ' ' + o.devotee?.lastName).toLowerCase().includes(q);
+                    const matchType = templeOrderTypeFilter === 'all' || o.orderType === templeOrderTypeFilter;
+                    const matchStatus = templeOrderStatusFilter === 'all' || o.deliveryStatus === templeOrderStatusFilter;
+                    return matchSearch && matchType && matchStatus;
+                  }).length === 0 && (
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                      <div className="text-4xl mb-2">📦</div>
+                      <p className="text-gray-400 text-sm">No orders found matching your filters</p>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'bookings' && (
+          <BookingsTab bookingsList={bookingsList} onSelectBooking={setSelectedBookingModal} />
+        )}
       </div>
+        )}
+      </div>
+
+      {/* Add / Edit Temple Modal */}
+      {isTempleModalOpen && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={() => setIsTempleModalOpen(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[92vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            {/* Header */}
+            <div className="bg-gradient-to-r from-orange-500 to-amber-500 p-6 rounded-t-2xl flex justify-between items-center">
+              <div>
+                <h3 className="text-xl font-bold text-white">{editingTemple ? '✏️ Edit Temple' : '🛕 Add New Temple'}</h3>
+                <p className="text-orange-100 text-sm mt-0.5">{editingTemple ? `Editing: ${editingTemple.name}` : 'Fill in temple details below'}</p>
+              </div>
+              <button onClick={() => setIsTempleModalOpen(false)} className="text-white/70 hover:text-white text-3xl leading-none font-light">&times;</button>
+            </div>
+
+            <form onSubmit={handleTempleFormSubmit} className="p-6 space-y-5">
+              {/* Basic Info */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2">
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Temple Name *</label>
+                  <input required value={templeForm.name} onChange={e => setTempleForm(f => ({ ...f, name: e.target.value }))}
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-400 outline-none"
+                    placeholder="e.g. Tirupati Balaji" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Deity *</label>
+                  <input required value={templeForm.deity} onChange={e => setTempleForm(f => ({ ...f, deity: e.target.value }))}
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-400 outline-none"
+                    placeholder="e.g. Lord Venkateswara" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Location *</label>
+                  <input required value={templeForm.location} onChange={e => setTempleForm(f => ({ ...f, location: e.target.value }))}
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-400 outline-none"
+                    placeholder="e.g. Tirumala" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">State *</label>
+                  <input required value={templeForm.state} onChange={e => setTempleForm(f => ({ ...f, state: e.target.value }))}
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-400 outline-none"
+                    placeholder="e.g. Andhra Pradesh" />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Description</label>
+                  <textarea rows={2} value={templeForm.description} onChange={e => setTempleForm(f => ({ ...f, description: e.target.value }))}
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-400 outline-none resize-none"
+                    placeholder="Brief description of this temple..." />
+                </div>
+              </div>
+
+              {/* Temple Image Selector */}
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Select Temple Image *</label>
+                <div className="grid grid-cols-4 gap-2">
+                  {TEMPLE_PRESET_IMAGES.map(img => (
+                    <div
+                      key={img.key}
+                      onClick={() => setSelectedTempleImage(img.src)}
+                      className={`relative cursor-pointer rounded-xl overflow-hidden border-2 transition-all ${
+                        selectedTempleImage === img.src
+                          ? 'border-orange-500 shadow-lg scale-105'
+                          : 'border-gray-200 hover:border-orange-300'
+                      }`}
+                    >
+                      <img src={img.src} alt={img.label} className="w-full h-16 object-cover" />
+                      <div className={`absolute inset-0 flex items-end justify-center pb-1 ${
+                        selectedTempleImage === img.src ? 'bg-orange-500/30' : 'bg-black/20 hover:bg-black/30'
+                      }`}>
+                        <span className="text-white text-[9px] font-bold text-center leading-tight px-1">{img.label}</span>
+                      </div>
+                      {selectedTempleImage === img.src && (
+                        <div className="absolute top-1 right-1 w-4 h-4 bg-orange-500 rounded-full flex items-center justify-center">
+                          <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                {!selectedTempleImage && (
+                  <p className="text-[10px] text-amber-600 font-semibold mt-2">⚠️ Please select an image for this temple</p>
+                )}
+                {selectedTempleImage && (
+                  <p className="text-[10px] text-green-600 font-semibold mt-2">✓ Image selected</p>
+                )}
+              </div>
+
+              <hr className="border-gray-100" />
+
+              {/* Chadava Section */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-bold text-gray-700 text-sm">🪙 Chadava (Donations)</p>
+                    <p className="text-xs text-gray-400">Allow devotees to make monetary offerings</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" checked={templeForm.chadavaEnabled} onChange={e => setTempleForm(f => ({ ...f, chadavaEnabled: e.target.checked }))} className="sr-only peer" />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
+                  </label>
+                </div>
+                {templeForm.chadavaEnabled && (
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Quick-Select Preset Amounts (₹, comma-separated)</label>
+                    <input value={templeForm.chadavaPresets} onChange={e => setTempleForm(f => ({ ...f, chadavaPresets: e.target.value }))}
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-400 outline-none"
+                      placeholder="51, 101, 251, 501, 1001" />
+                    <p className="text-[10px] text-gray-400 mt-1">These will appear as preset buttons for devotees on the temple page</p>
+                  </div>
+                )}
+              </div>
+
+              <hr className="border-gray-100" />
+
+              {/* Prasad Section */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-bold text-gray-700 text-sm">📦 Prasad Delivery</p>
+                    <p className="text-xs text-gray-400">Allow devotees to order prasad from this temple</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" checked={templeForm.prasadEnabled} onChange={e => setTempleForm(f => ({ ...f, prasadEnabled: e.target.checked }))} className="sr-only peer" />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
+                  </label>
+                </div>
+                {templeForm.prasadEnabled && (
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="col-span-3 md:col-span-1">
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Prasad Item Name</label>
+                      <input value={templeForm.prasadItemName} onChange={e => setTempleForm(f => ({ ...f, prasadItemName: e.target.value }))}
+                        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-400 outline-none"
+                        placeholder="e.g. Ladoo Box" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Price (₹)</label>
+                      <input type="number" min="1" value={templeForm.prasadItemPrice} onChange={e => setTempleForm(f => ({ ...f, prasadItemPrice: e.target.value }))}
+                        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-400 outline-none" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Delivery Days</label>
+                      <input type="number" min="1" value={templeForm.prasadDeliveryDays} onChange={e => setTempleForm(f => ({ ...f, prasadDeliveryDays: e.target.value }))}
+                        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-400 outline-none" />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <hr className="border-gray-100" />
+
+              {/* Actions */}
+              <div className="flex gap-3 justify-end">
+                <button type="button" onClick={() => setIsTempleModalOpen(false)}
+                  className="px-5 py-2.5 border border-gray-200 text-gray-600 font-semibold rounded-xl hover:bg-gray-50 transition-colors text-sm">
+                  Cancel
+                </button>
+                <button type="submit" disabled={isSubmittingTemple}
+                  className="flex items-center gap-2 px-6 py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl transition-all shadow-sm disabled:opacity-60 text-sm">
+                  {isSubmittingTemple ? (
+                    <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Saving...</>
+                  ) : (
+                    <><Sparkles size={15} /> {editingTemple ? 'Save Changes' : 'Add Temple'}</>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* User Profile Modal */}
       {selectedUserModal && (
@@ -1240,8 +2134,26 @@ const AdminDashboard = () => {
                 <div className="bg-gray-50 rounded-xl p-3">
                   <p className="text-xs text-gray-400 mb-1">Fee & Payment</p>
                   <p className="font-bold text-green-700 text-sm">₹{(selectedBookingModal.fee || 0).toLocaleString()}</p>
-                  <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full capitalize ${selectedBookingModal.paymentStatus === 'paid' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{selectedBookingModal.paymentStatus}</span>
+                  <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full capitalize ${
+                    selectedBookingModal.paymentStatus === 'paid' ? 'bg-green-100 text-green-700' :
+                    selectedBookingModal.paymentStatus === 'refunded' ? 'bg-purple-100 text-purple-700' :
+                    'bg-yellow-100 text-yellow-700'
+                  }`}>{selectedBookingModal.paymentStatus}</span>
                 </div>
+                {selectedBookingModal.paymentStatus === 'paid' &&
+                 ['confirmed', 'in-progress'].includes(selectedBookingModal.status) &&
+                 !selectedBookingModal.completionOtp &&
+                 selectedBookingModal.scheduledDate &&
+                 (new Date() - new Date(selectedBookingModal.scheduledDate)) / (1000 * 60 * 60 * 24) >= 5 && (
+                  <div className="col-span-2 bg-amber-50 border border-amber-200 rounded-xl p-3 space-y-2">
+                    <div className="flex items-center gap-2 text-amber-800 font-bold text-xs uppercase">
+                      <span>⚠️ Stale booking (Overdue 5+ Days)</span>
+                    </div>
+                    <p className="text-xs text-gray-600">
+                      This booking has been paid but not completed or verified via OTP for more than 5 days. It is eligible for the auto-refund job, which will refund the booking fee to the devotee's UPI Lite Wallet.
+                    </p>
+                  </div>
+                )}
                 <div className="bg-gray-50 rounded-xl p-3">
                   <p className="text-xs text-gray-400 mb-1">Mode</p>
                   <p className="font-semibold text-gray-800 text-sm capitalize">{selectedBookingModal.pujaMode || 'in-person'}</p>
