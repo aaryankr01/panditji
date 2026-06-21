@@ -5,6 +5,7 @@ import useAuthStore from '../store/useAuthStore';
 import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
 import api from '../utils/api';
+import useT from '../hooks/useT';
 
 // ── Static image map: name keywords → local asset path ─────────
 const TEMPLE_IMAGE_MAP = {
@@ -41,6 +42,7 @@ const DELIVERY_STATUS_CONFIG = {
 export default function TemplePage() {
   const { isAuthenticated, token, user } = useAuthStore();
   const navigate = useNavigate();
+  const t = useT();
 
   const [activeTab, setActiveTab] = useState('chadava');
   const [temples, setTemples] = useState([]);
@@ -158,8 +160,8 @@ export default function TemplePage() {
     } finally { setPrasadLoading(false); }
   };
 
-  const chadavaTemples = temples.filter(t => t.chadavaEnabled);
-  const prasadTemples = temples.filter(t => t.prasadEnabled);
+  const chadavaTemples = temples.filter(tmpl => tmpl.chadavaEnabled);
+  const prasadTemples = temples.filter(tmpl => tmpl.prasadEnabled);
 
   return (
     <div style={{ minHeight: '100vh', background: '#f9f5f0', fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
@@ -176,14 +178,15 @@ export default function TemplePage() {
         <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(circle at 20% 50%, rgba(255,160,60,0.08) 0%, transparent 50%), radial-gradient(circle at 80% 50%, rgba(255,100,0,0.08) 0%, transparent 50%)' }} />
         <div style={{ position: 'relative' }}>
           <h1 style={{ fontSize: 28, fontWeight: 800, color: '#fff', margin: '0 0 8px', fontFamily: "'Georgia', serif" }}>
-            Temple Seva Portal
+            {t('temple_portal_title')}
           </h1>
-          <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 14, margin: '0 0 20px', maxWidth: 480, marginLeft: 'auto', marginRight: 'auto' }}>
-            Offer Chadava to your favourite temple or receive blessed Prasad at your doorstep
-          </p>
+          <p 
+            style={{ color: 'rgba(255,255,255,0.8)', fontSize: 14, margin: '0 0 20px', maxWidth: 480, marginLeft: 'auto', marginRight: 'auto' }}
+            dangerouslySetInnerHTML={{ __html: t('temple_portal_subtitle') }}
+          />
           {isAuthenticated && (
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 12, padding: '8px 16px' }}>
-              <span style={{ color: '#fde68a', fontWeight: 700, fontSize: 14 }}>Wallet Balance: Rs.{walletBalance.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+              <span style={{ color: '#fde68a', fontWeight: 700, fontSize: 14 }}>{t('temple_wallet_balance')}{walletBalance.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
             </div>
           )}
         </div>
@@ -193,9 +196,9 @@ export default function TemplePage() {
       <div style={{ background: '#fff', borderBottom: '1px solid #e5e7eb', position: 'sticky', top: 0, zIndex: 50 }}>
         <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', padding: '0 16px' }}>
           {[
-            { id: 'chadava', label: 'Chadava (Donate)', count: chadavaTemples.length },
-            { id: 'prasad', label: 'Prasad (Home Delivery)', count: prasadTemples.length },
-            ...(isAuthenticated ? [{ id: 'myorders', label: 'My Orders', count: null }] : []),
+            { id: 'chadava', label: t('temple_chadava_tab'), count: chadavaTemples.length },
+            { id: 'prasad', label: t('temple_prasad_tab'), count: prasadTemples.length },
+            ...(isAuthenticated ? [{ id: 'myorders', label: t('temple_my_orders_tab'), count: null }] : []),
           ].map(tab => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
               style={{
@@ -217,8 +220,8 @@ export default function TemplePage() {
         {activeTab === 'chadava' && (
           <div>
             <div style={{ marginBottom: 24 }}>
-              <h2 style={{ fontSize: 20, fontWeight: 700, color: '#1f2937', margin: 0 }}>Offer Chadava to Sacred Temples</h2>
-              <p style={{ color: '#6b7280', fontSize: 14, margin: '4px 0 0' }}>Your offering is recorded in our seva register. Funds support temple activities and maintenance.</p>
+              <h2 style={{ fontSize: 20, fontWeight: 700, color: '#1f2937', margin: 0 }}>{t('temple_offer_chadava_title')}</h2>
+              <p style={{ color: '#6b7280', fontSize: 14, margin: '4px 0 0' }}>{t('temple_offer_chadava_desc')}</p>
             </div>
             {loading ? (
               <LoadingSkeleton />
@@ -227,9 +230,9 @@ export default function TemplePage() {
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20 }}>
                 {chadavaTemples.length === 0
-                  ? <EmptyState message="No temples available for Chadava yet." />
+                  ? <EmptyState message={t('temple_no_temples_chadava')} />
                   : chadavaTemples.map(temple => (
-                    <TempleCard key={temple._id} temple={temple} actionLabel="Offer Chadava" actionColor="#b5451b" onAction={() => openChadava(temple)} />
+                    <TempleCard key={temple._id} temple={temple} actionLabel={t('temple_offer_chadava_btn')} actionColor="#b5451b" onAction={() => openChadava(temple)} />
                   ))}
               </div>
             )}
@@ -240,8 +243,8 @@ export default function TemplePage() {
         {activeTab === 'prasad' && (
           <div>
             <div style={{ marginBottom: 24 }}>
-              <h2 style={{ fontSize: 20, fontWeight: 700, color: '#1f2937', margin: 0 }}>Order Prasad to Your Doorstep</h2>
-              <p style={{ color: '#6b7280', fontSize: 14, margin: '4px 0 0' }}>Receive sacred prasad from famous temples delivered to your home.</p>
+              <h2 style={{ fontSize: 20, fontWeight: 700, color: '#1f2937', margin: 0 }}>{t('temple_order_prasad_title')}</h2>
+              <p style={{ color: '#6b7280', fontSize: 14, margin: '4px 0 0' }}>{t('temple_order_prasad_desc')}</p>
             </div>
             {loading ? (
               <LoadingSkeleton />
@@ -250,13 +253,13 @@ export default function TemplePage() {
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20 }}>
                 {prasadTemples.length === 0
-                  ? <EmptyState message="No temples available for Prasad delivery yet." />
+                  ? <EmptyState message={t('temple_no_temples_prasad')} />
                   : prasadTemples.map(temple => (
                     <TempleCard key={temple._id} temple={temple}
-                      actionLabel={`Order Prasad — Rs.${temple.prasadItem?.price || 0}`}
+                      actionLabel={t('temple_order_prasad_btn', { price: temple.prasadItem?.price || 0 })}
                       actionColor="#1d4ed8"
                       onAction={() => openPrasad(temple)}
-                      badge={`${temple.prasadItem?.deliveryDays || 7} days delivery`}
+                      badge={t('temple_order_prasad_est_days', { days: temple.prasadItem?.deliveryDays || 7 })}
                       subLabel={temple.prasadItem?.name}
                     />
                   ))}
@@ -268,13 +271,13 @@ export default function TemplePage() {
         {/* ─── MY ORDERS TAB ─────────────────────────────── */}
         {activeTab === 'myorders' && (
           <div>
-            <h2 style={{ fontSize: 20, fontWeight: 700, color: '#1f2937', marginBottom: 20 }}>My Temple Orders</h2>
+            <h2 style={{ fontSize: 20, fontWeight: 700, color: '#1f2937', marginBottom: 20 }}>{t('temple_my_orders_title')}</h2>
             {ordersLoading ? (
-              <div style={{ textAlign: 'center', padding: 60, color: '#9ca3af' }}>Loading your orders...</div>
+              <div style={{ textAlign: 'center', padding: 60, color: '#9ca3af' }}>{t('temple_loading_orders')}</div>
             ) : myOrders.length === 0 ? (
               <div style={{ textAlign: 'center', padding: 60, background: '#fff', borderRadius: 16, border: '1px solid #e5e7eb' }}>
-                <p style={{ color: '#6b7280', fontWeight: 600, fontSize: 16 }}>No orders yet</p>
-                <p style={{ color: '#9ca3af', fontSize: 13, marginTop: 4 }}>Offer Chadava or order Prasad from your favourite temple</p>
+                <p style={{ color: '#6b7280', fontWeight: 600, fontSize: 16 }}>{t('temple_no_orders_yet')}</p>
+                <p style={{ color: '#9ca3af', fontSize: 13, marginTop: 4 }}>{t('temple_no_orders_yet_desc')}</p>
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -285,21 +288,21 @@ export default function TemplePage() {
                       <div style={{ fontWeight: 700, color: '#1f2937', fontSize: 15 }}>{order.templeName}</div>
                       <div style={{ color: '#6b7280', fontSize: 13 }}>
                         {order.orderType === 'chadava'
-                          ? `Chadava offering${order.dedicatedTo ? ` · For: ${order.dedicatedTo}` : ''}`
-                          : `Prasad: ${order.prasadItem}`}
+                          ? `${t('temple_chadhava_offering')}${order.dedicatedTo ? ` · ${t('temple_dedicated_to_for')}${order.dedicatedTo}` : ''}`
+                          : `${t('temple_prasad_label')}${order.prasadItem}`}
                       </div>
                       <div style={{ color: '#9ca3af', fontSize: 12, marginTop: 2 }}>{new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
                       <div style={{ fontWeight: 800, fontSize: 16, color: '#1f2937' }}>₹{order.amount.toLocaleString('en-IN')}</div>
                       {order.orderType === 'chadava' ? (
-                        <span style={{ fontSize: 11, fontWeight: 700, background: '#dcfce7', color: '#166534', padding: '2px 8px', borderRadius: 20 }}>Offered</span>
+                        <span style={{ fontSize: 11, fontWeight: 700, background: '#dcfce7', color: '#166534', padding: '2px 8px', borderRadius: 20 }}>{t('temple_order_placed')}</span>
                       ) : (
                         <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: DELIVERY_STATUS_CONFIG[order.deliveryStatus]?.cls?.includes('yellow') ? '#fef9c3' : DELIVERY_STATUS_CONFIG[order.deliveryStatus]?.cls?.includes('green') ? '#dcfce7' : DELIVERY_STATUS_CONFIG[order.deliveryStatus]?.cls?.includes('purple') ? '#f3e8ff' : '#dbeafe', color: DELIVERY_STATUS_CONFIG[order.deliveryStatus]?.cls?.includes('yellow') ? '#854d0e' : DELIVERY_STATUS_CONFIG[order.deliveryStatus]?.cls?.includes('green') ? '#166534' : DELIVERY_STATUS_CONFIG[order.deliveryStatus]?.cls?.includes('purple') ? '#6b21a8' : '#1e40af' }}>
-                          {DELIVERY_STATUS_CONFIG[order.deliveryStatus]?.label || order.deliveryStatus}
+                          {t(`temple_delivery_${order.deliveryStatus}`) || order.deliveryStatus}
                         </span>
                       )}
-                      {order.trackingId && <div style={{ fontSize: 11, color: '#6b7280', marginTop: 2 }}>Tracking: {order.trackingId}</div>}
+                      {order.trackingId && <div style={{ fontSize: 11, color: '#6b7280', marginTop: 2 }}>{t('temple_delivery_tracking')}{order.trackingId}</div>}
                     </div>
                   </div>
                 ))}
@@ -311,14 +314,14 @@ export default function TemplePage() {
 
       {/* ─── CHADAVA MODAL ─────────────────────────────── */}
       {chadavaModal && (
-        <Modal onClose={() => setChadavaModal(null)} title={`Offer Chadava — ${chadavaModal.name}`}>
+        <Modal onClose={() => setChadavaModal(null)} title={t('temple_chadava_modal_title', { name: chadavaModal.name })}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div style={{ background: '#fef3c7', border: '1px solid #fcd34d', borderRadius: 10, padding: '10px 14px', fontSize: 13, color: '#92400e', fontWeight: 600 }}>
-              Wallet Balance: Rs.{walletBalance.toLocaleString('en-IN')}
+              {t('temple_wallet_balance')}{walletBalance.toLocaleString('en-IN')}
             </div>
 
             <div>
-              <label style={labelStyle}>SELECT AMOUNT</label>
+              <label style={labelStyle}>{t('temple_select_amount')}</label>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
                 {(chadavaModal.chadavaPresets || [51, 101, 251, 501, 1001]).map(amt => (
                   <button key={amt} onClick={() => { setChadavaAmount(amt); setCustomAmount(''); }}
@@ -330,26 +333,26 @@ export default function TemplePage() {
                     }}>₹{amt}</button>
                 ))}
               </div>
-              <input type="number" min={11} placeholder="Or enter custom amount (min ₹11)"
+              <input type="number" min={11} placeholder={t('temple_custom_amount_placeholder')}
                 value={customAmount}
                 onChange={e => { setCustomAmount(e.target.value); setChadavaAmount(0); }}
                 style={inputStyle} />
             </div>
 
             <div>
-              <label style={labelStyle}>DEDICATED TO (Optional)</label>
-              <input type="text" placeholder="e.g. For my family's health and peace"
+              <label style={labelStyle}>{t('temple_dedicated_to_label')}</label>
+              <input type="text" placeholder={t('temple_dedicated_to_placeholder')}
                 value={dedicatedTo} onChange={e => setDedicatedTo(e.target.value)} style={inputStyle} />
             </div>
 
             <div style={{ background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 10, padding: '12px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ color: '#374151', fontWeight: 600 }}>Chadava Amount</span>
+              <span style={{ color: '#374151', fontWeight: 600 }}>{t('temple_chadava_amount_summary')}</span>
               <span style={{ fontSize: 22, fontWeight: 800, color: '#b5451b' }}>₹{(customAmount || chadavaAmount || 0).toLocaleString('en-IN')}</span>
             </div>
 
             <button onClick={handleChadava} disabled={chadavaLoading}
               style={{ width: '100%', padding: '14px', background: chadavaLoading ? '#9ca3af' : '#b5451b', color: '#fff', border: 'none', borderRadius: 10, fontWeight: 800, fontSize: 15, cursor: chadavaLoading ? 'not-allowed' : 'pointer' }}>
-              {chadavaLoading ? 'Processing...' : 'Offer Chadava'}
+              {chadavaLoading ? t('rev_submitting') : t('temple_offer_chadava_btn')}
             </button>
           </div>
         </Modal>
@@ -357,20 +360,20 @@ export default function TemplePage() {
 
       {/* ─── PRASAD MODAL ─────────────────────────────── */}
       {prasadModal && (
-        <Modal onClose={() => setPrasadModal(null)} title={`Order Prasad — ${prasadModal.name}`}>
+        <Modal onClose={() => setPrasadModal(null)} title={t('temple_order_prasad_modal_title', { name: prasadModal.name })}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 10, padding: '10px 14px' }}>
               <div style={{ fontWeight: 700, color: '#1d4ed8', fontSize: 14 }}>{prasadModal.prasadItem?.name}</div>
-              <div style={{ color: '#374151', fontSize: 13 }}>₹{prasadModal.prasadItem?.price} · Estimated {prasadModal.prasadItem?.deliveryDays} days delivery</div>
-              <div style={{ color: '#6b7280', fontSize: 12, marginTop: 4 }}>Wallet Balance: Rs.{walletBalance.toLocaleString('en-IN')}</div>
+              <div style={{ color: '#374151', fontSize: 13 }}>₹{prasadModal.prasadItem?.price} · {t('temple_order_prasad_est_days', { days: prasadModal.prasadItem?.deliveryDays })}</div>
+              <div style={{ color: '#6b7280', fontSize: 12, marginTop: 4 }}>{t('temple_wallet_balance')}{walletBalance.toLocaleString('en-IN')}</div>
             </div>
 
             {[
-              { label: 'FULL NAME', key: 'name', placeholder: 'Your full name', type: 'text' },
-              { label: 'DELIVERY ADDRESS', key: 'address', placeholder: 'House no, Street, Area', type: 'text' },
-              { label: 'CITY', key: 'city', placeholder: 'City', type: 'text' },
-              { label: 'PINCODE', key: 'pincode', placeholder: '6-digit pincode', type: 'text', maxLength: 6 },
-              { label: 'PHONE', key: 'phone', placeholder: '10-digit mobile number', type: 'tel' },
+              { label: t('temple_form_name'), key: 'name', placeholder: t('temple_form_name_placeholder'), type: 'text' },
+              { label: t('temple_form_address'), key: 'address', placeholder: t('temple_form_address_placeholder'), type: 'text' },
+              { label: t('temple_form_city'), key: 'city', placeholder: t('temple_form_city_placeholder'), type: 'text' },
+              { label: t('temple_form_pincode'), key: 'pincode', placeholder: t('temple_form_pincode_placeholder'), type: 'text', maxLength: 6 },
+              { label: t('temple_form_phone'), key: 'phone', placeholder: t('temple_form_phone_placeholder'), type: 'tel' },
             ].map(f => (
               <div key={f.key}>
                 <label style={labelStyle}>{f.label}</label>
@@ -383,7 +386,7 @@ export default function TemplePage() {
 
             <button onClick={handlePrasad} disabled={prasadLoading}
               style={{ width: '100%', padding: '14px', background: prasadLoading ? '#9ca3af' : '#1d4ed8', color: '#fff', border: 'none', borderRadius: 10, fontWeight: 800, fontSize: 15, cursor: prasadLoading ? 'not-allowed' : 'pointer' }}>
-              {prasadLoading ? 'Placing Order...' : `Order Prasad — Rs.${prasadModal.prasadItem?.price}`}
+              {prasadLoading ? t('rev_submitting') : t('temple_order_prasad_btn', { price: prasadModal.prasadItem?.price })}
             </button>
           </div>
         </Modal>
