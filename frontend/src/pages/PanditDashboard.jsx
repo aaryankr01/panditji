@@ -174,7 +174,8 @@ const PanditDashboard = () => {
         // Pending weekly payout (completed before current Monday & payoutStatus = pending)
         const mondayCutoff = getStartOfCurrentWeekMonday();
         const pending = completedOrOtherPayments.filter(p => {
-          if (p.payoutStatus !== 'pending') return false;
+          const pStatus = p.payoutStatus || 'pending';
+          if (pStatus !== 'pending') return false;
           const dateToCompare = p.booking ? (p.booking.completedAt || p.booking.updatedAt) : p.createdAt;
           return new Date(dateToCompare) < mondayCutoff;
         });
@@ -389,7 +390,8 @@ const PanditDashboard = () => {
 
             const mondayCutoff = getStartOfCurrentWeekMonday();
             const pending = completedOrOtherPayments.filter(p => {
-              if (p.payoutStatus !== 'pending') return false;
+              const pStatus = p.payoutStatus || 'pending';
+              if (pStatus !== 'pending') return false;
               const dateToCompare = p.booking ? (p.booking.completedAt || p.booking.updatedAt) : p.createdAt;
               return new Date(dateToCompare) < mondayCutoff;
             });

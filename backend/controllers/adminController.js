@@ -336,7 +336,7 @@ exports.getPayouts = async (req, res, next) => {
         const diffTime = Math.abs(new Date() - new Date(completedAt));
         const diffDays = diffTime / (1000 * 60 * 60 * 24);
         p.daysRemaining = Math.max(0, Math.ceil(15 - diffDays));
-        p.isEligible = diffDays >= 15 && p.payoutStatus === 'pending';
+        p.isEligible = diffDays >= 15 && (p.payoutStatus === 'pending' || !p.payoutStatus);
       } else {
         p.daysRemaining = 15;
         p.isEligible = false;
@@ -414,7 +414,10 @@ exports.getPendingPayoutsSummary = async (req, res, next) => {
     const payments = await Payment.find({
       type: 'booking_fee',
       status: 'completed',
-      payoutStatus: 'pending'
+      $or: [
+        { payoutStatus: 'pending' },
+        { payoutStatus: { $exists: false } }
+      ]
     })
     .populate({
       path: 'booking',
@@ -497,7 +500,10 @@ exports.processManualPayout = async (req, res, next) => {
     const paymentsToSettle = await Payment.find({
       _id: { $in: parsedPaymentIds },
       pandit: panditId,
-      payoutStatus: 'pending'
+      $or: [
+        { payoutStatus: 'pending' },
+        { payoutStatus: { $exists: false } }
+      ]
     });
 
     if (paymentsToSettle.length === 0) {
