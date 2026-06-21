@@ -35,6 +35,7 @@ const paymentSchema = new mongoose.Schema(
     },
     payoutDate: { type: Date },
     payoutTransactionId: { type: String },
+    payout: { type: mongoose.Schema.Types.ObjectId, ref: 'Payout' },
   },
   { timestamps: true }
 );

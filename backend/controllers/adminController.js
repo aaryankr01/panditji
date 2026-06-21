@@ -393,3 +393,140 @@ exports.processPayout = async (req, res, next) => {
     next(err);
   }
 };
+
+// Helper to calculate the start (00:00:00) of Monday of the current week
+const getStartOfCurrentWeekMonday = () => {
+  const today = new Date();
+  const day = today.getDay(); // 0 is Sunday, 1 is Monday, ...
+  const diff = today.getDate() - day + (day === 0 ? -6 : 1);
+  const monday = new Date(today.setDate(diff));
+  monday.setHours(0, 0, 0, 0);
+  return monday;
+};
+
+// @desc    Get summary of pending payouts (completed pujas before current Monday)
+// @route   GET /api/admin/payouts/pending
+// @access  Private/Admin
+exports.getPendingPayoutsSummary = async (req, res, next) => {
+  try {
+    const mondayCutoff = getStartOfCurrentWeekMonday();
+
+    const payments = await Payment.find({
+      type: 'booking_fee',
+      status: 'completed',
+      payoutStatus: 'pending'
+    })
+    .populate('booking')
+    .populate({
+      path: 'pandit',
+      select: 'firstName lastName email phone',
+      populate: {
+        path: 'panditProfile',
+        select: 'bankDetails'
+      }
+    });
+
+    // Filter payments: associated booking status must be completed, and completedAt must be before mondayCutoff
+    const eligiblePayments = payments.filter(p => {
+      if (!p.booking || p.booking.status !== 'completed') return false;
+      const completedAt = p.booking.completedAt || p.booking.updatedAt;
+      return new Date(completedAt) < mondayCutoff;
+    });
+
+    // Group by Pandit
+    const summaryMap = {};
+    eligiblePayments.forEach(p => {
+      if (!p.pandit) return;
+      const panditId = p.pandit._id.toString();
+      if (!summaryMap[panditId]) {
+        summaryMap[panditId] = {
+          pandit: p.pandit,
+          pendingAmount: 0,
+          payments: []
+        };
+      }
+      summaryMap[panditId].pendingAmount += p.panditEarnings || 0;
+      summaryMap[panditId].payments.push({
+        _id: p._id,
+        booking: p.booking,
+        amount: p.amount,
+        panditEarnings: p.panditEarnings,
+        createdAt: p.createdAt
+      });
+    });
+
+    const data = Object.values(summaryMap);
+    res.status(200).json({ success: true, count: data.length, data });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Process manual payout
+// @route   POST /api/admin/payouts/process
+// @access  Private/Admin
+exports.processManualPayout = async (req, res, next) => {
+  try {
+    const { panditId, paymentIds, transactionId, payoutMethod } = req.body;
+
+    if (!panditId || !paymentIds || !transactionId || !payoutMethod) {
+      return res.status(400).json({ success: false, message: 'Please provide panditId, paymentIds, transactionId, and payoutMethod' });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'Please upload a payment receipt screenshot' });
+    }
+
+    const parsedPaymentIds = typeof paymentIds === 'string' ? JSON.parse(paymentIds) : paymentIds;
+
+    const User = require('../models/User');
+    const Payout = require('../models/Payout');
+
+    const user = await User.findById(panditId).populate('panditProfile');
+    if (!user || user.role !== 'pandit' || !user.panditProfile) {
+      return res.status(404).json({ success: false, message: 'Pandit profile not found' });
+    }
+
+    // Fetch payments to verify eligibility
+    const paymentsToSettle = await Payment.find({
+      _id: { $in: parsedPaymentIds },
+      pandit: panditId,
+      payoutStatus: 'pending'
+    });
+
+    if (paymentsToSettle.length === 0) {
+      return res.status(400).json({ success: false, message: 'No eligible pending payments found to settle' });
+    }
+
+    const totalAmount = paymentsToSettle.reduce((sum, p) => sum + (p.panditEarnings || 0), 0);
+
+    // Create the payout record
+    const payout = await Payout.create({
+      pandit: panditId,
+      panditProfile: user.panditProfile._id,
+      amount: totalAmount,
+      payments: parsedPaymentIds,
+      receiptImage: req.file.path, // Cloudinary path URL from upload middleware
+      payoutMethod,
+      transactionId,
+      payoutDate: new Date()
+    });
+
+    // Update individual payments
+    await Payment.updateMany(
+      { _id: { $in: parsedPaymentIds } },
+      {
+        $set: {
+          payoutStatus: 'paid',
+          payoutDate: new Date(),
+          payoutTransactionId: transactionId,
+          payout: payout._id
+        }
+      }
+    );
+
+    res.status(200).json({ success: true, message: 'Payout recorded and processed successfully', data: payout });
+  } catch (err) {
+    next(err);
+  }
+};

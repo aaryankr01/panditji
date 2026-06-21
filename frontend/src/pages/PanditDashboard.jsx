@@ -6,7 +6,7 @@ import axios from 'axios';
 import { io } from 'socket.io-client';
 import {
   LogOut, Calendar, MessageSquare, CheckCircle, XCircle,
-  MapPin, Clock, Bell, Phone, User, AlertCircle, Trash2, Headphones, Video, ShieldCheck, Save,
+  MapPin, Clock, Bell, Phone, User, AlertCircle, Trash2, Headphones, Video, ShieldCheck, Save, CreditCard,
   LayoutDashboard, Coins, TrendingUp, CheckCircle2, CalendarCheck, Star
 } from 'lucide-react';
 import ChatInterface from '../components/ChatInterface';
@@ -84,6 +84,9 @@ const PanditDashboard = () => {
   const [mobileChatView, setMobileChatView] = useState('list'); // 'list' | 'chat'
   const [conversations, setConversations] = useState([]);
   const [totalEarnings, setTotalEarnings] = useState(0);
+  const [pendingPayout, setPendingPayout] = useState(0);
+  const [totalPaidOut, setTotalPaidOut] = useState(0);
+  const [payouts, setPayouts] = useState([]);
   const [incomingRequest, setIncomingRequest] = useState(null);
   const [accepting, setAccepting] = useState(false);
   const [profileData, setProfileData] = useState(null);
@@ -109,14 +112,18 @@ const PanditDashboard = () => {
     feePerPuja: 1500, 
     specializations: [],
     bankDetails: {
+      payoutMethod: 'bank_transfer',
       accountNumber: '',
       ifscCode: '',
       bankName: '',
       accountHolderName: '',
-      upiId: ''
+      upiId: '',
+      qrCode: ''
     }
   });
   const [savingProfile, setSavingProfile] = useState(false);
+  const [selectedReceipt, setSelectedReceipt] = useState(null);
+  const [uploadingQr, setUploadingQr] = useState(false);
 
   // Aadhar Upload State
   const [aadharNumber, setAadharNumber] = useState('');
@@ -141,11 +148,37 @@ const PanditDashboard = () => {
     api.get('/chat/conversations/list')
       .then(r => setConversations(r.data.data)).catch(console.error);
 
+    const getStartOfCurrentWeekMonday = () => {
+      const today = new Date();
+      const day = today.getDay();
+      const diff = today.getDate() - day + (day === 0 ? -6 : 1);
+      const monday = new Date(today.setDate(diff));
+      monday.setHours(0, 0, 0, 0);
+      return monday;
+    };
+
     api.get('/payments')
       .then(r => {
-        const payments = r.data.data;
-        const sum = payments.reduce((acc, curr) => acc + (curr.panditEarnings || 0), 0);
-        setTotalEarnings(sum / 100);
+        const payments = r.data.data || [];
+        const completedPayments = payments.filter(p => p.booking && p.booking.status === 'completed');
+        
+        // Lifetime Earnings (only completed pujas)
+        const lifetime = completedPayments.reduce((acc, curr) => acc + (curr.panditEarnings || 0), 0);
+        setTotalEarnings(lifetime / 100);
+
+        // Pending weekly payout (completed before current Monday & payoutStatus = pending)
+        const mondayCutoff = getStartOfCurrentWeekMonday();
+        const pending = completedPayments.filter(p => p.payoutStatus === 'pending' && new Date(p.booking.completedAt || p.booking.updatedAt) < mondayCutoff);
+        const pendingSum = pending.reduce((acc, curr) => acc + (curr.panditEarnings || 0), 0);
+        setPendingPayout(pendingSum / 100);
+      }).catch(console.error);
+
+    api.get('/pandits/payouts')
+      .then(r => {
+        const payoutList = r.data.data || [];
+        setPayouts(payoutList);
+        const paidSum = payoutList.reduce((acc, curr) => acc + (curr.amount || 0), 0);
+        setTotalPaidOut(paidSum / 100);
       }).catch(console.error);
 
     const fetchProfile = async () => {
@@ -163,11 +196,13 @@ const PanditDashboard = () => {
           feePerPuja: data.panditProfile?.feePerPuja || 1500,
           specializations: data.panditProfile?.specializations || [],
           bankDetails: {
+            payoutMethod: data.panditProfile?.bankDetails?.payoutMethod || 'bank_transfer',
             accountNumber: data.panditProfile?.bankDetails?.accountNumber || '',
             ifscCode: data.panditProfile?.bankDetails?.ifscCode || '',
             bankName: data.panditProfile?.bankDetails?.bankName || '',
             accountHolderName: data.panditProfile?.bankDetails?.accountHolderName || '',
-            upiId: data.panditProfile?.bankDetails?.upiId || ''
+            upiId: data.panditProfile?.bankDetails?.upiId || '',
+            qrCode: data.panditProfile?.bankDetails?.qrCode || ''
           }
         });
 
@@ -446,6 +481,50 @@ const PanditDashboard = () => {
     }
   };
 
+  const handleSaveBankDetails = async () => {
+    setSavingProfile(true);
+    try {
+      const res = await api.patch('/pandits/profile', { bankDetails: editForm.bankDetails });
+      setProfileData(res.data.data);
+      alert('Bank details saved successfully!');
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.message || 'Failed to save bank details.');
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
+  const handleQrUploadChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const formData = new FormData();
+    formData.append('qrCode', file);
+    setUploadingQr(true);
+    try {
+      const res = await api.post('/pandits/payout-details/qr', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${token}`
+        }
+      });
+      setEditForm(prev => ({
+        ...prev,
+        bankDetails: {
+          ...prev.bankDetails,
+          qrCode: res.data.data.panditProfile?.bankDetails?.qrCode || ''
+        }
+      }));
+      setProfileData(res.data.data);
+      alert('QR Code uploaded successfully!');
+    } catch (err) {
+      console.error(err);
+      alert('Failed to upload QR Code.');
+    } finally {
+      setUploadingQr(false);
+    }
+  };
+
   const renderBadge = (status) => {
     const map = {
       pending: { bg: C.goldLt, c: C.gold },
@@ -503,24 +582,9 @@ const PanditDashboard = () => {
         
         .pd-stats-grid {
           display: grid;
-          grid-template-columns: repeat(5, 1fr);
+          grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
           gap: 20px;
           margin-bottom: 28px;
-        }
-        @media (max-width: 1200px) {
-          .pd-stats-grid {
-            grid-template-columns: repeat(3, 1fr);
-          }
-        }
-        @media (max-width: 800px) {
-          .pd-stats-grid {
-            grid-template-columns: repeat(2, 1fr);
-          }
-        }
-        @media (max-width: 500px) {
-          .pd-stats-grid {
-            grid-template-columns: 1fr;
-          }
         }
         .pd-stat-card {
           background: #fff;
@@ -765,6 +829,8 @@ const PanditDashboard = () => {
             { id: 'overview', label: t('pd_overview') || 'Overview', icon: LayoutDashboard },
             { id: 'bookings', label: t('pd_booking_requests') || 'Pujas & Requests', icon: Calendar },
             { id: 'chat', label: t('dd_messages') || 'Messages', icon: MessageSquare },
+            { id: 'bank_details', label: 'Bank Details', icon: CreditCard },
+            { id: 'payouts', label: 'Payout History', icon: Coins },
             { id: 'profile', label: t('dd_my_profile') || 'My Profile', icon: User },
             { id: 'support', label: t('dd_support') || 'Support & Care', icon: Headphones },
           ].map(tab => (
@@ -798,7 +864,13 @@ const PanditDashboard = () => {
             <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M3 5H15" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" /><path d="M3 10H17" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" /><path d="M3 15H11" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" /></svg>
           </button>
           <h1 style={{ fontFamily: "'Playfair Display',serif", fontSize: 24, fontWeight: 900, color: C.maroon }}>
-            {activeTab === 'overview' ? (t('pd_overview') || 'Overview') : activeTab === 'bookings' ? (t('pd_booking_requests') || 'Pujas & Requests') : activeTab === 'chat' ? t('dd_messages') : activeTab === 'profile' ? t('dd_my_profile') : t('dd_support')}
+            {activeTab === 'overview' ? (t('pd_overview') || 'Overview') 
+              : activeTab === 'bookings' ? (t('pd_booking_requests') || 'Pujas & Requests') 
+              : activeTab === 'chat' ? t('dd_messages') 
+              : activeTab === 'bank_details' ? 'Bank Details'
+              : activeTab === 'payouts' ? 'Payout History'
+              : activeTab === 'profile' ? t('dd_my_profile') 
+              : t('dd_support')}
           </h1>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: 13, fontWeight: 700 }}>
             {subscriptionStatus === 'inactive' ? (
@@ -853,14 +925,36 @@ const PanditDashboard = () => {
 
               {/* Stats Grid */}
               <div className="pd-stats-grid" style={{ position: 'relative', zIndex: 1 }}>
-                {/* Earnings Card */}
+                {/* Lifetime Earnings Card */}
                 <div className="pd-stat-card" style={{ background: 'linear-gradient(135deg, #E8F5EE 0%, #C2E7D9 100%)', border: 'none' }}>
                   <div className="pd-stat-card-icon" style={{ background: '#fff', color: C.success }}>
                     <Coins size={24} />
                   </div>
                   <div>
-                    <p className="dd-stat-lbl" style={{ color: 'rgba(30,125,60,0.6)' }}>{t('pd_total_earnings') || 'Total Earnings'}</p>
+                    <p className="dd-stat-lbl" style={{ color: 'rgba(30,125,60,0.6)' }}>Total Lifetime Earnings</p>
                     <p className="dd-stat" style={{ color: C.success }}>₹{totalEarnings.toLocaleString()}</p>
+                  </div>
+                </div>
+
+                {/* Pending Weekly Payout Card */}
+                <div className="pd-stat-card" style={{ background: 'linear-gradient(135deg, #FFF9E6 0%, #FFE599 100%)', border: 'none' }}>
+                  <div className="pd-stat-card-icon" style={{ background: '#fff', color: '#A67C00' }}>
+                    <Clock size={24} />
+                  </div>
+                  <div>
+                    <p className="dd-stat-lbl" style={{ color: 'rgba(166,124,0,0.6)' }}>Pending Weekly Payout</p>
+                    <p className="dd-stat" style={{ color: '#A67C00' }}>₹{pendingPayout.toLocaleString()}</p>
+                  </div>
+                </div>
+
+                {/* Successfully Paid Out Card */}
+                <div className="pd-stat-card" style={{ background: 'linear-gradient(135deg, #E8F4FD 0%, #BFE3FC 100%)', border: 'none' }}>
+                  <div className="pd-stat-card-icon" style={{ background: '#fff', color: C.purple }}>
+                    <CheckCircle2 size={24} />
+                  </div>
+                  <div>
+                    <p className="dd-stat-lbl" style={{ color: 'rgba(91,45,142,0.6)' }}>Successfully Paid Out</p>
+                    <p className="dd-stat" style={{ color: C.purple }}>₹{totalPaidOut.toLocaleString()}</p>
                   </div>
                 </div>
 
@@ -1156,6 +1250,225 @@ const PanditDashboard = () => {
             </div>
           )}
 
+          {activeTab === 'bank_details' && (
+            <div style={{ maxWidth: 900, margin: '0 auto', background: '#fff', padding: 32, borderRadius: 24, border: `1px solid ${C.border}`, boxShadow: '0 4px 12px rgba(0,0,0,0.02)' }}>
+              <h2 style={{ fontFamily: "'Playfair Display',serif", fontSize: 22, fontWeight: 700, color: C.maroon, marginBottom: 8 }}>Payout & Bank Settings</h2>
+              <p style={{ fontSize: 14, color: C.textMid, marginBottom: 24 }}>Set up and manage how you want to receive payments from the platform. You can update these settings at any time.</p>
+              
+              {/* Payout Method Selection Tabs */}
+              <div style={{ display: 'flex', gap: 12, marginBottom: 24, borderBottom: `2px solid ${C.border}`, paddingBottom: 16 }}>
+                {[
+                  { id: 'bank_transfer', label: 'Bank Account Details' },
+                  { id: 'upi', label: 'UPI ID' },
+                  { id: 'qr_code', label: 'QR Code' }
+                ].map(method => (
+                  <button
+                    key={method.id}
+                    type="button"
+                    onClick={() => setEditForm(prev => ({
+                      ...prev,
+                      bankDetails: { ...prev.bankDetails, payoutMethod: method.id }
+                    }))}
+                    style={{
+                      padding: '12px 20px',
+                      borderRadius: 12,
+                      border: 'none',
+                      fontFamily: "'Poppins', sans-serif",
+                      fontWeight: 700,
+                      fontSize: 14,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      background: editForm.bankDetails?.payoutMethod === method.id ? C.maroon : C.surface,
+                      color: editForm.bankDetails?.payoutMethod === method.id ? '#fff' : C.textMid
+                    }}
+                  >
+                    {method.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Form Content depending on selected payoutMethod */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                {editForm.bankDetails?.payoutMethod === 'bank_transfer' && (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      <label style={{ fontSize: 13, fontWeight: 700, color: C.textMid }}>Bank Name</label>
+                      <input
+                        type="text"
+                        value={editForm.bankDetails?.bankName || ''}
+                        onChange={e => setEditForm(prev => ({
+                          ...prev,
+                          bankDetails: { ...prev.bankDetails, bankName: e.target.value }
+                        }))}
+                        placeholder="e.g. State Bank of India"
+                        style={{ padding: 12, borderRadius: 8, border: `1px solid ${C.border}`, outline: 'none' }}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      <label style={{ fontSize: 13, fontWeight: 700, color: C.textMid }}>Account Holder Name</label>
+                      <input
+                        type="text"
+                        value={editForm.bankDetails?.accountHolderName || ''}
+                        onChange={e => setEditForm(prev => ({
+                          ...prev,
+                          bankDetails: { ...prev.bankDetails, accountHolderName: e.target.value }
+                        }))}
+                        placeholder="e.g. Pt. Ramesh Sharma"
+                        style={{ padding: 12, borderRadius: 8, border: `1px solid ${C.border}`, outline: 'none' }}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      <label style={{ fontSize: 13, fontWeight: 700, color: C.textMid }}>Account Number</label>
+                      <input
+                        type="text"
+                        value={editForm.bankDetails?.accountNumber || ''}
+                        onChange={e => setEditForm(prev => ({
+                          ...prev,
+                          bankDetails: { ...prev.bankDetails, accountNumber: e.target.value }
+                        }))}
+                        placeholder="Enter account number"
+                        style={{ padding: 12, borderRadius: 8, border: `1px solid ${C.border}`, outline: 'none' }}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      <label style={{ fontSize: 13, fontWeight: 700, color: C.textMid }}>IFSC Code</label>
+                      <input
+                        type="text"
+                        value={editForm.bankDetails?.ifscCode || ''}
+                        onChange={e => setEditForm(prev => ({
+                          ...prev,
+                          bankDetails: { ...prev.bankDetails, ifscCode: e.target.value.toUpperCase() }
+                        }))}
+                        placeholder="e.g. SBIN0001234"
+                        style={{ padding: 12, borderRadius: 8, border: `1px solid ${C.border}`, outline: 'none' }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {editForm.bankDetails?.payoutMethod === 'upi' && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <label style={{ fontSize: 13, fontWeight: 700, color: C.textMid }}>UPI ID</label>
+                    <input
+                      type="text"
+                      value={editForm.bankDetails?.upiId || ''}
+                      onChange={e => setEditForm(prev => ({
+                        ...prev,
+                        bankDetails: { ...prev.bankDetails, upiId: e.target.value }
+                      }))}
+                      placeholder="e.g. ramesh@okaxis"
+                      style={{ padding: 12, borderRadius: 8, border: `1px solid ${C.border}`, outline: 'none' }}
+                    />
+                  </div>
+                )}
+
+                {editForm.bankDetails?.payoutMethod === 'qr_code' && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    <label style={{ fontSize: 13, fontWeight: 700, color: C.textMid }}>Payout QR Code Image</label>
+                    
+                    {editForm.bankDetails?.qrCode ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 20, background: C.surface, padding: 16, borderRadius: 16, border: `1px solid ${C.border}` }}>
+                        <img
+                          src={editForm.bankDetails.qrCode}
+                          alt="QR Code"
+                          style={{ width: 140, height: 140, objectFit: 'contain', background: '#fff', borderRadius: 8, border: `1px solid ${C.border}` }}
+                        />
+                        <div>
+                          <p style={{ fontSize: 14, fontWeight: 700, color: C.maroon, marginBottom: 4 }}>QR Code Uploaded</p>
+                          <p style={{ fontSize: 12, color: C.textMuted, marginBottom: 12 }}>You can replace this QR code image by uploading a new one.</p>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleQrUploadChange}
+                            style={{ display: 'none' }}
+                            id="qr-replace-file"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => document.getElementById('qr-replace-file').click()}
+                            disabled={uploadingQr}
+                            className="dd-btn dd-btn-ghost"
+                            style={{ fontSize: 12, padding: '8px 16px' }}
+                          >
+                            {uploadingQr ? 'Uploading...' : 'Replace QR Code'}
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, background: C.surface, padding: 24, borderRadius: 16, border: `1px dashed ${C.border}`, alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
+                        <CreditCard size={36} color={C.textMuted} style={{ marginBottom: 8 }} />
+                        <p style={{ fontSize: 14, fontWeight: 700, color: C.textMid, margin: 0 }}>No QR Code Uploaded</p>
+                        <p style={{ fontSize: 12, color: C.textMuted, margin: '4px 0 16px', maxWidth: 300 }}>Upload your UPI QR code screenshot so the company can pay you instantly.</p>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleQrUploadChange}
+                          style={{ display: 'none' }}
+                          id="qr-upload-file"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => document.getElementById('qr-upload-file').click()}
+                          disabled={uploadingQr}
+                          className="dd-btn dd-btn-primary"
+                        >
+                          {uploadingQr ? 'Uploading...' : 'Upload QR Code'}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div style={{ marginTop: 24, paddingTop: 24, borderTop: `1px solid ${C.border}`, display: 'flex', justifyContent: 'flex-end' }}>
+                  <button onClick={handleSaveBankDetails} disabled={savingProfile} className="dd-btn dd-btn-primary">
+                    <Save size={18} /> {savingProfile ? 'Saving...' : 'Save Bank Details'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'payouts' && (
+            <div style={{ maxWidth: 900, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 24 }}>
+              <div style={{ background: '#fff', padding: 32, borderRadius: 24, border: `1px solid ${C.border}`, boxShadow: '0 4px 12px rgba(0,0,0,0.02)' }}>
+                <h2 style={{ fontFamily: "'Playfair Display',serif", fontSize: 22, fontWeight: 700, color: C.maroon, marginBottom: 8 }}>Payout History</h2>
+                <p style={{ fontSize: 14, color: C.textMid, marginBottom: 24 }}>Check the payouts made to you by the platform. Payouts are made manually every Monday for pujas completed before that Monday.</p>
+                
+                {payouts.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '40px 20px', background: C.surface, borderRadius: 16 }}>
+                    <Coins size={36} color={C.textMuted} style={{ marginBottom: 12 }} />
+                    <p style={{ fontSize: 15, fontWeight: 700, color: C.maroon, margin: 0 }}>No payout records found</p>
+                    <p style={{ fontSize: 13, color: C.textMuted, marginTop: 4 }}>Your weekly payouts processed by the company will appear here.</p>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                    {payouts.map(p => (
+                      <div key={p._id} style={{ border: `1px solid ${C.border}`, borderRadius: 16, padding: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: C.surface }}>
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                            <span style={{ fontSize: 18, fontWeight: 800, color: C.success }}>₹{(p.amount / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                            <span style={{ fontSize: 11, background: C.successLt, color: C.success, padding: '2px 8px', borderRadius: 8, fontWeight: 700, textTransform: 'capitalize' }}>{p.payoutMethod.replace('_', ' ')}</span>
+                          </div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginTop: 8, fontSize: 12, color: C.textMid }}>
+                            <div><strong>Txn ID:</strong> <span style={{ fontFamily: 'monospace' }}>{p.transactionId}</span></div>
+                            <div><strong>Date:</strong> {new Date(p.payoutDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => setSelectedReceipt(p.receiptImage)}
+                          className="dd-btn dd-btn-ghost"
+                          style={{ fontSize: 13, padding: '10px 16px' }}
+                        >
+                          View Receipt
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {activeTab === 'profile' && (
             <div style={{ maxWidth: 900, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 24 }}>
 
@@ -1317,6 +1630,23 @@ const PanditDashboard = () => {
           )}
         </main>
       </div>
+
+      {/* ═══ RECEIPT LIGHTBOX MODAL ═══ */}
+      {selectedReceipt && (
+        <div onClick={() => setSelectedReceipt(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, backdropFilter: 'blur(4px)' }}>
+          <div onClick={e => e.stopPropagation()} style={{ position: 'relative', maxWidth: '90%', maxHeight: '90%', background: '#fff', borderRadius: 24, padding: 12, display: 'flex', flexDirection: 'column', boxShadow: '0 12px 40px rgba(0,0,0,0.5)' }}>
+            <button onClick={() => setSelectedReceipt(null)} style={{ position: 'absolute', top: -16, right: -16, width: 36, height: 36, background: '#fff', color: C.maroon, borderRadius: '50%', border: `2px solid ${C.maroon}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: 18, boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}>
+              &times;
+            </button>
+            <img
+              src={selectedReceipt}
+              alt="Payment Receipt"
+              style={{ maxWidth: '100%', maxHeight: '75vh', objectFit: 'contain', borderRadius: 16 }}
+            />
+            <p style={{ textAlign: 'center', margin: '12px 0 4px', fontSize: 14, fontWeight: 700, color: C.maroon }}>Payment Receipt Screenshot</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

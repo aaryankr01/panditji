@@ -58,11 +58,17 @@ const panditSchema = new mongoose.Schema(
     },
     adminNotes: { type: String }, // admin can add notes
     bankDetails: {
+      payoutMethod: {
+        type: String,
+        enum: ['upi', 'qr_code', 'bank_transfer'],
+        default: 'bank_transfer',
+      },
       accountNumber: { type: String, default: '' },
       ifscCode: { type: String, default: '' },
       bankName: { type: String, default: '' },
       accountHolderName: { type: String, default: '' },
       upiId: { type: String, default: '' },
+      qrCode: { type: String, default: '' },
     },
   },
   { timestamps: true }

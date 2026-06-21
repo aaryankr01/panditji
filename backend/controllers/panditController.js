@@ -194,11 +194,13 @@ exports.updateProfile = async (req, res, next) => {
       }
       if (bankDetails) {
         panditUpdates.bankDetails = {
+          payoutMethod: bankDetails.payoutMethod || 'bank_transfer',
           accountNumber: bankDetails.accountNumber || '',
           ifscCode: bankDetails.ifscCode || '',
           bankName: bankDetails.bankName || '',
           accountHolderName: bankDetails.accountHolderName || '',
-          upiId: bankDetails.upiId || ''
+          upiId: bankDetails.upiId || '',
+          qrCode: bankDetails.qrCode || ''
         };
       }
 
@@ -247,6 +249,50 @@ exports.uploadAadharDocument = async (req, res, next) => {
       message: 'Aadhar document uploaded successfully. Please wait 24 hours for admin verification.',
       data: updatedUser 
     });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Upload QR Code for payouts
+// @route   POST /api/pandits/payout-details/qr
+// @access  Private/Pandit
+exports.uploadQrCode = async (req, res, next) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'Please upload a QR code image' });
+    }
+
+    const user = await User.findById(req.user.id);
+    if (!user.panditProfile) {
+      return res.status(400).json({ success: false, message: 'Pandit profile not found' });
+    }
+
+    // Update bankDetails.qrCode URL
+    await Pandit.findByIdAndUpdate(user.panditProfile, {
+      $set: { 'bankDetails.qrCode': req.file.path }
+    });
+
+    const updatedUser = await User.findById(req.user.id).populate('panditProfile');
+
+    res.status(200).json({ 
+      success: true, 
+      message: 'QR code uploaded successfully.',
+      data: updatedUser 
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Get payouts for logged in pandit
+// @route   GET /api/pandits/payouts
+// @access  Private/Pandit
+exports.getMyPayouts = async (req, res, next) => {
+  try {
+    const Payout = require('../models/Payout');
+    const payouts = await Payout.find({ pandit: req.user.id }).sort('-createdAt');
+    res.status(200).json({ success: true, count: payouts.length, data: payouts });
   } catch (err) {
     next(err);
   }
