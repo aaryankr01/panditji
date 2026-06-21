@@ -416,7 +416,13 @@ exports.getPendingPayoutsSummary = async (req, res, next) => {
       status: 'completed',
       payoutStatus: 'pending'
     })
-    .populate('booking')
+    .populate({
+      path: 'booking',
+      populate: {
+        path: 'devotee',
+        select: 'firstName lastName'
+      }
+    })
     .populate({
       path: 'pandit',
       select: 'firstName lastName email phone',

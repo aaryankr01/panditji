@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import useAuthStore from '../../store/useAuthStore';
 import api from '../../utils/api';
-import { Users, MessageSquare, LayoutDashboard, LogOut, Headphones, RefreshCw, Inbox, CheckCircle, Clock, XCircle, Send, Trash2, Eye, Megaphone, Banknote, BookOpen, Building, Sparkles, Upload, X, ExternalLink } from 'lucide-react';
+import { Users, MessageSquare, LayoutDashboard, LogOut, Headphones, RefreshCw, Inbox, CheckCircle, Clock, XCircle, Send, Trash2, Eye, Megaphone, Banknote, BookOpen, Building, Sparkles, Upload, X, ExternalLink, ChevronDown } from 'lucide-react';
 import BookingsTab from './components/BookingsTab';
 import ChatTrackerTab from './components/ChatTrackerTab';
 
@@ -103,6 +103,14 @@ const AdminDashboard = () => {
   const [transactionId, setTransactionId] = useState('');
   const [receiptFile, setReceiptFile] = useState(null);
   const [processing, setProcessing] = useState(false);
+  const [expandedPandits, setExpandedPandits] = useState({});
+
+  const togglePanditExpand = (panditId) => {
+    setExpandedPandits(prev => ({
+      ...prev,
+      [panditId]: !prev[panditId]
+    }));
+  };
 
   const fetchData = useCallback(async () => {
     try {
@@ -1333,58 +1341,120 @@ const AdminDashboard = () => {
                         </td>
                       </tr>
                     ) : (
-                      pendingPayouts.map(p => (
-                        <tr key={p.pandit?._id || p._id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors text-sm">
-                          <td className="p-4">
-                            <div className="font-semibold text-gray-800">
-                              Pt. {p.pandit?.firstName} {p.pandit?.lastName}
-                            </div>
-                            <div className="text-xs text-gray-400">{p.pandit?.email}</div>
-                            <div className="text-xs text-gray-400">{p.pandit?.phone}</div>
-                          </td>
-                          <td className="p-4 text-gray-600 capitalize">
-                            {p.pandit?.panditProfile?.bankDetails?.payoutMethod?.replace('_', ' ') || 'Bank Transfer'}
-                          </td>
-                          <td className="p-4 text-gray-600">
-                            {p.pandit?.panditProfile?.bankDetails?.payoutMethod === 'upi' ? (
-                              <span className="font-mono text-xs bg-orange-50 text-orange-700 px-2.5 py-1 rounded-lg border border-orange-100">
-                                {p.pandit.panditProfile.bankDetails.upiId}
-                              </span>
-                            ) : p.pandit?.panditProfile?.bankDetails?.payoutMethod === 'qr_code' ? (
-                              p.pandit.panditProfile.bankDetails.qrCode ? (
-                                <a 
-                                  href={p.pandit.panditProfile.bankDetails.qrCode} 
-                                  target="_blank" 
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1 text-orange-600 font-bold hover:underline"
+                      pendingPayouts.map(p => {
+                        const panditId = p.pandit?._id || p._id;
+                        const isExpanded = !!expandedPandits[panditId];
+                        return (
+                          <React.Fragment key={panditId}>
+                            <tr className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors text-sm">
+                              <td className="p-4">
+                                <div className="flex items-center gap-3">
+                                  <button
+                                    onClick={() => togglePanditExpand(panditId)}
+                                    className="p-1 text-gray-400 hover:text-orange-600 rounded-lg hover:bg-orange-50 transition-all focus:outline-none"
+                                    title="View completed pujas details"
+                                  >
+                                    <ChevronDown 
+                                      size={16} 
+                                      className={`transform transition-transform duration-200 ${isExpanded ? 'rotate-180 text-orange-600' : ''}`} 
+                                    />
+                                  </button>
+                                  <div>
+                                    <div className="font-semibold text-gray-800">
+                                      Pt. {p.pandit?.firstName} {p.pandit?.lastName}
+                                    </div>
+                                    <div className="text-xs text-gray-400">{p.pandit?.email}</div>
+                                    <div className="text-xs text-gray-400">{p.pandit?.phone}</div>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="p-4 text-gray-600 capitalize">
+                                {p.pandit?.panditProfile?.bankDetails?.payoutMethod?.replace('_', ' ') || 'Bank Transfer'}
+                              </td>
+                              <td className="p-4 text-gray-600">
+                                {p.pandit?.panditProfile?.bankDetails?.payoutMethod === 'upi' ? (
+                                  <span className="font-mono text-xs bg-orange-50 text-orange-700 px-2.5 py-1 rounded-lg border border-orange-100">
+                                    {p.pandit.panditProfile.bankDetails.upiId}
+                                  </span>
+                                ) : p.pandit?.panditProfile?.bankDetails?.payoutMethod === 'qr_code' ? (
+                                  p.pandit.panditProfile.bankDetails.qrCode ? (
+                                    <a 
+                                      href={p.pandit.panditProfile.bankDetails.qrCode} 
+                                      target="_blank" 
+                                      rel="noopener noreferrer"
+                                      className="inline-flex items-center gap-1 text-orange-600 font-bold hover:underline"
+                                    >
+                                      View QR Code <ExternalLink size={12} />
+                                    </a>
+                                  ) : (
+                                    <span className="text-red-500 text-xs font-semibold">No QR Uploaded</span>
+                                  )
+                                ) : (
+                                  <div className="text-xs leading-normal">
+                                    <div><strong>Holder:</strong> {p.pandit?.panditProfile?.bankDetails?.accountHolderName || '-'}</div>
+                                    <div><strong>Acc:</strong> {p.pandit?.panditProfile?.bankDetails?.accountNumber || '-'}</div>
+                                    <div><strong>Bank:</strong> {p.pandit?.panditProfile?.bankDetails?.bankName || '-'}</div>
+                                    <div><strong>IFSC:</strong> {p.pandit?.panditProfile?.bankDetails?.ifscCode || '-'}</div>
+                                  </div>
+                                )}
+                              </td>
+                              <td className="p-4 font-bold text-green-700 text-base">
+                                ₹{(p.pendingAmount / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                              </td>
+                              <td className="p-4">
+                                <button
+                                  onClick={() => setSelectedPayout(p)}
+                                  className="bg-orange-600 hover:bg-orange-700 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-sm transition-all"
                                 >
-                                  View QR Code <ExternalLink size={12} />
-                                </a>
-                              ) : (
-                                <span className="text-red-500 text-xs font-semibold">No QR Uploaded</span>
-                              )
-                            ) : (
-                              <div className="text-xs leading-normal">
-                                <div><strong>Holder:</strong> {p.pandit?.panditProfile?.bankDetails?.accountHolderName || '-'}</div>
-                                <div><strong>Acc:</strong> {p.pandit?.panditProfile?.bankDetails?.accountNumber || '-'}</div>
-                                <div><strong>Bank:</strong> {p.pandit?.panditProfile?.bankDetails?.bankName || '-'}</div>
-                                <div><strong>IFSC:</strong> {p.pandit?.panditProfile?.bankDetails?.ifscCode || '-'}</div>
-                              </div>
+                                  Process Payout
+                                </button>
+                              </td>
+                            </tr>
+                            {isExpanded && (
+                              <tr className="bg-gray-50/40">
+                                <td colSpan="5" className="p-4 pl-12">
+                                  <div className="bg-white rounded-2xl border border-gray-150 overflow-hidden shadow-sm max-w-4xl">
+                                    <div className="px-4 py-2 bg-gray-50/70 border-b border-gray-100 text-xs font-bold text-gray-500 uppercase tracking-wider flex justify-between items-center">
+                                      <span>Detailed Breakdown of Completed Pujas</span>
+                                      <span className="text-gray-400 font-normal">{p.payments?.length} {p.payments?.length === 1 ? 'puja' : 'pujas'} completed</span>
+                                    </div>
+                                    <table className="w-full text-left text-xs border-collapse">
+                                      <thead>
+                                        <tr className="border-b border-gray-100 bg-gray-50/20 text-gray-500 font-semibold uppercase tracking-wider">
+                                          <th className="p-3 pl-4">Puja Type</th>
+                                          <th className="p-3">Devotee Name</th>
+                                          <th className="p-3">Completed Date</th>
+                                          <th className="p-3">Puja Amount</th>
+                                          <th className="p-3 pr-4 text-right">Pandit Earnings (90%)</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {p.payments.map((pm, idx) => (
+                                          <tr key={pm._id || idx} className="border-b border-gray-50 hover:bg-gray-50/50 last:border-b-0 text-[13px] text-gray-700">
+                                            <td className="p-3 pl-4 font-semibold text-gray-800">{pm.booking?.pujaType || 'Puja'}</td>
+                                            <td className="p-3 text-gray-600">
+                                              {pm.booking?.devotee ? `${pm.booking.devotee.firstName || ''} ${pm.booking.devotee.lastName || ''}`.trim() : 'Devotee'}
+                                            </td>
+                                            <td className="p-3 text-gray-500">
+                                              {pm.booking?.completedAt ? new Date(pm.booking.completedAt).toLocaleDateString('en-IN', {
+                                                day: 'numeric',
+                                                month: 'short',
+                                                year: 'numeric'
+                                              }) : 'N/A'}
+                                            </td>
+                                            <td className="p-3 font-medium text-gray-600">₹{(pm.amount / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                                            <td className="p-3 pr-4 font-bold text-green-700 text-right">₹{(pm.panditEarnings / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                                          </tr>
+                                        ))}
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                </td>
+                              </tr>
                             )}
-                          </td>
-                          <td className="p-4 font-bold text-green-700 text-base">
-                            ₹{(p.pendingAmount / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                          </td>
-                          <td className="p-4">
-                            <button
-                              onClick={() => setSelectedPayout(p)}
-                              className="bg-orange-600 hover:bg-orange-700 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-sm transition-all"
-                            >
-                              Process Payout
-                            </button>
-                          </td>
-                        </tr>
-                      ))
+                          </React.Fragment>
+                        );
+                      })
                     )}
                   </tbody>
                 </table>
