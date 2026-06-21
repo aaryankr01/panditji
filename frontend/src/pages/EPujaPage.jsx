@@ -228,8 +228,8 @@ export default function EPujaPage() {
 
   const categories = [t('bap_cat_all'), t('bap_cat_home'), t('bap_cat_wedding'), t('bap_cat_devotional'), t('bap_cat_festival'), t('bap_cat_ritual'), t('bap_cat_remedial'), t('bap_cat_life_events')];
 
-  const [pujas, setPujas] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [pujas, setPujas] = useState(initialPujas);
+  const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [activeCategoryIndex, setActiveCategoryIndex] = useState(0);
   const [bookedPuja, setBookedPuja] = useState(null);
@@ -319,24 +319,6 @@ export default function EPujaPage() {
   };
 
   useEffect(() => { detectClientType(); }, []);
-
-  useEffect(() => {
-    const fetchPujas = async () => {
-      try {
-        const res = await api.get("/pujas");
-        if (res.data && res.data.success && res.data.data.length > 0) {
-          setPujas(res.data.data);
-        } else {
-          setPujas(initialPujas);
-        }
-      } catch {
-        setPujas(initialPujas);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchPujas();
-  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => setHeroSlide(s => (s + 1) % heroSlides.length), 4000);
