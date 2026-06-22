@@ -1436,7 +1436,7 @@ const AdminDashboard = () => {
                                               {pm.booking?.devotee ? `${pm.booking.devotee.firstName || ''} ${pm.booking.devotee.lastName || ''}`.trim() : 'Devotee'}
                                             </td>
                                             <td className="p-3 text-gray-500">
-                                              {pm.booking?.completedAt ? new Date(pm.booking.completedAt).toLocaleDateString('en-IN', {
+                                              {(pm.booking?.completedAt || pm.booking?.updatedAt) ? new Date(pm.booking.completedAt || pm.booking.updatedAt).toLocaleDateString('en-IN', {
                                                 day: 'numeric',
                                                 month: 'short',
                                                 year: 'numeric'
