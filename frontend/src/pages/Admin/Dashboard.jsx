@@ -2,9 +2,10 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import useAuthStore from '../../store/useAuthStore';
 import api from '../../utils/api';
-import { Users, MessageSquare, LayoutDashboard, LogOut, Headphones, RefreshCw, Inbox, CheckCircle, Clock, XCircle, Send, Trash2, Eye, Megaphone, Banknote, BookOpen, Building, Sparkles, Upload, X, ExternalLink, ChevronDown } from 'lucide-react';
+import { Users, MessageSquare, LayoutDashboard, LogOut, Headphones, RefreshCw, Inbox, CheckCircle, Clock, XCircle, Send, Trash2, Eye, Megaphone, Banknote, BookOpen, Building, Sparkles, Upload, X, ExternalLink, ChevronDown, RotateCcw } from 'lucide-react';
 import BookingsTab from './components/BookingsTab';
 import ChatTrackerTab from './components/ChatTrackerTab';
+import RefundsTab from './components/RefundsTab';
 
 // ── Preset temple images (stored in /public/pictures/temples/) ──
 const TEMPLE_PRESET_IMAGES = [
@@ -62,7 +63,7 @@ const AdminDashboard = () => {
     } else if (location.pathname === '/admin/bookings') {
       setActiveTab('bookings');
     } else {
-      const dashboardTabs = ['overview', 'users', 'financials', 'support', 'broadcast', 'payouts', 'templeManagement'];
+      const dashboardTabs = ['overview', 'users', 'financials', 'support', 'broadcast', 'payouts', 'templeManagement', 'refunds'];
       if (!dashboardTabs.includes(activeTab)) {
         setActiveTab('overview');
       }
@@ -526,6 +527,18 @@ const AdminDashboard = () => {
             <Building size={20} />
             Temple Management
           </button>
+          <button
+            onClick={() => handleTabClick('refunds')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'refunds' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
+          >
+            <RotateCcw size={20} />
+            Refunds
+            {bookingsList.filter(b => b.status === 'cancellation_requested').length > 0 && (
+              <span className="ml-auto bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center animate-pulse font-bold">
+                {bookingsList.filter(b => b.status === 'cancellation_requested').length}
+              </span>
+            )}
+          </button>
         </nav>
         <div className="p-4 border-t border-gray-800">
           <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-xl transition-colors">
@@ -551,6 +564,7 @@ const AdminDashboard = () => {
                 {activeTab === 'broadcast' && '📢 Broadcast Notifications'}
                 {activeTab === 'payouts' && 'Pandit Payouts (15-day Hold)'}
                 {activeTab === 'templeManagement' && '🛕 Temple Seva Management'}
+                {activeTab === 'refunds' && 'Manage Refunds & Cancellations'}
               </h2>
           {activeTab === 'templeManagement' && (
             <div className="flex gap-3 flex-wrap items-center">
@@ -1866,6 +1880,15 @@ const AdminDashboard = () => {
 
         {activeTab === 'bookings' && (
           <BookingsTab bookingsList={bookingsList} onSelectBooking={setSelectedBookingModal} />
+        )}
+
+        {activeTab === 'refunds' && (
+          <RefundsTab
+            bookingsList={bookingsList}
+            onSelectBooking={setSelectedBookingModal}
+            onApproveCancellation={handleApproveCancellation}
+            onRejectCancellation={handleRejectCancellation}
+          />
         )}
       </div>
         )}

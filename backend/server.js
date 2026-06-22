@@ -12,7 +12,6 @@ require('dotenv').config();
 const connectDB = require('./config/db');
 const errorHandler = require('./middleware/errorHandler');
 const initSocket = require('./socket');
-const { runAutoRefundJob } = require('./jobs/autoRefundJob');
 
 // Route imports
 const authRoutes = require('./routes/auth');
@@ -32,10 +31,6 @@ const { seedTemples } = require('./controllers/templeController');
 
 // Connect DB
 connectDB().then(() => {
-  // Run auto-refund job on startup, then every 24 hours
-  runAutoRefundJob().catch(console.error);
-  setInterval(() => runAutoRefundJob().catch(console.error), 24 * 60 * 60 * 1000);
-  console.log('⏰ Auto-refund job scheduled (runs every 24 hours)');
   // Seed default temples if DB is empty
   seedTemples();
 });

@@ -3,7 +3,6 @@ const { getUsers, getConversation, getStats, getAllBookings, getAllPayments, app
 const { getAllTickets, updateTicket, deleteTicket } = require('../controllers/supportController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 const upload = require('../middleware/upload');
-const { runAutoRefundJob } = require('../jobs/autoRefundJob');
 const {
   adminGetAllTemples, adminCreateTemple, adminUpdateTemple, adminDeleteTemple,
   adminGetAllOrders, adminUpdateOrderStatus
@@ -39,16 +38,6 @@ router.patch('/users/:id/reject-pandit', rejectPandit);
 // Booking Cancellation Requests
 router.patch('/bookings/:id/cancel-approve', approveCancellation);
 router.patch('/bookings/:id/cancel-reject', rejectCancellation);
-
-// Manual trigger for auto-refund job (admin only)
-router.post('/run-auto-refund', async (req, res) => {
-  try {
-    const result = await runAutoRefundJob();
-    res.json({ success: true, message: `Auto-refund job completed.`, ...result });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-});
 
 // Temple Management
 router.get('/temples', adminGetAllTemples);
