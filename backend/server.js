@@ -43,6 +43,8 @@ const server = http.createServer(app);
 const allowedOriginsList = [
   'http://localhost:5173',
   'http://localhost:3000',
+  'https://www.panditpunya.com',
+  'https://panditpunya.com',
   process.env.CLIENT_URL,
 ].filter(Boolean);
 
